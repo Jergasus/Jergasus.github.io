@@ -273,7 +273,8 @@ hr {
 }
 
 .project {
-  margin: 160px 200px;
+  min-height: 100vh;
+  padding: 150px 200px 200px 200px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -298,6 +299,7 @@ hr {
 
 .info-pro {
   padding-top: 20px;
+  padding-bottom: 30px;
 }
 
 .info-pro p {
@@ -310,6 +312,7 @@ hr {
   gap: 25px;
   max-width: 1100px;
   margin: auto;
+  margin-top: 20px;
 }
 
 .project-card {
@@ -386,7 +389,7 @@ hr {
 }
 
 .services {
-  margin: 160px 200px;
+  margin: 100px 200px 300px 200px;
   display: flex;
   align-items: center;
   justify-content: center;
