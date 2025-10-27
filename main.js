@@ -2,7 +2,7 @@ const navLinks = document.querySelectorAll(".ul-list li a");
 const sections = document.querySelectorAll("section");
 
 function removeActive() {
-  navLinks.forEach((link) => link.parentElement.classList.remove("active"));
+  document.querySelectorAll(".ul-list li:not(.theme-toggle-btn)").forEach((li) => li.classList.remove("active"));
 }
 
 navLinks.forEach((link) => {
@@ -22,7 +22,7 @@ navLinks.forEach((link) => {
 });
 
 window.addEventListener("scroll", () => {
-  let scrollPos = window.scrollY + 100;
+  let scrollPos = window.scrollY + 200;
 
   sections.forEach((section) => {
     if (
@@ -33,7 +33,9 @@ window.addEventListener("scroll", () => {
       const activeLink = document.querySelector(
         `.ul-list li a[href="#${section.id}"]`
       );
-      if (activeLink) activeLink.parentElement.classList.add("active");
+      if (activeLink && !activeLink.parentElement.classList.contains('theme-toggle-btn')) {
+        activeLink.parentElement.classList.add("active");
+      }
     }
   });
 
@@ -140,6 +142,31 @@ function type() {
 }
 
 document.addEventListener("DOMContentLoaded", type);
+
+// Theme Toggle Functionality
+const themeToggle = document.getElementById("theme-toggle");
+const body = document.body;
+
+// Check for saved theme preference or default to 'light' mode
+const currentTheme = localStorage.getItem("theme") || "light";
+if (currentTheme === "dark") {
+  body.classList.add("dark-mode");
+  themeToggle.querySelector("i").classList.replace("fa-moon", "fa-sun");
+}
+
+themeToggle.addEventListener("click", () => {
+  body.classList.toggle("dark-mode");
+  
+  // Update icon
+  const icon = themeToggle.querySelector("i");
+  if (body.classList.contains("dark-mode")) {
+    icon.classList.replace("fa-moon", "fa-sun");
+    localStorage.setItem("theme", "dark");
+  } else {
+    icon.classList.replace("fa-sun", "fa-moon");
+    localStorage.setItem("theme", "light");
+  }
+});
 
 document.addEventListener("DOMContentLoaded", () => {
   const loadingText = document.getElementById("loading-text");
