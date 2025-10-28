@@ -103,9 +103,12 @@ header {
   text-decoration: none;
   color: var(--text-primary);
   transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.ul-list li i {
+.ul-list li a i {
   color: var(--text-primary);
   transition: color 0.3s ease;
 }
@@ -116,7 +119,7 @@ header {
 }
 
 .ul-list li.active a,
-.ul-list li.active i {
+.ul-list li.active a i {
   color: white;
 }
 
