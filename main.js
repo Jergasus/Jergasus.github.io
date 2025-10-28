@@ -151,29 +151,33 @@ document.addEventListener("DOMContentLoaded", type);
 // Theme Toggle Functionality
 const themeToggle = document.getElementById("theme-toggle");
 const body = document.body;
+const portfolioImg = document.getElementById("portfolio-img");
 
 // Check for saved theme preference or default to 'light' mode
 const currentTheme = localStorage.getItem("theme") || "light";
 if (currentTheme === "dark") {
   body.classList.add("dark-mode");
   themeToggle.querySelector("i").classList.replace("fa-moon", "fa-sun");
+  if (portfolioImg) portfolioImg.src = "images/cp.png";
+} else {
+  if (portfolioImg) portfolioImg.src = "images/cp2.png";
 }
 
 themeToggle.addEventListener("click", () => {
   body.classList.toggle("dark-mode");
-
+  
   // Update icon
   const icon = themeToggle.querySelector("i");
   if (body.classList.contains("dark-mode")) {
     icon.classList.replace("fa-moon", "fa-sun");
     localStorage.setItem("theme", "dark");
+    if (portfolioImg) portfolioImg.src = "images/cp.png";
   } else {
     icon.classList.replace("fa-sun", "fa-moon");
     localStorage.setItem("theme", "light");
+    if (portfolioImg) portfolioImg.src = "images/cp2.png";
   }
-});
-
-document.addEventListener("DOMContentLoaded", () => {
+});document.addEventListener("DOMContentLoaded", () => {
   const loadingText = document.getElementById("loading-text");
   const mainIcon = document.querySelector(".main-icon");
   const subIcons = document.querySelectorAll(".sub-icons i");
