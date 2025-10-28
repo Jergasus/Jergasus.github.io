@@ -289,7 +289,7 @@ hr {
 
 .about {
   min-height: 100vh;
-  padding: 150px 200px 100px 200px;
+  padding: 175px 200px 100px 200px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -417,7 +417,9 @@ hr {
 
 .info-pro p {
   padding-bottom: 10px;
+  font-size: 15px;
   color: var(--text-secondary);
+  text-align: center;
 }
 
 .projects-container {
@@ -475,19 +477,19 @@ hr {
   align-items: flex-start;
 }
 
-.tech-tags a {
+.tech-tags span {
   display: inline-block;
   background: var(--gray-bg);
   color: var(--accent-blue);
-  text-decoration: none;
   font-size: 0.8rem;
   padding: 5px 10px;
   border-radius: 6px;
   margin: 3px;
-  transition: background 0.3s;
+  transition: background 0.3s, color 0.3s;
+  cursor: default;
 }
 
-.tech-tags a:hover {
+.tech-tags span:hover {
   background: var(--accent-purple);
   color: white;
 }
