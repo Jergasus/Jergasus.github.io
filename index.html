@@ -23,18 +23,16 @@
     <div id="loading-screen">
       <div class="loading-content">
         <i class="fa-solid fa-laptop-code fa-5x main-icon hidden"></i>
-
         <h1 id="loading-text" class="hidden">MY PROFILE</h1>
-
         <div class="sub-icons">
           <i class="fa-brands fa-github fa-2x hidden"></i>
           <i class="fa-solid fa-code fa-2x hidden"></i>
           <i class="fa-solid fa-user fa-2x hidden"></i>
         </div>
-
         <h2 id="designer-text" class="hidden">Designed by Jesús García</h2>
       </div>
     </div>
+
     <header class="header-list">
       <div class="div-list">
         <ul class="ul-list">
@@ -45,7 +43,9 @@
             <a href="#about"><i class="fa-regular fa-address-card"></i>About</a>
           </li>
           <li>
-            <a href="#project"><i class="fa-regular fa-folder-open"></i>Projects</a>
+            <a href="#project"
+              ><i class="fa-regular fa-folder-open"></i>Projects</a
+            >
           </li>
           <li>
             <a href="#skills"><i class="fa-solid fa-code"></i>Skills</a>
@@ -59,18 +59,18 @@
         </ul>
       </div>
     </header>
-    <!-- home -->
+
     <section class="home" id="home">
       <div class="home-container">
         <div class="info-home">
           <h1>Hi, I'm Jesús</h1>
-          <h3>Computer Science Student</h3>
+          <h3>Web & Mobile App Developer</h3>
           <div class="info-p">
             <p>
-              I am a Computer Science student at UPC with a strong drive for
-              continuous learning and skill development. Highly self-taught and
-              perseverant, always striving for excellence and committed to
-              problem-solving.
+              I build modern, responsive websites and engaging mobile
+              applications. A problem-solver at heart, I'm passionate about
+              using technology to create efficient and impactful digital
+              solutions.
             </p>
           </div>
           <div class="info-p2">
@@ -110,7 +110,6 @@
         <img src="images/img2.jpg" alt="" />
       </div>
     </section>
-    <!-- fine home  -->
     <section class="about" id="about">
       <p>ABOUT ME</p>
       <div class="title">
@@ -124,14 +123,14 @@
         <div class="info-about">
           <div class="about-info">
             <p>
-              I am a Computer Science student with a strong drive for continuous
-              learning and skill development. Highly self-taught and
-              perseverant, always striving for excellence in every task.
+              As a developer, I am driven by a strong passion for continuous
+              learning and skill development. I am a self-taught, perseverant
+              builder who strives for excellence in every task.
             </p>
             <p>
-              Committed to problem-solving and personal growth through
-              dedication and hard work. Strong interpersonal skills with the
-              ability to collaborate effectively in team environments.
+              My focus is on practical problem-solving and personal growth
+              through dedication. I possess strong interpersonal skills and
+              thrive in collaborative team environments.
             </p>
           </div>
           <h2>What Drives Me</h2>
@@ -139,8 +138,8 @@
             <div class="c1">
               <h3><i class="fa-solid fa-code"></i> Technical Skills</h3>
               <p>
-                HTML, CSS, JavaScript, React, React Native Angular, Python, C#,
-                C++, C, Microsoft Office
+                JavaScript (ES6+), TypeScript, React, React Native, HTML5, CSS3,
+                Git, C#, C++, C, Python, Unity
               </p>
             </div>
             <div class="c1">
@@ -151,24 +150,73 @@
               <h3>
                 <i class="fa-solid fa-folder-open"></i> Experience & Projects
               </h3>
-              <p>Zurich and projects</p>
+              <p>
+                Hands-on experience developing responsive websites and
+                cross-platform mobile apps.
+              </p>
             </div>
           </div>
         </div>
-        <img src="images/img.jpg" alt="" />
+        <img src="images/me.png" alt="" />
       </div>
     </section>
+
     <section class="project" id="project">
       <p>PROJECTS</p>
       <h1>Featured Work</h1>
       <hr />
       <div class="info-pro">
         <p>
-          A showcase of my recent projects demonstrating expertise in full-stack
+          A showcase of my recent projects demonstrating expertise in web and
+          mobile development.
         </p>
         <p>development, modern frameworks, and creative problem-solving.</p>
       </div>
       <div class="projects-container">
+        <div class="project-card">
+          <img src="images/app2.jpg" alt="Productivity RPG App" />
+          <h3>Productivity RPG App</h3>
+          <p>
+            A mobile app that gamifies productivity. Transforms tasks into an
+            RPG system with levels, missions, skills, inventory, and a shop.
+          </p>
+          <div class="tech-tags">
+            <a href="#">React Native</a>
+            <a href="#">Expo</a>
+            <a href="#">TypeScript</a>
+          </div>
+          <div class="btns">
+            <a href="#" class="btn"><i class="fab fa-github"></i> GitHub</a>
+            <a href="#" class="btn"
+              ><i class="fas fa-external-link-alt"></i> Live Demo</a
+            >
+          </div>
+        </div>
+
+        <div class="project-card">
+          <img
+            id="portfolio-img"
+            src="images/cp2.png"
+            alt="Portfolio Website"
+          />
+          <h3>Portfolio Website</h3>
+          <p>
+            A responsive, single-page portfolio built from scratch. Features a
+            modern UI, light/dark theme toggle, and a functional contact form.
+          </p>
+          <div class="tech-tags">
+            <a href="#">HTML</a>
+            <a href="#">CSS</a>
+            <a href="#">JavaScript</a>
+          </div>
+          <div class="btns">
+            <a href="#" class="btn"><i class="fab fa-github"></i> GitHub</a>
+            <a href="#" class="btn"
+              ><i class="fas fa-external-link-alt"></i> Live Demo</a
+            >
+          </div>
+        </div>
+
         <div class="project-card">
           <img src="images/game.png" alt="Unity 2D Platformer Game" />
           <h3>Unity 2D Platformer Game</h3>
@@ -190,93 +238,59 @@
             >
           </div>
         </div>
-
-        <div class="project-card">
-          <img id="portfolio-img" src="images/cp2.png" alt="Portfolio Website" />
-          <h3>Portfolio Website</h3>
-          <p>Personal portfolio to showcase my design and coding projects.</p>
-          <div class="tech-tags">
-            <a href="#">HTML</a>
-            <a href="#">CSS</a>
-            <a href="#">JavaScript</a>
-          </div>
-          <div class="btns">
-            <a href="#" class="btn"><i class="fab fa-github"></i> GitHub</a>
-            <a href="#" class="btn"
-              ><i class="fas fa-external-link-alt"></i> Live Demo</a
-            >
-          </div>
-        </div>
-
-        <div class="project-card">
-          <img src="images/app2.jpg" alt="Productivity RPG App" />
-          <h3>Productivity RPG App</h3>
-          <p>
-            A mobile app that gamifies productivity. Transforms tasks into an
-            RPG system with levels, quests, skill tree, inventory, and a shop.
-          </p>
-          <div class="tech-tags">
-            <a href="#">React Native</a>
-            <a href="#">Expo</a>
-            <a href="#">TypeScript</a>
-          </div>
-          <div class="btns">
-            <a href="#" class="btn"><i class="fab fa-github"></i> GitHub</a>
-            <a href="#" class="btn"
-              ><i class="fas fa-external-link-alt"></i> Live Demo</a
-            >
-          </div>
-        </div>
       </div>
     </section>
+
     <section class="skills" id="skills">
       <p>SKILLS</p>
       <h1>My Skills & Abilities</h1>
       <hr />
       <div class="skills-container">
         <div class="skill-card">
-          <img src="images/app.svg" alt="Game Development" />
-          <h3>Game & Software Development</h3>
-          <p>
-            Skilled in C# and the Unity engine. Capable of building interactive
-            experiences and implementing core gameplay logic, as shown in my 2D
-            platformer project.
-          </p>
-        </div>
-
-        <div class="skill-card">
-          <img src="images/web.svg" alt="Web Development" />
+          <img src="images/web.png" alt="Web Development" />
           <h3>Web Development</h3>
           <p>
-            Proficient in building responsive and functional websites from
-            scratch using HTML, CSS, and JavaScript, as demonstrated by this
-            portfolio.
+            Proficient in building responsive, dynamic websites from the ground
+            up using HTML5, CSS3, and modern JavaScript (ES6+), as demonstrated
+            by this portfolio.
           </p>
         </div>
 
         <div class="skill-card">
-          <img src="images/dm.svg" alt="Algorithms & Problem-Solving" />
-          <h3>Algorithms & Problem-Solving</h3>
+          <img src="images/mobile.png" alt="Mobile Development" />
+          <h3>Mobile App Development</h3>
           <p>
-            Strong understanding of C++ for implementing complex algorithms and
-            managing data structures, focusing on efficiency for data analysis.
+            Experienced in cross-platform development using React Native, Expo,
+            and TypeScript. Capable of managing application state and building
+            complex user interfaces.
           </p>
         </div>
 
         <div class="skill-card">
-          <img src="images/seo.svg" alt="Soft Skills" />
+          <img src="images/game-icon.png" alt="Game Development" />
+          <h3>Game Development</h3>
+          <p>
+            Skilled in C# and the Unity engine for building 2D interactive
+            experiences. Capable of implementing core gameplay logic, physics,
+            and character mechanics.
+          </p>
+        </div>
+
+        <div class="skill-card">
+          <img src="images/soft_skills.png" alt="Soft Skills" />
           <h3>Soft Skills</h3>
           <p>
-            A highly adaptable and creative team player. Strong communication,
-            critical thinking, and leadership skills, committed to continuous
-            learning.
+            An adaptable and creative team player. Strong communication,
+            critical thinking, and problem-solving skills with a proven
+            commitment to continuous learning.
           </p>
         </div>
       </div>
     </section>
+
     <section class="contact" id="contact">
       <p>CONTACT</p>
-      <h1>Get in Touch with Us</h1>
+      <h1>Get in Touch</h1>
       <div class="contact-content">
         <div class="contact-info slide-in-left">
           <p>
@@ -347,6 +361,7 @@
         </div>
       </div>
     </section>
+
     <footer class="footer">
       <div class="footer-container">
         <h2 class="footer-logo">Jesús García</h2>
