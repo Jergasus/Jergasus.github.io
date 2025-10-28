@@ -36,8 +36,8 @@ body.dark-mode {
   --card-shadow: rgba(0, 0, 0, 0.4);
   --nav-bg: #161b22;
   --nav-shadow: rgba(0, 0, 0, 0.5);
-  --footer-bg: #0d1117;
-  --footer-text: #e6edf3;
+  --footer-bg: #ffffff;
+  --footer-text: #000000;
   --accent-blue: #58a6ff;
   --accent-purple: #7d8cf8;
   --input-bg: #0d1117;
@@ -249,6 +249,7 @@ hr {
 .follow {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .follow p {
@@ -257,8 +258,9 @@ hr {
 
 .follow ul {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
   font-size: 20px;
+  align-items: center;
 }
 
 .follow ul li {
@@ -327,6 +329,7 @@ hr {
 
 .about-info p {
   color: var(--text-secondary);
+  font-size: 15px;
 }
 
 .about img {
@@ -430,6 +433,8 @@ hr {
   box-shadow: 0 5px 15px var(--card-shadow);
   transition: 0.3s ease;
   border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .project-card:hover {
@@ -439,6 +444,8 @@ hr {
 
 .project-card img {
   width: 100%;
+  height: 170px;
+  object-fit: cover;
   border-radius: 12px;
   margin-bottom: 15px;
 }
@@ -452,13 +459,20 @@ hr {
   color: var(--text-muted);
   font-size: 0.9rem;
   margin-bottom: 15px;
+  min-height: 65px;
 }
 
-.skills {
+.tech-tags {
   margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-height: 40px;
+  align-items: flex-start;
 }
 
-.skills a {
+.tech-tags a {
   display: inline-block;
   background: var(--gray-bg);
   color: var(--accent-blue);
@@ -470,7 +484,7 @@ hr {
   transition: background 0.3s;
 }
 
-.skills a:hover {
+.tech-tags a:hover {
   background: var(--accent-purple);
   color: white;
 }
@@ -500,7 +514,7 @@ hr {
   transform: scale(1.05);
 }
 
-.services {
+.skills {
   margin: 100px 200px 300px 200px;
   display: flex;
   align-items: center;
@@ -509,23 +523,23 @@ hr {
   scroll-snap-align: center;
 }
 
-.services p {
+.skills p {
   padding-bottom: 20px;
   font-size: 13px;
   color: var(--text-muted);
 }
 
-.services h1 {
+.skills h1 {
   font-family: "Open Sans", sans-serif;
   padding-bottom: 10px;
   color: var(--text-primary);
 }
 
-.services hr {
+.skills hr {
   width: 10%;
 }
 
-.services-container {
+.skills-container {
   padding-top: 30px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -534,7 +548,7 @@ hr {
   margin: auto;
 }
 
-.service-card {
+.skill-card {
   background: var(--card-bg);
   padding: 25px;
   border-radius: 16px;
@@ -546,14 +560,14 @@ hr {
   border: 1px solid var(--border-color);
 }
 
-.service-card img {
+.skill-card img {
   width: 100px;
   margin-bottom: 15px;
   z-index: 1;
   position: relative;
 }
 
-.service-card h3 {
+.skill-card h3 {
   color: var(--accent-blue);
   margin-bottom: 10px;
   transition: color 0.5s;
@@ -561,7 +575,7 @@ hr {
   z-index: 1;
 }
 
-.service-card p {
+.skill-card p {
   color: var(--text-muted);
   font-size: 0.9rem;
   transition: color 0.5s;
@@ -569,7 +583,7 @@ hr {
   z-index: 1;
 }
 
-.service-card::before {
+.skill-card::before {
   content: "";
   position: absolute;
   top: 0;
@@ -581,12 +595,12 @@ hr {
   transition: 0.5s;
 }
 
-.service-card:hover::before {
+.skill-card:hover::before {
   left: 0;
 }
 
-.service-card:hover h3,
-.service-card:hover p {
+.skill-card:hover h3,
+.skill-card:hover p {
   color: #fff;
 }
 
@@ -905,7 +919,7 @@ body {
   .home,
   .about,
   .project,
-  .services,
+  .skills,
   .contact {
     margin: 120px 50px;
   }
@@ -938,7 +952,7 @@ body {
   .home,
   .about,
   .project,
-  .services,
+  .skills,
   .contact {
     margin: 100px 20px;
   }
@@ -951,7 +965,7 @@ body {
   }
 
   .projects-container,
-  .services-container {
+  .skills-container {
     grid-template-columns: 1fr;
     gap: 20px;
   }
@@ -991,7 +1005,7 @@ body {
   .home,
   .about,
   .project,
-  .services,
+  .skills,
   .contact {
     margin: 20px auto;
     padding: 0 15px;
@@ -1002,7 +1016,7 @@ body {
 
   .home-container,
   .about-container,
-  .services-container,
+  .skills-container,
   .projects-container,
   .contact-content,
   .card {
@@ -1030,7 +1044,7 @@ body {
 
   .home img,
   .project-card img,
-  .service-card img {
+  .skill-card img {
     width: 100%;
     max-width: 300px;
     height: auto;
@@ -1050,12 +1064,12 @@ body {
   .home-p,
   .about p,
   .project p,
-  .service-card p,
+  .skill-card p,
   .contact p {
     font-size: 14px;
   }
   .project-card h3,
-  .service-card h3 {
+  .skill-card h3 {
     font-size: 16px;
   }
 

@@ -2,7 +2,9 @@ const navLinks = document.querySelectorAll(".ul-list li a");
 const sections = document.querySelectorAll("section");
 
 function removeActive() {
-  document.querySelectorAll(".ul-list li:not(.theme-toggle-btn)").forEach((li) => li.classList.remove("active"));
+  document
+    .querySelectorAll(".ul-list li:not(.theme-toggle-btn)")
+    .forEach((li) => li.classList.remove("active"));
 }
 
 navLinks.forEach((link) => {
@@ -33,7 +35,10 @@ window.addEventListener("scroll", () => {
       const activeLink = document.querySelector(
         `.ul-list li a[href="#${section.id}"]`
       );
-      if (activeLink && !activeLink.parentElement.classList.contains('theme-toggle-btn')) {
+      if (
+        activeLink &&
+        !activeLink.parentElement.classList.contains("theme-toggle-btn")
+      ) {
         activeLink.parentElement.classList.add("active");
       }
     }
@@ -57,7 +62,7 @@ window.addEventListener("scroll", () => {
 });
 
 const revealElements = document.querySelectorAll(
-  ".about-container, .projects-container, .services-container, .contact-content"
+  ".about-container, .projects-container, .skills-container, .contact-content"
 );
 revealElements.forEach((el) => el.classList.add("reveal"));
 
@@ -96,7 +101,7 @@ backToTop.addEventListener(
   () => (backToTop.style.transform = "scale(1)")
 );
 
-const cards = document.querySelectorAll(".project-card, .c1, .service-card");
+const cards = document.querySelectorAll(".project-card, .c1, .skill-card");
 cards.forEach((card) => {
   card.addEventListener(
     "mouseenter",
@@ -156,7 +161,7 @@ if (currentTheme === "dark") {
 
 themeToggle.addEventListener("click", () => {
   body.classList.toggle("dark-mode");
-  
+
   // Update icon
   const icon = themeToggle.querySelector("i");
   if (body.classList.contains("dark-mode")) {
@@ -192,7 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setTimeout(() => {
     loadingScreen.style.opacity = "0";
-    setTimeout(() => (loadingScreen.style.display = "none"), 500);
-    mainPage.classList.add("visible");
+    setTimeout(() => {
+      loadingScreen.style.display = "none";
+      // Scroll to top after loading screen
+      window.scrollTo(0, 0);
+    }, 500);
+    if (mainPage) mainPage.classList.add("visible");
   }, 4000);
 });
