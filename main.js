@@ -153,8 +153,8 @@ const themeToggle = document.getElementById("theme-toggle");
 const body = document.body;
 const portfolioImg = document.getElementById("portfolio-img");
 
-// Check for saved theme preference or default to 'light' mode
-const currentTheme = localStorage.getItem("theme") || "light";
+// Check for saved theme preference or default to 'dark' mode
+const currentTheme = localStorage.getItem("theme") || "dark";
 if (currentTheme === "dark") {
   body.classList.add("dark-mode");
   themeToggle.querySelector("i").classList.replace("fa-moon", "fa-sun");
