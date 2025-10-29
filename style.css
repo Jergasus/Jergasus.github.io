@@ -1036,6 +1036,7 @@ body {
     max-width: 220px;
     height: auto;
     margin-bottom: 20px;
+    margin-top: 1px;
     position: relative;
     z-index: 1;
   }
