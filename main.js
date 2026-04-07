@@ -182,7 +182,7 @@ themeToggle.addEventListener("click", () => {
 // EmailJS Contact Form
 const EMAILJS_PUBLIC_KEY = "rofRf_S9R01myMs8_";
 const EMAILJS_SERVICE_ID = "service_14hxag7";
-const EMAILJS_TEMPLATE_ID = "template_5f5smoh";
+const EMAILJS_TEMPLATE_ID = "template_tutm7dg";
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
