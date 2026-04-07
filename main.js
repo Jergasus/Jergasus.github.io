@@ -182,7 +182,7 @@ themeToggle.addEventListener("click", () => {
 // EmailJS Contact Form
 const EMAILJS_PUBLIC_KEY = "rofRf_S9R01myMs8_";
 const EMAILJS_SERVICE_ID = "service_14hxag7";
-const EMAILJS_TEMPLATE_ID = "template_tutm7dg";
+const EMAILJS_TEMPLATE_ID = "template_y3ochrx";
 
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
@@ -196,7 +196,13 @@ contactForm.addEventListener("submit", (e) => {
   btnSend.textContent = "Sending...";
   btnSend.disabled = true;
 
-  emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, contactForm)
+  const templateParams = {
+    user_name: contactForm.user_name.value,
+    user_email: contactForm.user_email.value,
+    message: contactForm.message.value,
+  };
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
     .then(() => {
       btnSend.textContent = "Message Sent!";
       btnSend.style.background = "#22c55e";
