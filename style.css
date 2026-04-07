@@ -689,6 +689,11 @@ hr {
   color: var(--text-primary);
   font-size: 20px;
   transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.social-link i {
+  line-height: 1;
 }
 
 .social-link:hover {

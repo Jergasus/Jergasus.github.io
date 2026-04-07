@@ -177,7 +177,49 @@ themeToggle.addEventListener("click", () => {
     localStorage.setItem("theme", "light");
     if (portfolioImg) portfolioImg.src = "images/cp2.png";
   }
-});document.addEventListener("DOMContentLoaded", () => {
+});
+
+// EmailJS Contact Form
+const EMAILJS_PUBLIC_KEY = "rofRf_S9R01myMs8_";
+const EMAILJS_SERVICE_ID = "service_14hxag7";
+const EMAILJS_TEMPLATE_ID = "template_5f5smoh";
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
+const contactForm = document.getElementById("contact-form");
+const btnSend = contactForm.querySelector(".btn-send");
+
+contactForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  
+  const originalText = btnSend.textContent;
+  btnSend.textContent = "Sending...";
+  btnSend.disabled = true;
+
+  emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, contactForm)
+    .then(() => {
+      btnSend.textContent = "Message Sent!";
+      btnSend.style.background = "#22c55e";
+      contactForm.reset();
+      setTimeout(() => {
+        btnSend.textContent = originalText;
+        btnSend.style.background = "";
+        btnSend.disabled = false;
+      }, 3000);
+    })
+    .catch((error) => {
+      console.error("EmailJS error:", error);
+      btnSend.textContent = "Failed to send";
+      btnSend.style.background = "#ef4444";
+      setTimeout(() => {
+        btnSend.textContent = originalText;
+        btnSend.style.background = "";
+        btnSend.disabled = false;
+      }, 3000);
+    });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
   const loadingText = document.getElementById("loading-text");
   const mainIcon = document.querySelector(".main-icon");
   const subIcons = document.querySelectorAll(".sub-icons i");
