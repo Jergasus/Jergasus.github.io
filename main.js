@@ -165,6 +165,7 @@ document.addEventListener("DOMContentLoaded", type);
 const themeToggle = document.getElementById("theme-toggle");
 const body = document.body;
 const portfolioImg = document.getElementById("portfolio-img");
+const sakuraiImg = document.getElementById("sakurai-img");
 
 // Check for saved theme preference or default to 'dark' mode
 const currentTheme = localStorage.getItem("theme") || "dark";
@@ -172,8 +173,10 @@ if (currentTheme === "dark") {
   body.classList.add("dark-mode");
   themeToggle.querySelector("i").classList.replace("fa-moon", "fa-sun");
   if (portfolioImg) portfolioImg.src = "images/cp.png";
+  if (sakuraiImg) sakuraiImg.src = "images/sakurai.png";
 } else {
   if (portfolioImg) portfolioImg.src = "images/cp2.png";
+  if (sakuraiImg) sakuraiImg.src = "images/sakurai_dark.png";
 }
 
 themeToggle.addEventListener("click", () => {
@@ -185,10 +188,12 @@ themeToggle.addEventListener("click", () => {
     icon.classList.replace("fa-moon", "fa-sun");
     localStorage.setItem("theme", "dark");
     if (portfolioImg) portfolioImg.src = "images/cp.png";
+    if (sakuraiImg) sakuraiImg.src = "images/sakurai.png";
   } else {
     icon.classList.replace("fa-sun", "fa-moon");
     localStorage.setItem("theme", "light");
     if (portfolioImg) portfolioImg.src = "images/cp2.png";
+    if (sakuraiImg) sakuraiImg.src = "images/sakurai_dark.png";
   }
 });
 
