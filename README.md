@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Live-jergasus.github.io-474af0?style=for-the-badge&logo=github-pages&logoColor=white" alt="Live Site" />
+  <a href="https://jergasus.github.io">
+    <img src="https://img.shields.io/badge/Live-jergasus.github.io-474af0?style=for-the-badge&logo=github-pages&logoColor=white" alt="Live Site" />
+  </a>
   <img src="https://img.shields.io/badge/Responsive-All%20Devices-22c55e?style=for-the-badge" alt="Responsive" />
   <img src="https://img.shields.io/badge/Theme-Light%20%2F%20Dark-8b949e?style=for-the-badge" alt="Light / Dark Theme" />
 </p>

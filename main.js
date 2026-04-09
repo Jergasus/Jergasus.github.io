@@ -23,6 +23,19 @@ navLinks.forEach((link) => {
   });
 });
 
+document.querySelectorAll("a.smooth-scroll").forEach((link) => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetId = link.getAttribute("href").substring(1);
+    const targetSection = document.getElementById(targetId);
+
+    window.scrollTo({
+      top: targetSection.offsetTop - 80,
+      behavior: "smooth",
+    });
+  });
+});
+
 window.addEventListener("scroll", () => {
   let scrollPos = window.scrollY + 200;
 
@@ -115,9 +128,9 @@ cards.forEach((card) => {
 
 const typingElement = document.querySelector(".info-home h3");
 const words = [
-  "Frontend Developer",
-  "UI/UX Designer",
-  "Web Enthusiast",
+  "Full-Stack Developer",
+  "Mobile App Developer",
+  "AI Builder",
   "React Developer",
 ];
 let wordIndex = 0;
