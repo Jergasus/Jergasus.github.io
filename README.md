@@ -1,70 +1,47 @@
-<p align="center">
-  <a href="https://jergasus.github.io">
-    <img src="https://img.shields.io/badge/Live-jergasus.github.io-474af0?style=for-the-badge&logo=github-pages&logoColor=white" alt="Live Site" />
-  </a>
-  <img src="https://img.shields.io/badge/Responsive-All%20Devices-22c55e?style=for-the-badge" alt="Responsive" />
-  <img src="https://img.shields.io/badge/Theme-Light%20%2F%20Dark-8b949e?style=for-the-badge" alt="Light / Dark Theme" />
-</p>
+# Jesús García — Portfolio
 
-<h1 align="center">Jesús García — Portfolio</h1>
+Personal portfolio site for Jesús García ([@Jergasus](https://github.com/Jergasus)), built with Next.js 16 static export, Tailwind CSS v4, and next-intl. Spanish at `/`, Catalan at `/ca/`, English at `/en/`.
 
-<p align="center">
-  A modern, responsive personal portfolio built from scratch with vanilla HTML, CSS, and JavaScript.<br/>
-  Showcasing my projects, skills, and experience as a web &amp; mobile app developer.
-</p>
+## Commands
 
-<p align="center">
-  <a href="#features">Features</a> &bull;
-  <a href="#tech-stack">Tech Stack</a> &bull;
-  <a href="#structure">Structure</a> &bull;
-  <a href="#support">Support</a>
-</p>
+```bash
+npm run dev        # development server
+npm run build      # static export → out/
+npm run test       # unit tests (vitest)
+npm run test:e2e   # end-to-end tests (playwright, on a production build)
+npm run activity   # refresh data/activity.json (needs ACTIVITY_TOKEN)
+```
 
----
+## Maintaining the site
 
-## Features
+### Where things live
 
-- **Loading Animation** — Cinematic intro with cascading icons and text before revealing the main content
-- **Typing Effect** — Rotating titles (Frontend Developer, UI/UX Designer, React Developer…) with a typewriter animation
-- **Light / Dark Theme** — Toggle between themes with preference saved to localStorage
-- **Smooth Navigation** — Fixed pill-shaped navbar with scroll-spy that highlights the active section
-- **Scroll Reveal** — Sections fade in as you scroll down the page
-- **Contact Form** — Functional email form powered by EmailJS — no backend needed
-- **Project Showcase** — Cards with tech tags, descriptions, and GitHub links
-- **Skills Section** — Animated cards with a sliding color fill on hover
-- **Back to Top** — Floating button that appears after scrolling down
-- **Fully Responsive** — Adapts from desktop to tablet to mobile
-
-## Tech Stack
-
-| Layer | Technology |
+| To change | Edit |
 |---|---|
-| Markup | HTML5 |
-| Styling | CSS3 (Custom Properties, Grid, Flexbox) |
-| Logic | Vanilla JavaScript (ES6+) |
-| Icons | Font Awesome 6.5.1 |
-| Fonts | Google Fonts (Montserrat, Open Sans, Playfair Display, Unbounded) |
-| Contact Form | EmailJS |
-| Hosting | GitHub Pages |
+| Availability and "currently building" | `content/status.json`: `available` (true/false) picks the hero's default wording; the optional `availabilityLabel` (es, ca, en) replaces it and must change whenever `available` does; `currentlyBuilding` is one line per language (empty: the most recently committed project) |
+| Any copy | `messages/es.json`, `messages/ca.json`, `messages/en.json`; the three keep the same keys (a unit test checks) |
+| Projects (order, status, links, stack) | `src/content/projects.ts` |
+| Email, WhatsApp, LinkedIn, GitHub | `src/content/contact.ts` |
+| Which repo and branch each project's activity comes from | `src/lib/activity-sources.ts` (build-only; never imported by pages or components) |
+| Colours, type scale, spacing | `src/design/tokens.css`, the only place visual values live |
+| Animation timing | `src/design/motion.ts`, the only place motion timing lives |
 
-## Structure
+Pushing to `main` deploys the change.
 
-```
-├── index.html          # Single-page markup (home, about, projects, skills, contact)
-├── style.css           # All styles — theming, layout, animations, responsive breakpoints
-├── main.js             # Navigation, typing effect, theme toggle, scroll reveal, EmailJS
-└── images/             # Project screenshots, skill icons, profile photo
-```
+### Deploy and daily refresh
 
-## Support
+`.github/workflows/deploy.yml` runs on every push to `main`, every day at 05:17 UTC, and on demand from the Actions tab. It refreshes the activity numbers from the GitHub API, runs the unit tests, builds, and deploys to GitHub Pages. If the activity fetch fails, the site still deploys with the last known numbers and the run is marked failed, so GitHub emails about it. GitHub pauses the daily run after 60 days without commits. [docs/activity-token.md](docs/activity-token.md) covers both, and how to create and rotate the `ACTIVITY_TOKEN` secret.
 
-If you like my work, you can support me:
+### Custom domain
 
-<p align="center">
-  <a href="https://buymeacoffee.com/jergasus">
-    <img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-Support-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" />
-  </a>
-</p>
+1. Add `public/CNAME` with the bare hostname (for example `jesusgarcia.dev`). Every absolute URL (canonical, hreflang, Open Graph, sitemap, robots) follows it.
+2. Set the same domain in the repository's **Settings → Pages** and point its DNS at GitHub Pages.
+3. Re-run `npx tsx scripts/generate-og.ts` so the share images show the new host, and commit them.
+
+### Images
+
+- `npm run images` optimises the project previews in `assets/raw-previews/` (capture them with `npx tsx scripts/capture-previews.ts`).
+- `npm run images -- /path/to/portrait.jpg` (or `ABOUT_SRC=/path/to/portrait.jpg`) also rebuilds the about photo.
 
 ## License
 

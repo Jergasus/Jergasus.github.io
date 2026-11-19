@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "title": "Jesús García · Desarrollador web full-stack",
+    "description": "Desarrollador web full-stack en Barcelona. Construyo webs, apps y productos digitales."
+  },
+  "nav": {
+    "siteLabel": "Navegación principal",
+    "work": "Trabajo",
+    "now": "Ahora",
+    "business": "Para negocios",
+    "about": "Sobre mí",
+    "contact": "Contacto",
+    "language": "Idioma"
+  },
+  "switcher": {
+    "label": "Cambiar idioma"
+  },
+  "hero": {
+    "heading": "Jesús\nGarcía",
+    "lede": "Desarrollador full-stack en Barcelona. Construyo webs, apps y herramientas digitales de la interfaz al servidor.",
+    "availability": {
+      "available": "Aceptando nuevos proyectos",
+      "unavailable": "Ahora mismo no acepto proyectos"
+    },
+    "lastCommit": "Último commit",
+    "totalCommits": "<value>{total, number}</value> commits en {projects, plural, one {# proyecto} other {# proyectos}}"
+  },
+  "work": {
+    "heading": "Trabajo",
+    "status": {
+      "live": "Publicado",
+      "building": "En desarrollo",
+      "wip": "En diseño"
+    }
+  },
+  "now": {
+    "heading": "Ahora",
+    "buildingLabel": "Construyendo",
+    "gridLabel": "{count, number} commits en las {weeks, number} semanas hasta el {date}"
+  },
+  "business": {
+    "heading": "Una web como esta",
+    "intro": "Si tu bar, salón o tienda necesita una web que realmente funcione, cuéntamelo.",
+    "step1Label": "Hablamos",
+    "step1Desc": "Me cuentas qué es tu negocio, qué necesitas y qué quieres transmitir.",
+    "step2Label": "Diseño y desarrollo",
+    "step2Desc": "Creo una web a medida: diseño propio, código limpio y optimizada para móvil.",
+    "step3Label": "Publicamos",
+    "step3Desc": "Tu web online, lista para recibir clientes desde el primer día.",
+    "ctaLabel": "Escríbeme"
+  },
+  "about": {
+    "heading": "Sobre mí",
+    "photoAlt": "Retrato de Jesús García",
+    "bio": "Soy desarrollador full-stack en Barcelona. En enero de 2027 acabo Ingeniería Informática en la FIB-UPC. Construyo webs y productos digitales de principio a fin, y estoy montando un pequeño estudio web para negocios locales.",
+    "stackLabel": "Tecnologías"
+  },
+  "contact": {
+    "heading": "Hablemos",
+    "whatsappMessage": "Hola Jesús, he visto tu portfolio y me gustaría hablar de una web.",
+    "whatsappAriaLabel": "WhatsApp: {number}"
+  },
+  "footer": {
+    "copy": "Jesús García",
+    "githubAriaLabel": "GitHub de Jesús García",
+    "linkedinAriaLabel": "LinkedIn de Jesús García"
+  },
+  "projects": {
+    "questday": {
+      "oneLiner": "Plataforma de puzles diarios que funciona dentro de Discord"
+    },
+    "sakurai": {
+      "oneLiner": "Chat con IA que responde con el contenido de cada cliente, integrado en su web"
+    },
+    "rallyVoley": {
+      "oneLiner": "Gestor de equipos de voleibol: partidos, alineaciones y estadísticas"
+    },
+    "yokaido": {
+      "oneLiner": "Un videojuego indie en desarrollo temprano"
+    }
+  },
+  "casePage": {
+    "metaTitle": "{title} · Jesús García",
+    "problem": "El problema",
+    "built": "Qué construí",
+    "decisions": "Decisiones técnicas",
+    "stack": "Tecnologías",
+    "visit": "Visitar {site}",
+    "newTab": "se abre en otra pestaña",
+    "imageAlt": "Captura de pantalla de {project}",
+    "moreWork": "Más proyectos",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "allWork": "Todos los proyectos"
+  },
+  "caseStudies": {
+    "questday": {
+      "title": "QuestDay: puzles diarios de videojuegos",
+      "summary": "Tres minijuegos diarios para fans de los videojuegos, iguales para todo el mundo, que se juegan en la web y dentro de Discord.",
+      "problem": "La idea es la de Wordle: un reto pequeño al día, el mismo para todo el mundo, que puedes perder y compartir sin destripar la respuesta. Lo quería para fans de los videojuegos, con misiones cortas y un motivo para volver al día siguiente.",
+      "built": "Una web en español e inglés con tres misiones diarias: Revela, donde adivinas el juego con seis pistas; Adivina el %, donde estimas qué porcentaje de jugadores consiguió un logro de Steam; y Emoji, el juego contado en seis emojis. Las mismas misiones funcionan como actividad de Discord: un canal juega en grupo y recibe cada día un resumen con su ranking. Además hay un archivo para repetir días anteriores y un comando que genera el vídeo vertical diario con el Emoji del día anterior.",
+      "decisions": [
+        {
+          "title": "Cloudflare Workers y D1 desde el principio",
+          "body": "La web corre en Workers con OpenNext y guarda los contadores de cada día en D1. La imagen del resumen diario de Discord necesita más CPU de la que permite el plan gratuito, así que la cuenta usa un plan de pago que cubre tanto la web como la actividad de Discord. Los datos son relacionales: SQL encaja."
+        },
+        {
+          "title": "La respuesta no llega antes de tiempo",
+          "body": "Los puzles solo se empaquetan en el servidor y la API devuelve la solución cuando acabas la partida. Un test falla si algún código de cliente importa ese contenido."
+        },
+        {
+          "title": "Porcentajes de Steam congelados",
+          "body": "Un script descarga los porcentajes globales de logros de Steam y el valor se fija al escribir el puzle, así que todo el mundo juega con el mismo número."
+        },
+        {
+          "title": "Discord, con su propio Worker",
+          "body": "Un Worker aparte, hecho con Hono, atiende a Discord: verifica la firma de cada interacción, guarda cada intento en el servidor para que nadie pueda falsear su resultado y dibuja la imagen del resumen diario. Comparte la base de datos D1 con la web."
+        }
+      ],
+      "stackNote": "Next.js 16 y React 19 sobre Cloudflare Workers, con D1 como base de datos. GSAP para la animación, next-intl para los dos idiomas, el SDK de Embedded Apps de Discord para la actividad, y Vitest y Playwright para las pruebas."
+    },
+    "sakurai": {
+      "title": "SakurAI: un chat con IA que responde con el contenido de cada web",
+      "summary": "Un agente de chat con IA que se instala en cualquier web con una sola línea de código y responde a partir del contenido de cada negocio.",
+      "problem": "Muchas de las preguntas de quien visita una web ya tienen respuesta en sus páginas o en sus documentos, pero un chat genérico no conoce ese contenido. Hacía falta uno que contestara a partir de él y que cualquier negocio pudiera poner en marcha sin instalar ni mantener nada.",
+      "built": "Un servicio alojado en tres piezas. Un panel en Angular donde cada cliente crea su agente, le da personalidad y aspecto, y le pasa la dirección de su web o sus documentos: PDF, Word, texto, CSV, JSON o Markdown. Una API en NestJS que busca los fragmentos relevantes y se los pasa a Google Gemini junto a la pregunta. Y un widget que habla español, catalán e inglés y, por defecto, responde en el idioma en que le escriben. Cada cuenta puede llevar varios agentes, las suscripciones van con Stripe y la landing, getsakurai.com, está en inglés y en español.",
+      "decisions": [
+        {
+          "title": "Un widget aislado en Shadow DOM",
+          "body": "El widget es un Web Component hecho con Angular Elements. Vive en su propio Shadow DOM, así que los estilos de la web que lo aloja no lo descolocan, y se instala con una etiqueta script en WordPress, Shopify o HTML plano."
+        },
+        {
+          "title": "La búsqueda vectorial, junto a los datos",
+          "body": "En producción, la búsqueda semántica corre dentro de MongoDB Atlas con $vectorSearch y solo devuelve los mejores fragmentos. El modo en memoria queda para desarrollo, y la API se niega a arrancar con él en producción."
+        },
+        {
+          "title": "Leer webs ajenas sin abrir la puerta",
+          "body": "Leer la URL que escribe un cliente es una petición que mi servidor hace en su nombre. Por eso cada salto se resuelve a sus IP y se comprueba, también después de cada redirección, para no llegar nunca a la red interna. Y se respeta el robots.txt."
+        },
+        {
+          "title": "Contenido al día sin vigilarlo",
+          "body": "El agente puede volver a leer la web cada semana o cada mes. Un único reloj por hora pregunta qué agentes tocan, en vez de una tarea programada por agente; al tercer fallo seguido avisa al dueño por correo y al quinto deja de intentarlo."
+        }
+      ],
+      "stackNote": "NestJS con MongoDB (Mongoose) y Google Gemini para el chat, los embeddings y las herramientas. El panel y el widget son Angular. La API corre en Railway, el panel y la landing en Vercel, y GitHub Actions compila y prueba las dos partes en cada cambio que llega a main."
+    },
+    "rallyVoley": {
+      "title": "Rally Voley: estadísticas de vóley en directo",
+      "summary": "Una app para anotar partidos de vóley en directo desde la grada, con el móvil en una mano, y saber al acabar qué decidió el partido.",
+      "problem": "Anotar un partido punto a punto obliga a seguir el ritmo de cada jugada sin apartar la vista de la pista, a menudo sin cobertura en el pabellón. Después, el entrenador necesita ver en pocos segundos qué decidió el partido y qué entrenar, no un muro de tablas.",
+      "built": "Una app web en español, pensada para el móvil. La pista es la interfaz: cada posición de tu equipo es un botón grande; tocas quién y qué hizo, y la app deduce quién se lleva el punto. El informe va de la respuesta al detalle en pestañas (resumen, rotaciones, jugadores y puntos), y el modo pro añade un análisis por zonas y una vista 3D de los saques dibujada en SVG. La app sincroniza el partido para que otros móviles puedan seguirlo casi en directo.",
+      "decisions": [
+        {
+          "title": "El partido es una lista de eventos",
+          "body": "Cada punto, cambio o tiempo muerto se añade al final de una lista de eventos. El marcador, las rotaciones y todas las estadísticas se calculan a partir de ella con funciones puras, y deshacer es quitar el último evento."
+        },
+        {
+          "title": "Primero el móvil, después la nube",
+          "body": "Cada evento se guarda al instante en IndexedDB con Dexie, y una cola lo sube cuando hay conexión. Quien anota nunca espera a la red: ningún punto depende de la cobertura."
+        },
+        {
+          "title": "Un solo anotador, nunca una mezcla",
+          "body": "Cada partido lo anota un único móvil. Si dos lo han anotado sin conexión, sus registros no se fusionan, porque contarían puntos dos veces: el segundo pasa a una copia en ese móvil y no se pierde nada."
+        },
+        {
+          "title": "Códigos de club en lugar de cuentas",
+          "body": "Para entrar no hace falta correo ni contraseña: hay un código para ver y otro para anotar, guardados solo como hash con clave (HMAC). Las plantillas guardan el dorsal, el nombre de pila y la posición, nada más."
+        }
+      ],
+      "stackNote": "Next.js 16 en exportación estática, Dexie sobre IndexedDB en el móvil y un Worker de Cloudflare con D1 para sincronizar. GSAP para el movimiento, que respeta la preferencia de movimiento reducido, y Vitest y Playwright para las pruebas."
+    }
+  }
+}

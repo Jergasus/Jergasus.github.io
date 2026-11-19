@@ -1,0 +1,173 @@
+{
+  "meta": {
+    "title": "Jesús García · Full-stack web developer",
+    "description": "Full-stack web developer in Barcelona. I build websites, apps and digital products."
+  },
+  "nav": {
+    "siteLabel": "Main navigation",
+    "work": "Work",
+    "now": "Now",
+    "business": "For businesses",
+    "about": "About",
+    "contact": "Contact",
+    "language": "Language"
+  },
+  "switcher": {
+    "label": "Switch language"
+  },
+  "hero": {
+    "heading": "Jesús\nGarcía",
+    "lede": "Full-stack developer in Barcelona. I build websites, apps and digital tools from front end to server.",
+    "availability": {
+      "available": "Taking new projects",
+      "unavailable": "Not taking projects right now"
+    },
+    "lastCommit": "Last commit",
+    "totalCommits": "<value>{total, number}</value> commits across {projects, plural, one {# project} other {# projects}}"
+  },
+  "work": {
+    "heading": "Work",
+    "status": {
+      "live": "Live",
+      "building": "Building",
+      "wip": "In design"
+    }
+  },
+  "now": {
+    "heading": "Now",
+    "buildingLabel": "Currently building",
+    "gridLabel": "{count, number} commits in the {weeks, number} weeks up to {date}"
+  },
+  "business": {
+    "heading": "A website that looks like this one",
+    "intro": "If your bar, salon or shop needs a website that actually works, tell me about it.",
+    "step1Label": "Talk",
+    "step1Desc": "Tell me about your business, what you need and what you want to say.",
+    "step2Label": "Design & build",
+    "step2Desc": "I create a custom site: original design, clean code and optimised for mobile.",
+    "step3Label": "Launch",
+    "step3Desc": "Your website live, ready to bring in customers from day one.",
+    "ctaLabel": "Get in touch"
+  },
+  "about": {
+    "heading": "About",
+    "photoAlt": "Portrait of Jesús García",
+    "bio": "I’m a full-stack developer based in Barcelona. I finish my Computer Engineering degree at FIB-UPC in January 2027. I build websites and digital products from start to finish, and I’m setting up a small web studio for local businesses.",
+    "stackLabel": "Stack"
+  },
+  "contact": {
+    "heading": "Let’s talk",
+    "whatsappMessage": "Hi Jesús, I've seen your portfolio and I'd like to talk about a website.",
+    "whatsappAriaLabel": "WhatsApp: {number}"
+  },
+  "footer": {
+    "copy": "Jesús García",
+    "githubAriaLabel": "Jesús García on GitHub",
+    "linkedinAriaLabel": "Jesús García on LinkedIn"
+  },
+  "projects": {
+    "questday": {
+      "oneLiner": "Daily puzzle platform that runs inside Discord"
+    },
+    "sakurai": {
+      "oneLiner": "AI chat that answers from each customer’s own content, right on their site"
+    },
+    "rallyVoley": {
+      "oneLiner": "Volleyball team manager: matches, lineups and stats"
+    },
+    "yokaido": {
+      "oneLiner": "An indie game in early development"
+    }
+  },
+  "casePage": {
+    "metaTitle": "{title} · Jesús García",
+    "problem": "The problem",
+    "built": "What I built",
+    "decisions": "Technical decisions",
+    "stack": "Stack",
+    "visit": "Visit {site}",
+    "newTab": "opens in a new tab",
+    "imageAlt": "Screenshot of {project}",
+    "moreWork": "More work",
+    "previous": "Previous",
+    "next": "Next",
+    "allWork": "All projects"
+  },
+  "caseStudies": {
+    "questday": {
+      "title": "QuestDay: daily video game puzzles",
+      "summary": "Three daily mini-games for video game fans, the same for everyone, played on the web and inside Discord.",
+      "problem": "The idea is Wordle’s: one small challenge a day, the same for everyone, that you can lose and share without spoiling the answer. I wanted that for video game fans, with short missions and a reason to come back the next day.",
+      "built": "A Spanish and English site with three daily missions: Reveal, where you guess the game from six clues; Guess the %, where you estimate what share of players unlocked a Steam achievement; and Emoji, the game told in six emojis. The same missions run as a Discord Activity: a channel plays as a group and gets a daily summary with its ranking. There is also an archive to replay past days, and one command renders the daily vertical video from the previous day’s Emoji.",
+      "decisions": [
+        {
+          "title": "Cloudflare Workers and D1 from day one",
+          "body": "The site runs on Workers through OpenNext and keeps each day’s counters in D1. The Discord daily summary image needs more CPU than the free plan allows, so the account runs on a paid plan that covers both the site and the Discord Activity. The data is relational, so SQL fits."
+        },
+        {
+          "title": "The answer never arrives early",
+          "body": "Puzzles are bundled on the server only, and the API returns the solution once you finish the game. A test fails if any client code imports that content."
+        },
+        {
+          "title": "Frozen Steam percentages",
+          "body": "A script downloads Steam’s global achievement percentages, and the value is fixed when the puzzle is written, so everyone plays against the same number."
+        },
+        {
+          "title": "Discord gets its own Worker",
+          "body": "A separate Worker built with Hono handles Discord: it verifies every interaction’s signature, stores every attempt on the server so nobody can fake a result, and draws the daily summary image. It shares the D1 database with the site."
+        }
+      ],
+      "stackNote": "Next.js 16 and React 19 on Cloudflare Workers, with D1 as the database. GSAP for animation, next-intl for both languages, Discord’s Embedded App SDK for the Activity, and Vitest and Playwright for testing."
+    },
+    "sakurai": {
+      "title": "SakurAI: an AI chat that answers from each site’s own content",
+      "summary": "An AI chat agent that installs on any website with a single line of code and answers from that business’s own content.",
+      "problem": "Many of a visitor’s questions are already answered somewhere in a site’s pages or documents, but a generic chatbot doesn’t know that content. What was missing was one that answers from it, and that any business could switch on without installing or maintaining anything.",
+      "built": "A hosted service in three parts. An Angular dashboard where each customer creates their agent, sets its personality and look, and gives it their website address or their documents: PDF, Word, text, CSV, JSON or Markdown. A NestJS API that finds the relevant passages and sends them to Google Gemini with the question. And a widget that speaks Spanish, Catalan and English and, by default, replies in whatever language the visitor writes in. One account can run several agents, subscriptions go through Stripe, and the landing page, getsakurai.com, is in English and Spanish.",
+      "decisions": [
+        {
+          "title": "A widget sealed in Shadow DOM",
+          "body": "The widget is a Web Component built with Angular Elements. It lives in its own Shadow DOM, so the host site’s styles can’t knock it out of shape, and it installs with one script tag on WordPress, Shopify or plain HTML."
+        },
+        {
+          "title": "Vector search next to the data",
+          "body": "In production, semantic search runs inside MongoDB Atlas with $vectorSearch and returns only the best matches. The in-memory mode is for development, and the API refuses to start with it in production."
+        },
+        {
+          "title": "Reading other people’s sites safely",
+          "body": "Fetching a URL a customer types means my server makes a request on their behalf. So every hop is resolved to its IP addresses and checked, after every redirect too, so it can never reach the internal network. And robots.txt is respected."
+        },
+        {
+          "title": "Fresh content without babysitting",
+          "body": "An agent can re-read its site every week or every month. One hourly tick asks which agents are due, instead of one scheduled job per agent; after three failures in a row it emails the owner, and after five it stops trying."
+        }
+      ],
+      "stackNote": "NestJS with MongoDB (Mongoose), and Google Gemini for chat, embeddings and tool calling. The dashboard and the widget are Angular. The API runs on Railway, the dashboard and the landing page on Vercel, and GitHub Actions builds and tests both parts on every change to main."
+    },
+    "rallyVoley": {
+      "title": "Rally Voley: live volleyball stats",
+      "summary": "An app for scoring volleyball matches live from the stands, phone in one hand, and knowing at the end what decided the match.",
+      "problem": "Scoring a match point by point means keeping up with every rally without looking away from the court, often with no signal in the sports hall. Afterwards, the coach needs to see in a few seconds what decided the match and what to train, not a wall of tables.",
+      "built": "A Spanish-language web app built for the phone. The court is the interface: each position on your team is a big button; you tap who and what they did, and the app works out who won the point. The report goes from answer to detail across tabs (summary, rotations, players and points), and pro mode adds a zone-by-zone analysis and a 3D view of the serves, drawn in SVG. The app syncs the match so other phones can follow it almost live.",
+      "decisions": [
+        {
+          "title": "A match is a list of events",
+          "body": "Every point, substitution or timeout is added to the end of a list of events. The score, the rotations and every statistic are computed from it with pure functions, and undo means removing the last event."
+        },
+        {
+          "title": "Phone first, cloud second",
+          "body": "Every event is saved at once to IndexedDB with Dexie, and a queue uploads it when there is a connection. The scorer never waits on the network: no point depends on signal."
+        },
+        {
+          "title": "One scorer, never a merge",
+          "body": "Each match is scored by a single phone. If two phones scored the same match offline, their logs are not merged, because points would count twice: the second becomes a copy on that phone and nothing is lost."
+        },
+        {
+          "title": "Club codes instead of accounts",
+          "body": "Getting in needs no email and no password: one code to view and another to score, stored only as keyed hashes (HMAC). Rosters keep the shirt number, first name and position, nothing else."
+        }
+      ],
+      "stackNote": "Next.js 16 as a static export, Dexie over IndexedDB on the phone, and a Cloudflare Worker with D1 for sync. GSAP for motion that respects the reduced-motion preference, and Vitest and Playwright for testing."
+    }
+  }
+}

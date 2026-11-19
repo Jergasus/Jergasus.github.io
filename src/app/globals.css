@@ -1,0 +1,259 @@
+@import "tailwindcss";
+@import "../design/tokens.css";
+
+/* Only design tokens become utilities: Tailwind's default palette, families,
+   sizes, leading, radii and easings are removed, so a component cannot reach
+   past tokens.css (bg-red-500 or text-xl generate nothing). */
+@theme {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --leading-*: initial;
+  --radius-*: initial;
+  --ease-*: initial;
+}
+
+/* Hover styles only for a mouse or trackpad (spec §5). Tailwind's default
+   `hover:` checks (hover: hover) alone; this adds (pointer: fine) and applies
+   to every hover-based variant (group-hover:, peer-hover: ...). Touch gets
+   `active:` feedback instead. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* 1:1 map from tokens.css to utilities. `inline reference` makes utilities read
+   the token directly (bg-paper -> var(--color-paper)) without re-declaring the
+   variable, which would be a self-reference. */
+@theme inline reference {
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-rule: var(--color-rule);
+  --color-accent: var(--color-accent);
+  --color-accent-ink: var(--color-accent-ink);
+
+  --color-activity-0: var(--color-activity-0);
+  --color-activity-1: var(--color-activity-1);
+  --color-activity-2: var(--color-activity-2);
+  --color-activity-3: var(--color-activity-3);
+  --color-activity-4: var(--color-activity-4);
+
+  --font-display: var(--font-display);
+  --font-text: var(--font-text);
+  --font-mono: var(--font-mono);
+  --font-weight-strong: var(--weight-strong);
+
+  --text-step--1: var(--step--1);
+  --text-step--1--line-height: var(--leading-text);
+  --text-step-0: var(--step-0);
+  --text-step-0--line-height: var(--leading-text);
+  --text-step-1: var(--step-1);
+  --text-step-1--line-height: var(--leading-snug);
+  --text-step-2: var(--step-2);
+  --text-step-2--line-height: var(--leading-snug);
+  --text-step-3: var(--step-3);
+  --text-step-3--line-height: var(--leading-display);
+  --text-step-4: var(--step-4);
+  --text-step-4--line-height: var(--leading-display);
+  --text-step-5: var(--step-5);
+  --text-step-5--line-height: var(--leading-display);
+  --text-step-6: var(--step-6);
+  --text-step-6--line-height: var(--leading-display);
+  --text-step-poster: var(--step-poster);
+  --text-step-poster--line-height: var(--leading-display);
+
+  --leading-display: var(--leading-display);
+  --leading-snug: var(--leading-snug);
+  --leading-text: var(--leading-text);
+
+  --spacing-3xs: var(--space-3xs);
+  --spacing-2xs: var(--space-2xs);
+  --spacing-xs: var(--space-xs);
+  --spacing-s: var(--space-s);
+  --spacing-m: var(--space-m);
+  --spacing-l: var(--space-l);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --spacing-3xl: var(--space-3xl);
+  --spacing-gutter: var(--gutter);
+
+  --container-page: var(--container);
+  --container-preview: var(--preview-width);
+  /* Named sizes need their own utility names: max-w-xs, w-s ... resolve to
+     the --spacing-* tokens above, not Tailwind's container scale. */
+  --container-photo: var(--photo-max);
+  --default-border-width: var(--rule-width);
+  --border-width-hair: var(--rule-width-hair);
+  --radius-base: var(--radius);
+
+  --ease-out: var(--ease-out);
+  --ease-in-out: var(--ease-in-out);
+  --default-transition-duration: var(--duration-ui);
+  --default-transition-timing-function: var(--ease-out);
+}
+
+/* Custom utilities that consume tokens but don't map to Tailwind's default
+   property model. Each one reads exactly one CSS variable so the visual mode
+   can be swapped by editing tokens.css alone (spec §5.1). */
+@utility photo-treatment {
+  filter: var(--photo-filter);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-text, sans-serif);
+    line-height: var(--leading-text);
+    /* Touch (mobile-native): no grey flash over a tapped link; every link
+       has its own `active:` cue instead. iOS Safari applies :active only
+       when the page has a touch listener: React registers passive ones on
+       the document when it hydrates (pinned by e2e/layout.spec.ts). */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* A tap is a click at once: links and buttons never wait to see whether
+     a double-tap zoom is coming. Pinch zoom stays. */
+  a,
+  button {
+    touch-action: manipulation;
+  }
+
+  body {
+    font-size: var(--step-0);
+  }
+
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-mono, monospace);
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-accent-ink);
+  }
+
+  :focus-visible {
+    outline: var(--rule-width) solid var(--color-accent);
+    outline-offset: var(--rule-width);
+  }
+}
+
+/*
+ * Masked line reveals (src/components/motion): a line rises into place
+ * through a mask that clips it. Server-rendered masks (the hero name, a case
+ * title) use both classes; SplitText names its masks after the line class.
+ * Display capitals carry accents above the line box (Ú, Í in JESÚS GARCÍA,
+ * --leading-display 1.05), so the line gains 0.15em on top and the mask gives
+ * it back: nothing moves, and a hidden line (moved down by its own height)
+ * takes its accents out of view too. 0.15em is a structural ratio for accent
+ * clearance, not a design token. Masks never hide anything by themselves:
+ * only GSAP's hidden states, set after hydration, move a line out.
+ */
+@layer components {
+  .reveal-line-mask {
+    overflow: clip;
+    margin-top: -0.15em;
+  }
+
+  .reveal-line {
+    display: block;
+    padding-top: 0.15em;
+  }
+
+  /* A heading SplitText splits for its scroll reveal keeps its box: as its
+     own formatting context, the first mask's negative margin stays inside
+     instead of collapsing out and stretching the heading upward. Otherwise
+     restoring the heading's markup when it lands would shift the page (and
+     scroll anchoring with it). No effect on an unsplit heading. */
+  [data-reveal-heading] {
+    display: flow-root;
+  }
+}
+
+/*
+ * Page transition into a case page (spec §3.3: a row click opens its case
+ * page). React's <ViewTransition> (src/components/motion/PageTransition.tsx)
+ * tags the page content with the `case-open` class, only on navigations the
+ * link marked with that type (CASE_OPEN in motion.ts). The old page steps
+ * back fast; the case page rises into place on the expo.out curve. The
+ * header is captured on its own and held still, so it reads as the fixed
+ * frame the content moves under. Transform and opacity only. Browsers
+ * without the View Transitions API simply navigate.
+ */
+
+/* The overlay must not swallow clicks while a transition settles. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* What stays put swaps at once: the root (paper and footer) and the header.
+   Only the page content, tagged case-open, moves. */
+::view-transition-group(root),
+::view-transition-new(root),
+::view-transition-group(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-old(site-header) {
+  display: none;
+}
+
+::view-transition-old(.case-open) {
+  animation: var(--duration-ui) var(--ease-out) both case-out;
+}
+
+/* Held back by half the fade-out: on expo.out the old page is ~97% gone by
+   then, so the two never show as a double exposure. */
+::view-transition-new(.case-open) {
+  animation: var(--duration-page) var(--ease-out) calc(var(--duration-ui) / 2) both case-in;
+}
+
+@keyframes case-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes case-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-xl));
+  }
+}
+
+/* Static equivalent: the new page simply replaces the old one. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/*
+ * Print (and save as PDF) shows the finished page. The motion layer's hidden
+ * states are GSAP inline styles on these elements: a page-load sequence still
+ * playing, or a section whose scroll reveal has not run yet. !important wins
+ * over inline styles, so whatever is held back prints in place. These are the
+ * static values, not design tokens.
+ */
+@media print {
+  [data-load-rule],
+  [data-load-line],
+  [data-load-item],
+  [data-load-row],
+  [data-reveal-item],
+  .reveal-line {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

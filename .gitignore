@@ -1,0 +1,22 @@
+# dependencies
+node_modules
+
+# Next.js
+.next
+out
+
+# TypeScript incremental build state
+tsconfig.tsbuildinfo
+
+# testing
+test-results
+playwright-report
+
+# project workspace
+.superpowers
+
+# raw screenshot intermediates (re-generate with: npx tsx scripts/capture-previews.ts)
+assets/raw-previews/
+
+# local forbidden-terms list (contains client names that must not appear in public source)
+content/forbidden-terms.local.txt
