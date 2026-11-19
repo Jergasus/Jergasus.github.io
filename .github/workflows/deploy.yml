@@ -16,15 +16,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     outputs:
       activity-result: ${{ steps.activity.outputs.result }}
       activity-failed: ${{ steps.activity.outputs.failed }}
@@ -65,6 +60,19 @@ jobs:
         with:
           path: out
 
+  # A job of its own, as in GitHub's Pages starter workflows: deploy-pages
+  # looks the artifact up through the API, which may not list an upload made
+  # moments earlier in the same job ("No artifacts named github-pages").
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
@@ -74,17 +82,17 @@ jobs:
   # emails about it instead of the numbers going quietly stale. What to do:
   # docs/activity-token.md.
   activity-health:
-    needs: deploy
+    needs: [build, deploy]
     runs-on: ubuntu-latest
     permissions: {}
     steps:
       - name: Check the activity refresh
         env:
-          RESULT: ${{ needs.deploy.outputs.activity-result }}
-          FAILED: ${{ needs.deploy.outputs.activity-failed }}
+          RESULT: ${{ needs.build.outputs.activity-result }}
+          FAILED: ${{ needs.build.outputs.activity-failed }}
         run: |
           echo "Activity refresh: ${RESULT}"
           if [ "${FAILED}" = "true" ]; then
-            echo "::error title=Activity refresh failed::The site deployed, but with older activity numbers (${RESULT}). The deploy job's warnings name the repos that failed; docs/activity-token.md says what to do."
+            echo "::error title=Activity refresh failed::The site deployed, but with older activity numbers (${RESULT}). The build job's warnings name the repos that failed; docs/activity-token.md says what to do."
             exit 1
           fi

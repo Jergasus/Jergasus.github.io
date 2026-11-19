@@ -102,7 +102,7 @@ older than they should be. It reaches the account that created the scheduled
 workflow (or last changed its cron line), as long as Actions notifications are
 on for that account (**GitHub → Settings → Notifications → Actions**).
 
-To fix it, open the failed run, read the warnings on the `deploy` job, then:
+To fix it, open the failed run, read the warnings on the `build` job, then:
 
 - **401 for every repo**: the token expired or was revoked. Rotate it (section 5).
 - **404 for one repo**: the repo was renamed or the token lost access to it.
