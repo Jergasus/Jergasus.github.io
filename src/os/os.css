@@ -1,0 +1,834 @@
+/*
+ * JG-OS: layout and window look.
+ *
+ * The base rules are the document: what a visitor without JavaScript, a
+ * crawler and a printer get. Every content window is a static, full-width
+ * window, stacked in reading order; the OS chrome is hidden; the home page's
+ * h1 shows. On screen, html[data-os] (set before the first paint by the
+ * pre-paint script) turns the same markup into the desktop or the phone.
+ * Print never matches those rules, so it always gets the document.
+ */
+
+@layer components {
+  :root {
+    /* Secondary text: 72% ink on the window, about 6.6:1 by day. */
+    --os-ink-muted: color-mix(in srgb, var(--os-ink) 72%, var(--os-window));
+    --os-pad: 16px;
+    --os-wp: var(--os-wp-dots);
+  }
+
+  html[data-wallpaper="grid"] {
+    --os-wp: var(--os-wp-grid);
+  }
+  html[data-wallpaper="sunset"] {
+    --os-wp: var(--os-wp-sunset);
+  }
+  html[data-wallpaper="cream"] {
+    --os-wp: var(--os-wp-cream);
+  }
+  html[data-wallpaper="barcelona"] {
+    --os-wp: var(--os-wp-barcelona);
+  }
+
+  /* ── Document (no JavaScript, crawlers, print) ───────────────────────── */
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 24px var(--os-pad) 48px;
+    background: var(--os-wp);
+  }
+
+  [data-desktop],
+  [data-taskbar],
+  [data-phone-home],
+  .os-win[data-interactive-only] {
+    display: none;
+  }
+
+  [data-windows] {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 64rem;
+    margin-inline: auto;
+  }
+
+  .os-doc-title {
+    align-self: flex-start;
+    margin: 0;
+    padding: 8px 14px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-3);
+    font-weight: 600;
+    line-height: 1.15;
+    background: var(--os-window);
+    color: var(--os-ink);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+  }
+
+  /* An anchor stands in for a control that needs JavaScript (and back). */
+  html:not([data-os]) .os-js-only {
+    display: none;
+  }
+
+  /* ── Window ──────────────────────────────────────────────────────────── */
+
+  .os-win,
+  .os-notice {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--os-window);
+    color: var(--os-ink);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+  }
+
+  .os-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--os-titlebar-h);
+    padding: 1px 3px 1px 8px;
+    background-color: var(--app, var(--os-c-cream));
+    color: #111111;
+    border-bottom: var(--os-border-w) solid var(--os-border);
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .os-title {
+    min-width: 0;
+    padding: 3px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background-color: var(--app, var(--os-c-cream));
+  }
+
+  .os-grip {
+    flex: 1 1 0;
+  }
+
+  .os-win-buttons {
+    display: none;
+    gap: 3px;
+  }
+
+  .os-win-button {
+    display: grid;
+    place-items: center;
+    inline-size: 24px;
+    block-size: 24px;
+    padding: 0;
+    color: #111111;
+    background: var(--os-c-cream);
+    border: var(--os-border-w) solid #111111;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-win-button:hover {
+      background: #ffffff;
+    }
+  }
+
+  .os-win-button:active {
+    color: var(--os-c-cream);
+    background: #111111;
+  }
+
+  .os-win-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: var(--os-pad);
+    overflow-wrap: break-word;
+  }
+
+  .os-win-body:focus-visible {
+    outline-offset: -6px;
+  }
+
+  /* ── Content ─────────────────────────────────────────────────────────── */
+
+  .os-win-body p,
+  .os-notice p {
+    margin: 0;
+  }
+
+  .os-win-body a:not([class]) {
+    color: inherit;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .os-heading {
+    margin: 0;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-2);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .os-label {
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    color: var(--os-ink-muted);
+  }
+
+  .os-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    font: 600 var(--os-step-0) / 1.2 var(--os-font-pixel);
+    color: #111111;
+    text-decoration: none;
+    background: var(--app, var(--os-c-cream));
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: 3px 3px 0 var(--os-shadow);
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-button:hover {
+      background: #ffffff;
+    }
+  }
+
+  .os-button:active {
+    box-shadow: none;
+    translate: 3px 3px;
+  }
+
+  /* Status square: filled when live, an outline while not out yet. */
+  .os-mark {
+    display: inline-block;
+    inline-size: 10px;
+    block-size: 10px;
+    margin-inline-end: 6px;
+    vertical-align: -1px;
+    border: 2px solid currentColor;
+  }
+
+  .os-mark[data-status="live"] {
+    background: var(--os-ok);
+    border-color: var(--os-border);
+  }
+
+  .os-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .os-chips li {
+    padding: 1px 8px;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    border: var(--os-border-w) solid var(--os-border);
+  }
+
+  .os-specs {
+    display: grid;
+    gap: 10px;
+    margin: 0;
+  }
+
+  .os-specs > div {
+    display: grid;
+    grid-template-columns: 8.5rem 1fr;
+    gap: 4px 12px;
+    align-items: baseline;
+  }
+
+  .os-specs dt {
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    color: var(--os-ink-muted);
+  }
+
+  .os-specs dd {
+    margin: 0;
+  }
+
+  /* sobre_mi.txt */
+  .os-about {
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 14px 16px;
+    align-items: center;
+  }
+
+  .os-portrait {
+    display: block;
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: 3px 3px 0 var(--os-shadow);
+  }
+
+  .os-portrait img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .os-about-head {
+    display: grid;
+    gap: 8px;
+  }
+
+  .os-availability {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+  }
+
+  .os-light {
+    flex: none;
+    inline-size: 10px;
+    block-size: 10px;
+    background: var(--os-ok);
+    border: var(--os-border-w) solid var(--os-border);
+  }
+
+  [data-available="false"] .os-light {
+    background: var(--os-off);
+  }
+
+  .os-about-bio {
+    grid-column: 1 / -1;
+    max-width: 64ch;
+  }
+
+  /* proyectos */
+  .os-projects {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Compact enough that all four show in the window on load. */
+  .os-project {
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    grid-template-areas:
+      "icon name status"
+      "icon summary summary";
+    gap: 2px 10px;
+    align-items: baseline;
+    width: 100%;
+    padding: 6px 8px;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    color: inherit;
+    background: transparent;
+    border: var(--os-border-w) solid transparent;
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-project:hover {
+      border-color: var(--os-border);
+    }
+  }
+
+  .os-project:active {
+    color: var(--os-window);
+    background: var(--os-ink);
+  }
+
+  .os-project-icon {
+    grid-area: icon;
+    align-self: start;
+    display: grid;
+    place-items: center;
+    inline-size: 36px;
+    block-size: 36px;
+    font-family: var(--os-font-pixel);
+    font-size: 20px;
+    font-weight: 700;
+    color: #111111;
+    background: var(--tile, var(--os-c-cream));
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: 2px 2px 0 var(--os-shadow);
+  }
+
+  .os-project-name {
+    grid-area: name;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-1);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .os-project-summary {
+    grid-area: summary;
+    font-size: var(--os-step--1);
+    line-height: 1.45;
+  }
+
+  .os-project-status {
+    grid-area: status;
+    white-space: nowrap;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    color: var(--os-ink-muted);
+  }
+
+  .os-project:active .os-project-status {
+    color: inherit;
+  }
+
+  /* A project window */
+  .os-case {
+    display: grid;
+    gap: 28px;
+    max-width: 72ch;
+  }
+
+  .os-case-head {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+  }
+
+  .os-case-title {
+    margin: 0;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-3);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .os-case-status {
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+  }
+
+  .os-case-summary {
+    font-size: var(--os-step-1);
+    line-height: 1.45;
+  }
+
+  .os-shot {
+    display: block;
+    justify-self: stretch;
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+  }
+
+  .os-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .os-case-section {
+    display: grid;
+    gap: 10px;
+  }
+
+  .os-case-section h2 {
+    margin: 0;
+    font-size: var(--os-step-1);
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .os-decisions {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .os-decisions li {
+    padding-left: 12px;
+    border-left: 4px solid var(--app, var(--os-border));
+  }
+
+  .os-decisions h3 {
+    margin: 0 0 4px;
+    font-size: var(--os-step-0);
+    font-weight: 600;
+  }
+
+  .os-case-section .os-chips {
+    margin-top: 4px;
+  }
+
+  /* yokaido */
+  .os-card {
+    display: grid;
+    gap: 12px;
+  }
+
+  /* actividad */
+  .os-activity {
+    display: grid;
+    gap: 18px;
+  }
+
+  .os-activity-building {
+    display: grid;
+    gap: 2px;
+  }
+
+  .os-activity-building > :last-child {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-1);
+    font-weight: 600;
+  }
+
+  .os-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--os-step--1);
+  }
+
+  .os-table :is(th, td) {
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid var(--os-border);
+  }
+
+  .os-table :is(th, td):first-child {
+    padding-left: 0;
+  }
+
+  .os-table thead th {
+    font-family: var(--os-font-mono);
+    font-weight: 500;
+    color: var(--os-ink-muted);
+    border-bottom-width: var(--os-border-w);
+  }
+
+  .os-table tbody th {
+    font-weight: 600;
+  }
+
+  .os-table td {
+    font-family: var(--os-font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .os-bar {
+    display: block;
+    inline-size: var(--share);
+    block-size: 6px;
+    margin-top: 5px;
+    background: var(--os-c-green);
+    outline: 1px solid var(--os-border);
+  }
+
+  .os-grid {
+    display: grid;
+    gap: 8px;
+  }
+
+  .os-grid-cells {
+    display: grid;
+    grid-template-columns: repeat(26, 1fr);
+    gap: 2px;
+  }
+
+  .os-grid-cells > span {
+    aspect-ratio: 1;
+    background: color-mix(in srgb, var(--os-ink) 10%, var(--os-window));
+  }
+
+  .os-grid-cells > [data-intensity="1"] {
+    background: color-mix(in srgb, var(--os-ok) 30%, var(--os-window));
+  }
+  .os-grid-cells > [data-intensity="2"] {
+    background: color-mix(in srgb, var(--os-ok) 55%, var(--os-window));
+  }
+  .os-grid-cells > [data-intensity="3"] {
+    background: color-mix(in srgb, var(--os-ok) 80%, var(--os-window));
+  }
+  .os-grid-cells > [data-intensity="4"] {
+    background: var(--os-ok);
+  }
+
+  /* nuevo_proyecto */
+  .os-business {
+    display: grid;
+    gap: 14px;
+    justify-items: start;
+  }
+
+  .os-steps {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+  }
+
+  .os-steps li {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    column-gap: 10px;
+    counter-increment: step;
+  }
+
+  .os-steps li::before {
+    content: counter(step, decimal-leading-zero);
+    grid-row: span 2;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    line-height: 1.7;
+    color: var(--os-ink-muted);
+  }
+
+  .os-step-label {
+    font-weight: 600;
+  }
+
+  /* contacto */
+  .os-contact {
+    display: grid;
+    gap: 14px;
+  }
+
+  .os-contact-main {
+    display: grid;
+    gap: 6px;
+    justify-items: start;
+  }
+
+  .os-contact-link {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-2);
+    font-weight: 600;
+    line-height: 1.25;
+    color: inherit;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+    overflow-wrap: anywhere;
+  }
+
+  .os-contact-more {
+    display: flex;
+    gap: 18px;
+    font-family: var(--os-font-mono);
+  }
+
+  /* propiedades del sistema */
+  .os-system {
+    display: grid;
+    gap: 14px;
+  }
+
+  /* 404 */
+  .os-notice {
+    max-width: 34rem;
+    margin: 12vh auto 0;
+  }
+
+  .os-notice-body {
+    display: grid;
+    gap: 12px;
+    justify-items: start;
+    padding: var(--os-pad);
+  }
+
+  /* Links and buttons pressed on a touch screen (no hover there). */
+  .os-win-body a:not([class]):active,
+  .os-contact-link:active {
+    color: var(--os-window);
+    background: var(--os-ink);
+  }
+
+  /* Placeholder taskbar: the language switch. */
+  .os-lang {
+    display: flex;
+    gap: 4px;
+  }
+
+  .os-lang-link {
+    padding: 2px 8px;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    color: inherit;
+    text-decoration: none;
+    border: var(--os-border-w) solid transparent;
+  }
+
+  .os-lang-link[aria-current="page"] {
+    border-color: currentColor;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-lang-link:hover {
+      color: var(--os-window);
+      background: var(--os-ink);
+    }
+  }
+
+  .os-lang-link:active {
+    color: var(--os-window);
+    background: var(--os-ink);
+  }
+
+  /* ── The OS on screen ────────────────────────────────────────────────── */
+
+  @media screen {
+    html[data-os] body {
+      min-height: 0;
+      padding: 0;
+      background: none;
+    }
+
+    html[data-os] [data-desktop] {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: var(--os-wp);
+    }
+
+    html[data-os] [data-windows] {
+      display: block;
+      max-width: none;
+      margin: 0;
+    }
+
+    html[data-os] .os-doc-title {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    html[data-os] .os-nojs-only {
+      display: none;
+    }
+
+    html[data-os] .os-win-buttons {
+      display: flex;
+    }
+
+    /* The window in front: horizontal stripes, the title on a solid patch
+       so it reads as well as on a plain bar. (A document has no front.) */
+    html[data-os] .os-win[data-focused="true"] > .os-titlebar {
+      background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
+    }
+
+    html[data-os] [data-taskbar] {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      position: fixed;
+      inset: auto 0 0;
+      z-index: 2;
+      height: var(--os-taskbar-h);
+      padding-inline: 8px;
+      background: var(--os-window);
+      color: var(--os-ink);
+      border-top: var(--os-border-w) solid var(--os-border);
+    }
+
+    html[data-os] .os-win-body {
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    /* Desktop: windows float over the wallpaper, above the taskbar. */
+    html[data-os="desktop"],
+    html[data-os="desktop"] body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    html[data-os="desktop"] [data-windows] {
+      position: fixed;
+      inset: 0 0 var(--os-taskbar-h);
+      z-index: 1;
+      isolation: isolate;
+      pointer-events: none;
+    }
+
+    html[data-os="desktop"] .os-win {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--w);
+      height: var(--h);
+      min-width: min(280px, 100%);
+      z-index: var(--z);
+      pointer-events: auto;
+    }
+
+    html[data-os="desktop"] .os-win[data-maximized="true"] {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      box-shadow: none;
+    }
+
+    html[data-os="desktop"] .os-win:is([data-win-state="closed"], [data-win-state="minimized"]) {
+      display: none;
+    }
+
+    html[data-os="desktop"] .os-win[data-interactive-only][data-win-state="open"] {
+      display: flex;
+    }
+
+    /* Phone: only the app in use shows, full screen (the home screen fills
+       the rest in its own task). */
+    html[data-os="phone"] .os-win {
+      display: none;
+    }
+
+    html[data-os="phone"] .os-win[data-phone-active="true"]:not([data-win-state="closed"]) {
+      display: flex;
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      border: 0;
+      box-shadow: none;
+    }
+
+    html[data-os="phone"] :is([data-win-minimize], [data-win-maximize]) {
+      display: none;
+    }
+  }
+
+  @media print {
+    body {
+      padding: 0;
+      background: none;
+    }
+
+    html .os-js-only {
+      display: none;
+    }
+
+    .os-win,
+    .os-doc-title {
+      box-shadow: none;
+    }
+  }
+}
