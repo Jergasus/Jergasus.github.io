@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readPref, readSession, writePref, writeSession } from './storage';
+import { PREF_KEYS, SESSION_KEY, readPref, readSession, writePref, writeSession } from './storage';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -38,19 +38,19 @@ describe('readPref', () => {
   it('returns null when window is undefined (SSR)', () => {
     // In the node test environment, window is not defined
     expect(typeof window).toBe('undefined');
-    expect(readPref('jgos-booted')).toBe(null);
+    expect(readPref(PREF_KEYS.booted)).toBe(null);
   });
 
   it('returns stored value via window.localStorage', () => {
-    const ls = makeLS({ 'jgos-theme': 'dark' });
+    const ls = makeLS({ [PREF_KEYS.theme]: 'dark' });
     vi.stubGlobal('window', { localStorage: ls });
-    expect(readPref('jgos-theme')).toBe('dark');
+    expect(readPref(PREF_KEYS.theme)).toBe('dark');
   });
 
   it('returns null for a key that is not in storage', () => {
     const ls = makeLS();
     vi.stubGlobal('window', { localStorage: ls });
-    expect(readPref('jgos-booted')).toBe(null);
+    expect(readPref(PREF_KEYS.booted)).toBe(null);
   });
 
   it('returns null and writePref is silent when storage throws', () => {
@@ -60,68 +60,68 @@ describe('readPref', () => {
       removeItem: () => { throw new Error('storage denied'); },
     };
     vi.stubGlobal('window', { localStorage: throwing, sessionStorage: throwing });
-    expect(() => readPref('jgos-booted')).not.toThrow();
-    expect(readPref('jgos-booted')).toBe(null);
-    expect(() => writePref('jgos-booted', '1')).not.toThrow();
+    expect(() => readPref(PREF_KEYS.booted)).not.toThrow();
+    expect(readPref(PREF_KEYS.booted)).toBe(null);
+    expect(() => writePref(PREF_KEYS.booted, '1')).not.toThrow();
   });
 });
 
 // ---------------------------------------------------------------------------
 describe('writePref', () => {
   it('is silent when window is undefined (SSR)', () => {
-    expect(() => writePref('jgos-theme', 'light')).not.toThrow();
+    expect(() => writePref(PREF_KEYS.theme, 'light')).not.toThrow();
   });
 
   it('writes a string value to localStorage', () => {
     const ls = makeLS();
     vi.stubGlobal('window', { localStorage: ls });
-    writePref('jgos-theme', 'light');
-    expect(ls._store.get('jgos-theme')).toBe('light');
+    writePref(PREF_KEYS.theme, 'light');
+    expect(ls._store.get(PREF_KEYS.theme)).toBe('light');
   });
 
   it('removes the key when value is null', () => {
-    const ls = makeLS({ 'jgos-theme': 'dark' });
+    const ls = makeLS({ [PREF_KEYS.theme]: 'dark' });
     vi.stubGlobal('window', { localStorage: ls });
-    writePref('jgos-theme', null);
-    expect(ls._store.has('jgos-theme')).toBe(false);
+    writePref(PREF_KEYS.theme, null);
+    expect(ls._store.has(PREF_KEYS.theme)).toBe(false);
   });
 });
 
 // ---------------------------------------------------------------------------
 describe('readSession', () => {
   it('returns null when window is undefined (SSR)', () => {
-    expect(readSession('jgos-windows')).toBe(null);
+    expect(readSession(SESSION_KEY)).toBe(null);
   });
 
   it('parses JSON from sessionStorage', () => {
-    const ss = makeSS({ 'jgos-windows': JSON.stringify({ about: { open: true } }) });
+    const ss = makeSS({ [SESSION_KEY]: JSON.stringify({ about: { open: true } }) });
     vi.stubGlobal('window', { sessionStorage: ss });
-    expect(readSession<{ about: { open: boolean } }>('jgos-windows')).toEqual({ about: { open: true } });
+    expect(readSession<{ about: { open: boolean } }>(SESSION_KEY)).toEqual({ about: { open: true } });
   });
 
   it('returns null when the key is not in sessionStorage', () => {
     const ss = makeSS();
     vi.stubGlobal('window', { sessionStorage: ss });
-    expect(readSession('jgos-windows')).toBe(null);
+    expect(readSession(SESSION_KEY)).toBe(null);
   });
 
   it('returns null when JSON is malformed', () => {
-    const ss = makeSS({ 'jgos-windows': 'not-json{{{' });
+    const ss = makeSS({ [SESSION_KEY]: 'not-json{{{' });
     vi.stubGlobal('window', { sessionStorage: ss });
-    expect(readSession('jgos-windows')).toBe(null);
+    expect(readSession(SESSION_KEY)).toBe(null);
   });
 });
 
 // ---------------------------------------------------------------------------
 describe('writeSession', () => {
   it('is silent when window is undefined (SSR)', () => {
-    expect(() => writeSession('jgos-windows', { about: true })).not.toThrow();
+    expect(() => writeSession(SESSION_KEY, { about: true })).not.toThrow();
   });
 
   it('serialises to JSON in sessionStorage', () => {
     const ss = makeSS();
     vi.stubGlobal('window', { sessionStorage: ss });
-    writeSession('jgos-windows', { about: { open: true } });
-    expect(ss._store.get('jgos-windows')).toBe(JSON.stringify({ about: { open: true } }));
+    writeSession(SESSION_KEY, { about: { open: true } });
+    expect(ss._store.get(SESSION_KEY)).toBe(JSON.stringify({ about: { open: true } }));
   });
 });

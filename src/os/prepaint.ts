@@ -1,3 +1,5 @@
+import { PREF_KEYS } from './storage';
+
 export type Wallpaper = 'dots' | 'grid' | 'sunset' | 'cream' | 'barcelona';
 
 /** All valid wallpaper values, used both at runtime and in the pre-paint script. */
@@ -27,6 +29,10 @@ export function prepaintScript(): string {
   const wallpapersJson = JSON.stringify(WALLPAPERS);
   const desktopQueryJson = JSON.stringify(DESKTOP_QUERY);
   const reducedMotionQueryJson = JSON.stringify('(prefers-reduced-motion: reduce)');
+  // Key names come from PREF_KEYS so a rename propagates here automatically.
+  const keyWallpaper = JSON.stringify(PREF_KEYS.wallpaper);
+  const keyTheme = JSON.stringify(PREF_KEYS.theme);
+  const keyBooted = JSON.stringify(PREF_KEYS.booted);
 
   return `(function(){
 var el=document.documentElement;
@@ -34,11 +40,11 @@ var isDesktop=true;
 try{isDesktop=window.matchMedia(${desktopQueryJson}).matches;}catch(e){}
 el.setAttribute('data-os',isDesktop?'desktop':'phone');
 var wp='dots';
-try{var w=window.localStorage.getItem('jgos-wallpaper');if(w&&${wallpapersJson}.indexOf(w)!==-1)wp=w;}catch(e){}
+try{var w=window.localStorage.getItem(${keyWallpaper});if(w&&${wallpapersJson}.indexOf(w)!==-1)wp=w;}catch(e){}
 el.setAttribute('data-wallpaper',wp);
-try{var t=window.localStorage.getItem('jgos-theme');if(t==='light'||t==='dark')el.setAttribute('data-theme',t);}catch(e){}
+try{var t=window.localStorage.getItem(${keyTheme});if(t==='light'||t==='dark')el.setAttribute('data-theme',t);}catch(e){}
 try{
-var booted=window.localStorage.getItem('jgos-booted');
+var booted=window.localStorage.getItem(${keyBooted});
 var rm=false;
 try{rm=window.matchMedia(${reducedMotionQueryJson}).matches;}catch(e){}
 if(booted!=='1'&&!rm)el.setAttribute('data-boot','1');

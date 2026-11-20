@@ -1,7 +1,19 @@
 // Storage helpers. Never throw. All access goes through window.localStorage /
 // window.sessionStorage so that SSR and environments without storage are safe.
 
-export type PrefKey = 'jgos-booted' | 'jgos-theme' | 'jgos-wallpaper';
+/** Runtime key names — single source of truth for all modules (including prepaint). */
+export const PREF_KEYS = {
+  booted: 'jgos-booted',
+  theme: 'jgos-theme',
+  wallpaper: 'jgos-wallpaper',
+} as const;
+
+/** Derived union type — always in sync with PREF_KEYS. */
+export type PrefKey = (typeof PREF_KEYS)[keyof typeof PREF_KEYS];
+
+/** sessionStorage key — exported so prepaint and other modules share it. */
+export const SESSION_KEY = 'jgos-windows' as const;
+export type SessionKey = typeof SESSION_KEY;
 
 export function readPref(key: PrefKey): string | null {
   if (typeof window === 'undefined') return null;

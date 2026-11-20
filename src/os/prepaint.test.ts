@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DESKTOP_QUERY, prepaintScript, WALLPAPERS } from './prepaint';
+import { PREF_KEYS } from './storage';
 
 type Attrs = Record<string, string>;
 
@@ -61,14 +62,14 @@ describe('prepaintScript', () => {
     for (const wp of WALLPAPERS) {
       const attrs = run({
         matchMedia: () => ({ matches: false }),
-        localStorage: { getItem: (k) => (k === 'jgos-wallpaper' ? wp : null) },
+        localStorage: { getItem: (k) => (k === PREF_KEYS.wallpaper ? wp : null) },
       });
       expect(attrs['data-wallpaper']).toBe(wp);
     }
 
     const unknown = run({
       matchMedia: () => ({ matches: false }),
-      localStorage: { getItem: (k) => (k === 'jgos-wallpaper' ? 'neon' : null) },
+      localStorage: { getItem: (k) => (k === PREF_KEYS.wallpaper ? 'neon' : null) },
     });
     expect(unknown['data-wallpaper']).toBe('dots');
   });
@@ -77,14 +78,14 @@ describe('prepaintScript', () => {
     for (const theme of ['light', 'dark'] as const) {
       const attrs = run({
         matchMedia: () => ({ matches: false }),
-        localStorage: { getItem: (k) => (k === 'jgos-theme' ? theme : null) },
+        localStorage: { getItem: (k) => (k === PREF_KEYS.theme ? theme : null) },
       });
       expect(attrs['data-theme']).toBe(theme);
     }
 
     const invalid = run({
       matchMedia: () => ({ matches: false }),
-      localStorage: { getItem: (k) => (k === 'jgos-theme' ? 'purple' : null) },
+      localStorage: { getItem: (k) => (k === PREF_KEYS.theme ? 'purple' : null) },
     });
     expect(invalid['data-theme']).toBeUndefined();
 
@@ -106,7 +107,7 @@ describe('prepaintScript', () => {
     // Already booted → no data-boot
     const alreadyBooted = run({
       matchMedia: () => ({ matches: false }),
-      localStorage: { getItem: (k) => (k === 'jgos-booted' ? '1' : null) },
+      localStorage: { getItem: (k) => (k === PREF_KEYS.booted ? '1' : null) },
     });
     expect(alreadyBooted['data-boot']).toBeUndefined();
 
