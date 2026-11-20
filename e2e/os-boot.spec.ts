@@ -146,3 +146,72 @@ test('no toast when every commit is older than 14 days', async ({ page }) => {
 
   await expect(page.locator('[data-toast]')).toHaveCount(0);
 });
+
+// ── Click-through safety ──────────────────────────────────────────────────────
+
+test('desktop: clicking the boot screen dismisses it without opening the app underneath', async ({
+  page,
+}) => {
+  await page.clock.install();
+  await page.goto('/');
+
+  const bootScreen = page.locator('[data-boot-screen]');
+  await expect(bootScreen).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-os-ready', '1');
+
+  // questday starts closed by default; clicking its icon would open it.
+  // We click the boot screen AT the icon's position to verify that the click
+  // is captured by the boot overlay and does NOT reach the icon below.
+  const icon = page.locator('[data-icon="questday"]');
+  const iconBox = await icon.boundingBox();
+
+  if (iconBox) {
+    // Click the boot screen at the icon's center.
+    await page.mouse.click(
+      iconBox.x + iconBox.width / 2,
+      iconBox.y + iconBox.height / 2,
+    );
+  } else {
+    // Icon not visible at this viewport — click anywhere on the boot screen.
+    const box = await bootScreen.boundingBox();
+    if (box) await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  }
+
+  // Boot is gone.
+  await expect(bootScreen).not.toBeVisible();
+
+  // The questday app was NOT opened by the click (it starts closed).
+  await expect(page.locator('[data-app="questday"][data-win-state="open"]')).not.toBeAttached();
+});
+
+test('phone: tapping the boot screen dismisses it without opening the app underneath', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.clock.install();
+  await page.goto('/');
+
+  const bootScreen = page.locator('[data-boot-screen]');
+  await expect(bootScreen).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-os-ready', '1');
+
+  // Find where the first phone icon sits so we can click exactly there.
+  const icon = page.locator('[data-phone-icon="about"]');
+  const iconBox = await icon.boundingBox();
+
+  if (iconBox) {
+    await page.mouse.click(
+      iconBox.x + iconBox.width / 2,
+      iconBox.y + iconBox.height / 2,
+    );
+  } else {
+    const box = await bootScreen.boundingBox();
+    if (box) await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+  }
+
+  // Boot is gone.
+  await expect(bootScreen).not.toBeVisible();
+
+  // The about app was NOT opened by the tap.
+  await expect(page.locator('[data-app="about"][data-phone-active="true"]')).not.toBeAttached();
+});

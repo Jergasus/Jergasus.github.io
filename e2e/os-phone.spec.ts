@@ -143,6 +143,38 @@ test('crossing the breakpoint keeps the active app', async ({ page }) => {
   await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
 });
 
+// ── Toasts ───────────────────────────────────────────────────────────────────
+
+// Clock anchor: within 14 days of the most recent commit (rally-voley 2026-11-19T20:50:52Z).
+const FRESH_NOW = new Date('2026-11-20T00:00:00Z');
+
+test('toasts do not overlap the phone dock', async ({ page }) => {
+  // Fixture already sets jgos-booted=1 so there is no boot screen.
+  // Install a fake clock near the most recent commit so a toast fires.
+  await page.clock.install({ time: FRESH_NOW });
+
+  await visit(page, '/');
+
+  // Advance past the 1200 ms no-boot toast delay.
+  await page.clock.fastForward(1500);
+
+  // Wait for at least one toast to appear.
+  const toast = page.locator('[data-toast]').first();
+  await expect(toast).toBeVisible();
+
+  // Compare bounding boxes: toast bottom must be above dock top.
+  const toastBox = await toast.boundingBox();
+  const dockBox = await dock(page).boundingBox();
+
+  expect(toastBox).not.toBeNull();
+  expect(dockBox).not.toBeNull();
+
+  if (toastBox && dockBox) {
+    // The bottom edge of the toast must be at or above the top edge of the dock.
+    expect(toastBox.y + toastBox.height).toBeLessThanOrEqual(dockBox.y);
+  }
+});
+
 test('phone home has no axe violations', async ({ page }) => {
   await visit(page, '/');
   const results = await new AxeBuilder({ page }).analyze();
