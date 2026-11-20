@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
+import { useMotionSafe } from '@/components/motion/useMotionSafe';
 import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { localizedPath } from '@/i18n/localized-path';
@@ -22,7 +23,7 @@ import { OsContext, type OsInternal, type OsMode } from './context';
 import { DESKTOP_QUERY, WALLPAPERS } from './prepaint';
 import { caseHref, routedSlugOf } from './route';
 import { PREF_KEYS, readPref, SESSION_KEY, readSession, writeSession } from './storage';
-import { initialState, nextActiveCase, reduce, serialize, type SavedWindows } from './window-manager';
+import { initialState, nextActiveCase, reduce, serialize, type SavedWindows, type WmState } from './window-manager';
 import { desktopBounds } from './shell/desktopBounds';
 import { forgetWindow } from './window-memory';
 import { BootScreen } from './shell/BootScreen';
@@ -31,6 +32,16 @@ import { DesktopIcons } from './shell/DesktopIcons';
 import { Taskbar } from './shell/Taskbar';
 import { ContextMenu } from './shell/ContextMenu';
 import { PhoneHome } from './phone/PhoneHome';
+import {
+  boxOf,
+  closeTarget,
+  expectOpen,
+  finishAllMotion,
+  finishMotion,
+  openOrigin,
+  playClose,
+  playMinimize,
+} from './shell/motion';
 
 export { useOs } from './context';
 export type { OsApi, OsMode } from './context';
@@ -60,6 +71,13 @@ function isShown(element: Element | null | undefined): element is HTMLElement {
 }
 
 const windowElement = (id: AppId) => document.querySelector<HTMLElement>(`[data-app="${id}"]`);
+
+/** Whether the app's window shows in this mode (os.css draws it from the same state). */
+function showing(state: WmState, id: AppId, mode: OsMode): boolean {
+  const win = state.windows[id];
+  if (!win.open) return false;
+  return mode === 'phone' ? state.phoneActive === id : mode === 'desktop' && !win.minimized;
+}
 
 /** Where keyboard focus goes once the next commits settle. */
 type FocusPlan =
@@ -114,6 +132,9 @@ export function OsRoot({
 
   const [state, dispatch] = useReducer(reduce, routedSlug, initialState);
   const mode = useSyncExternalStore(subscribeMode, readMode, readServerMode);
+  // False on the server, through hydration and under reduced motion: then
+  // every state change is instant and no sequence runs.
+  const animate = useMotionSafe().enabled;
 
   /** URL currently loaded in the browser window (null = start page). */
   const [browserUrl, setBrowserUrl] = useState<string | null>(null);
@@ -128,9 +149,9 @@ export function OsRoot({
   }
 
   // Event handlers read the latest values through this ref.
-  const latest = useRef({ state, routedSlug, mode });
+  const latest = useRef({ state, routedSlug, mode, animate });
   useLayoutEffect(() => {
-    latest.current = { state, routedSlug, mode };
+    latest.current = { state, routedSlug, mode, animate };
   });
 
   // ── URL ─────────────────────────────────────────────────────────────────
@@ -231,6 +252,8 @@ export function OsRoot({
   const openApp = useCallback(
     (id: AppId, opener?: HTMLElement) => {
       const now = latest.current;
+      // Acting on an app again ends whatever it is playing: its final look, now.
+      finishMotion(id);
       if (opener) openers.current.set(id, opener);
       const win = now.state.windows[id];
       const section = windowElement(id);
@@ -240,6 +263,10 @@ export function OsRoot({
         // Already the window in front: nothing changes but focus.
         section.focus();
         return;
+      }
+      // Its window grows from the opener as it appears (WindowFrame plays it).
+      if (now.animate && now.mode !== 'document' && !showing(now.state, id, now.mode)) {
+        expectOpen(id, openOrigin(id, now.mode, opener));
       }
       focusPlan.current = { kind: 'into', id };
       if (isCaseApp(id)) {
@@ -290,7 +317,10 @@ export function OsRoot({
     (id: AppId) => {
       const now = latest.current;
       if (!now.state.windows[id].open) return;
+      finishMotion(id);
       const opener = openers.current.get(id) ?? null;
+      // Measured while the window still shows: its outline shrinks back from here.
+      const from = now.animate && now.mode !== 'document' ? boxOf(windowElement(id)) : null;
       openers.current.delete(id);
       forgetWindow(id);
       const ownsUrl = isCaseApp(id) && (now.state.activeCase === id || now.routedSlug === id);
@@ -302,6 +332,9 @@ export function OsRoot({
 
       dispatch({ type: 'close', id });
       if (now.mode === 'phone') dispatch({ type: 'phoneHome' });
+      if (from && now.mode !== 'document') {
+        playClose(id, from, closeTarget(id, now.mode, opener), now.mode === 'phone' ? 'os-phone-close' : 'os-close');
+      }
       focusPlan.current = ownsUrl ? { kind: 'back', to: opener, afterRoute: next } : { kind: 'back', to: opener };
       if (ownsUrl) navigate('push', next);
     },
@@ -322,20 +355,33 @@ export function OsRoot({
   );
 
   const minimizeApp = useCallback((id: AppId) => {
+    const now = latest.current;
+    finishMotion(id);
+    const win = now.state.windows[id];
+    const frame = windowElement(id);
+    // The window scales into its taskbar button; its state is minimised at once.
+    if (now.animate && now.mode === 'desktop' && win.open && !win.minimized && frame) {
+      playMinimize(id, frame, boxOf(document.querySelector(`[data-task="${id}"]`)));
+    }
     dispatch({ type: 'minimize', id });
     focusPlan.current = { kind: 'back', to: null };
   }, []);
 
   const phoneBack = useCallback(
     (id: AppId) => {
+      const now = latest.current;
+      finishMotion(id);
+      const from = now.animate ? boxOf(windowElement(id)) : null;
+      // Home shows at once, while the app's outline shrinks back into its icon.
+      dispatch({ type: 'phoneHome' });
       if (isCaseApp(id)) {
-        // Navigate to / → triggers route(null) → closes cases, clears phoneActive.
+        // Navigate to / → triggers route(null) → closes cases.
         navigate('push', null);
       } else {
-        // Just go home without closing the window so its state is preserved.
-        dispatch({ type: 'phoneHome' });
+        // The window stays open (its state is preserved), just not in front.
         focusPlan.current = { kind: 'back', to: null };
       }
+      if (from) playClose(id, from, closeTarget(id, 'phone', openers.current.get(id)), 'os-phone-close');
     },
     [navigate],
   );
@@ -402,6 +448,8 @@ export function OsRoot({
     const desktopMq = window.matchMedia(DESKTOP_QUERY);
     const onChange = () => {
       if (!html.hasAttribute('data-os')) return;
+      // Nothing mid-animation survives the switch: every window shows as it is.
+      finishAllMotion();
       const { state: s } = latest.current;
       if (desktopMq.matches) {
         // Phone → desktop: focus the previously active phone app if still open.
@@ -505,6 +553,9 @@ export function OsRoot({
 
       {/* Right-click context menu */}
       <ContextMenu />
+
+      {/* Where the open/close outlines are drawn (src/os/shell/motion.ts). */}
+      <div data-motion-layer aria-hidden="true" className="os-motion-layer" />
     </OsContext>
   );
 }

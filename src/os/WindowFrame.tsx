@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useTranslations } from 'next-intl';
+import { useMotionSafe } from '@/components/motion/useMotionSafe';
 import { caseStudySlugs } from '@/content/projects';
 import { getApp, isCaseApp, type AppId } from './apps';
 import { useOsInternal } from './context';
@@ -17,6 +18,7 @@ import { recallWindow, rememberWindow, windowReopened } from './window-memory';
 import { useWindowDrag } from './shell/useWindowDrag';
 import { useWindowResize, type ResizeDir } from './shell/useWindowResize';
 import { desktopBounds } from './shell/desktopBounds';
+import { finishMotion, playOpen, playPhoneOpen, takeOpen } from './shell/motion';
 
 export type WindowLabels = { close: string; minimize: string; maximize: string; restore: string };
 
@@ -37,7 +39,7 @@ const RESIZE_DIRS: ResizeDir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
  * rect as percentages of the desktop, so the server HTML is already placed.
  */
 export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Props) {
-  const { state, dispatch, focusApp, closeApp, minimizeApp, phoneBack } = useOsInternal();
+  const { state, dispatch, mode, focusApp, closeApp, minimizeApp, phoneBack } = useOsInternal();
   const t = useTranslations('os.window');
   const tPhone = useTranslations('os.phone');
   const win = state.windows[id];
@@ -46,6 +48,7 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
   const body = useRef<HTMLDivElement>(null);
   // A press on close or minimise must not first bring the window forward.
   const keepBehind = useRef(false);
+  const animate = useMotionSafe().enabled;
 
   const step = isCaseApp(id) ? caseStudySlugs.indexOf(id) * CASCADE_PX : 0;
   const { x, y, w, h } = app.defaultRect;
@@ -88,6 +91,29 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
     if (win.open) windowReopened(id);
   }, [id, win.open]);
 
+  // ── Motion ────────────────────────────────────────────────────────────────
+  // The reducer has already made the window show; when the visitor asked for
+  // it (OsRoot's openApp), it animates in on top, before the first paint.
+  // Windows on the first paint, restored from the session or brought back by
+  // the browser's history were not asked for, so they simply show.
+  const shows = win.open && (mode === 'phone' ? state.phoneActive === id : mode === 'desktop' && !win.minimized);
+  const showed = useRef(false);
+  useLayoutEffect(() => {
+    const appeared = shows && !showed.current;
+    showed.current = shows;
+    if (!appeared) return;
+    const ask = takeOpen(id);
+    if (!ask || !animate) return;
+    if (mode === 'phone') playPhoneOpen(id, section.current!, ask.from);
+    else playOpen(id, section.current!, ask.from);
+  }, [id, shows, mode, animate]);
+
+  // A window leaving the page (a route change) takes its sequence with it.
+  useLayoutEffect(() => {
+    const frame = section.current!;
+    return () => finishMotion(id, frame);
+  }, [id]);
+
   // Read by the effect below as it mounts (this one runs first).
   const inFront = useRef(false);
   useLayoutEffect(() => {
@@ -122,6 +148,8 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
 
   // ── Pointer handlers ──────────────────────────────────────────────────────
   const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    // Using a window that is still animating in shows it as it is, at once.
+    finishMotion(id);
     keepBehind.current = (event.target as Element).closest('[data-win-close], [data-win-minimize]') !== null;
     if (!keepBehind.current) focusApp(id);
   };
@@ -219,6 +247,7 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
         onSectionPointerUp(e);
       }}
       onPointerCancel={onSectionPointerCancel}
+      onKeyDown={() => finishMotion(id)}
       onFocus={onFocus}
     >
       <div

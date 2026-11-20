@@ -18,15 +18,21 @@
  *  - [data-toasts] is an aria-live="polite" region, always in the DOM so AT
  *    can observe changes.
  *  - Each close button has an accessible name from os.notifications.dismiss.
+ *
+ * Motion: a toast slides in from the right edge and leaves the same way when
+ * dismissed (src/os/shell/motion.ts). Under reduced motion it simply appears
+ * and goes.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useMotionSafe } from '@/components/motion/useMotionSafe';
 import type { ProjectSlug } from '@/content/projects';
 import { getProject } from '@/content/projects';
 import type { Locale } from '@/i18n/routing';
 import { formatRelative } from '@/lib/dates';
 import { commitNotifications } from '@/os/notifications';
 import { SESSION_KEY_TOASTS, readSession, writeSession } from '@/os/storage';
+import { playToastIn, playToastOut } from './motion';
 
 /** Delay before showing toasts when no boot ran (ms). */
 const NO_BOOT_DELAY_MS = 1200;
@@ -52,6 +58,33 @@ export function Toasts({ repos, locale }: Props) {
   const [visibleToasts, setVisibleToasts] = useState<VisibleToast[]>([]);
   const shownRef = useRef(false);
   const idRef = useRef(0);
+
+  // ── Motion ──────────────────────────────────────────────────────────────
+  const animate = useMotionSafe().enabled;
+  const animateRef = useRef(animate);
+  const elements = useRef(new Map<number, HTMLElement>());
+  const entered = useRef(new Set<number>());
+
+  useLayoutEffect(() => {
+    animateRef.current = animate;
+  });
+
+  // Each new toast slides in once, before its first paint.
+  useLayoutEffect(() => {
+    for (const toast of visibleToasts) {
+      if (entered.current.has(toast.id)) continue;
+      entered.current.add(toast.id);
+      const element = elements.current.get(toast.id);
+      if (element && animateRef.current) playToastIn(element);
+    }
+  }, [visibleToasts]);
+
+  const dismiss = useCallback((id: number) => {
+    const remove = () => setVisibleToasts((prev) => prev.filter((tk) => tk.id !== id));
+    const element = elements.current.get(id);
+    if (element && animateRef.current) playToastOut(element, remove);
+    else remove();
+  }, []);
 
   useEffect(() => {
     // Evaluate freshness client-side so page.clock controls the result.
@@ -79,9 +112,7 @@ export function Toasts({ repos, locale }: Props) {
           const id = ++idRef.current;
           setVisibleToasts((prev) => [...prev, { id, ...notif }]);
 
-          const t2 = window.setTimeout(() => {
-            setVisibleToasts((prev) => prev.filter((tk) => tk.id !== id));
-          }, AUTO_DISMISS_MS);
+          const t2 = window.setTimeout(() => dismiss(id), AUTO_DISMISS_MS);
           timers.push(t2);
         }, i * STAGGER_MS);
         timers.push(t1);
@@ -109,11 +140,7 @@ export function Toasts({ repos, locale }: Props) {
       if (extraTimer !== null) window.clearTimeout(extraTimer);
       timers.forEach((id) => window.clearTimeout(id));
     };
-  }, [repos]);
-
-  const dismiss = (id: number) => {
-    setVisibleToasts((prev) => prev.filter((tk) => tk.id !== id));
-  };
+  }, [repos, dismiss]);
 
   return (
     // The region is always in the DOM so AT can observe live changes.
@@ -123,7 +150,15 @@ export function Toasts({ repos, locale }: Props) {
         const name = project?.name ?? (toast.slug as string);
         const when = formatRelative(toast.lastCommitAt, new Date(), locale);
         return (
-          <div key={toast.id} data-toast className="os-toast">
+          <div
+            key={toast.id}
+            ref={(element) => {
+              if (element) elements.current.set(toast.id, element);
+              else elements.current.delete(toast.id);
+            }}
+            data-toast
+            className="os-toast"
+          >
             <span className="os-toast-text">{t('commit', { project: name, when })}</span>
             <button
               type="button"

@@ -1917,29 +1917,25 @@
     display: flex;
   }
 
-  .os-boot-line {
-    margin: 0;
-    opacity: 0;
-    animation: os-boot-fadein 180ms ease forwards;
-  }
-
-  .os-boot-line:nth-child(1) { animation-delay:   80ms; }
-  .os-boot-line:nth-child(2) { animation-delay:  280ms; }
-  .os-boot-line:nth-child(3) { animation-delay:  520ms; }
-  .os-boot-line:nth-child(4) { animation-delay:  780ms; }
-
+  /* Each line appears whole, one step after the one before, like an old
+     machine printing its start-up checks: no fade, no slide. The step is
+     motion.os.bootLine (--os-boot-step) and --i the line's index, both set
+     by BootScreen.tsx. CSS, so it runs from the first paint. */
+  .os-boot-line,
   .os-boot-skip {
     margin: 0;
-    margin-top: 1.5em;
     opacity: 0;
-    font-size: var(--os-step--1, 0.875rem);
-    color: var(--os-text-dim, #888);
-    animation: os-boot-fadein 180ms ease 950ms forwards;
+    animation: os-boot-step 0s calc(var(--i, 0) * var(--os-boot-step, 0.22s)) forwards;
   }
 
-  @keyframes os-boot-fadein {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
+  .os-boot-skip {
+    margin-top: 1.5em;
+    font-size: var(--os-step--1, 0.875rem);
+    color: var(--os-text-dim, #888);
+  }
+
+  @keyframes os-boot-step {
+    to { opacity: 1; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1988,7 +1984,6 @@
     pointer-events: auto;
     box-shadow: 0 2px 8px rgba(0,0,0,.18);
     font-size: var(--os-step--1, 0.875rem);
-    animation: os-toast-in 200ms ease;
   }
 
   .os-toast-text {
@@ -2013,13 +2008,60 @@
 
   .os-toast-close:hover { color: var(--os-text, #111); }
 
-  @keyframes os-toast-in {
-    from { opacity: 0; transform: translateX(12px); }
-    to   { opacity: 1; transform: translateX(0); }
+  /* -----------------------------------------------------------------------
+     Motion (src/os/shell/motion.ts). Only transform and opacity animate.
+     ----------------------------------------------------------------------- */
+
+  /* A box-less holder: the outlines inside it are fixed to the viewport. */
+  .os-motion-layer {
+    display: contents;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .os-toast { animation: none; }
+  /* The open/close outline: a black-and-white dashed rectangle, like the
+     marquee of old systems, so one of its two colours reads on every
+     wallpaper, window and theme. Laid out once over the window; only its
+     four edges move, each stretched along its own length so the line stays
+     2 px wide. */
+  .os-motion-outline {
+    position: fixed;
+    z-index: 50;
+    pointer-events: none;
+  }
+
+  .os-motion-edge {
+    position: absolute;
+    transform-origin: 0 0;
+    --os-dash: #111111 0 6px, #ffffff 6px 10px;
+  }
+
+  .os-motion-edge:is([data-edge="top"], [data-edge="bottom"]) {
+    left: 0;
+    width: 100%;
+    height: var(--os-border-w, 2px);
+    background: repeating-linear-gradient(90deg, var(--os-dash));
+  }
+
+  .os-motion-edge:is([data-edge="left"], [data-edge="right"]) {
+    top: 0;
+    width: var(--os-border-w, 2px);
+    height: 100%;
+    background: repeating-linear-gradient(180deg, var(--os-dash));
+  }
+
+  .os-motion-edge[data-edge="top"] { top: 0; }
+  .os-motion-edge[data-edge="bottom"] { bottom: 0; }
+  .os-motion-edge[data-edge="left"] { left: 0; }
+  .os-motion-edge[data-edge="right"] { right: 0; }
+
+  html[data-os] .os-win[data-motion] {
+    transform-origin: 0 0;
+  }
+
+  /* A minimising window is minimised already; it stays drawn, unusable,
+     until it reaches its taskbar button. */
+  html[data-os="desktop"] .os-win[data-motion="out"][data-win-state] {
+    display: flex;
+    pointer-events: none;
   }
 
   /* ── Browser app ──────────────────────────────────────────────────────── */
@@ -2159,6 +2201,10 @@
     body {
       padding: 0;
       background: none;
+    }
+
+    .os-motion-layer {
+      display: none;
     }
 
     html .os-js-only {

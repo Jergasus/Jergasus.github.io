@@ -19,13 +19,23 @@
  *  - Keyboard dismiss is handled on the document so any key works.
  *  - aria-hidden="true" keeps it out of the accessibility tree.  There are no
  *    focusable children so a focus trap is not possible.
+ *
+ * Motion: the lines appear one by one, a step (motion.os.bootLine) apart, like
+ * an old machine printing its start-up checks. It is CSS (os.css), so it runs
+ * from the first paint, before and during hydration; the step reaches it as
+ * --os-boot-step and each line's index as --i. Reduced motion never boots.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
 import { useTranslations } from 'next-intl';
+import { motion } from '@/design/motion';
 import { PREF_KEYS, writePref } from '@/os/storage';
 
-/** Total boot duration in ms.  Lines animate over this window. */
-const BOOT_MS = 1100;
+/** Four loading lines and the skip hint, one step each. */
+const BEATS = 5;
+/** The boot ends one step after the last line appears (about 1 s). */
+const BOOT_MS = Math.round(BEATS * motion.os.bootLine * 1000);
+
+const step = (i: number) => ({ '--i': i }) as CSSProperties;
 
 export type BootScreenProps = {
   /** Number of projects shown in the loading line. */
@@ -67,7 +77,7 @@ export function BootScreen({ projectCount, totalCommits }: BootScreenProps) {
   // Click handler: the click fires while the boot screen is still visible
   // (data-boot not yet removed), so the browser hit-tested THIS element,
   // not whatever is underneath.  stopPropagation absorbs it; then we dismiss.
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     e.preventDefault();
     dismiss();
@@ -78,12 +88,13 @@ export function BootScreen({ projectCount, totalCommits }: BootScreenProps) {
       data-boot-screen
       aria-hidden="true"
       onClick={handleClick}
+      style={{ '--os-boot-step': `${motion.os.bootLine}s` } as CSSProperties}
     >
-      <p className="os-boot-line">{t('line1')}</p>
-      <p className="os-boot-line">{t('line2', { count: projectCount })}</p>
-      <p className="os-boot-line">{t('line3', { total: totalCommits })}</p>
-      <p className="os-boot-line">{t('line4')}</p>
-      <p className="os-boot-skip">{t('skip')}</p>
+      <p className="os-boot-line" style={step(0)}>{t('line1')}</p>
+      <p className="os-boot-line" style={step(1)}>{t('line2', { count: projectCount })}</p>
+      <p className="os-boot-line" style={step(2)}>{t('line3', { total: totalCommits })}</p>
+      <p className="os-boot-line" style={step(3)}>{t('line4')}</p>
+      <p className="os-boot-skip" style={step(4)}>{t('skip')}</p>
     </div>
   );
 }

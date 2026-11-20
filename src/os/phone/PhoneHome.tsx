@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { localizedPath } from '@/i18n/localized-path';
 import type { Locale } from '@/i18n/routing';
-import { PHONE_ICON_ORDER, getApp, isCaseApp, type AppId } from '../apps';
+import { PHONE_ICON_ORDER, getApp, type AppId } from '../apps';
 import { barcelonaTime } from '../clock';
 import { mailtoHref, whatsappHref } from '@/content/contact';
 import { useOsInternal } from '../context';
@@ -126,14 +126,10 @@ export function PhoneHome({
               aria-label={label}
               className="os-phone-icon"
               style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
-              onClick={() => {
-                if (isCaseApp(id)) {
-                  // Case apps use navigation; openApp handles that path.
-                  openApp(id as AppId);
-                } else {
-                  openApp(id);
-                }
-              }}
+              // The icon is the opener: the app grows out of it, closes back
+              // into it, and focus returns to it. (Case apps navigate; openApp
+              // handles that path.)
+              onClick={(event) => openApp(id, event.currentTarget)}
             >
               <span className="os-phone-icon-tile" aria-hidden="true">
                 {GLYPHS[id] ?? '□'}
