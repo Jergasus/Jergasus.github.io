@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
 import { SITE_URL } from '@/content/site';
 
 const HOME_PAGES = [

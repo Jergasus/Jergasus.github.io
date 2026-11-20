@@ -1,5 +1,6 @@
-import { HomePage } from '@/components/pages/HomePage';
+import { HomeTitle } from '@/os/HomeTitle';
 
+// The windows live in the layout; the home page adds only its title.
 export default function EsHomePage() {
-  return <HomePage locale="es" />;
+  return <HomeTitle locale="es" />;
 }

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
-import { osThemeColor, osThemeColorDark } from './theme-color';
+import { themeColor, themeColorDark } from './theme-color';
 
 /*
  * Parses os-tokens.css into two flat token maps: day (the :root block) and
@@ -101,7 +101,7 @@ describe('os-tokens', () => {
   });
 
   test('theme colours equal the desk colours', () => {
-    expect(osThemeColor).toBe(day['--os-desk']);
-    expect(osThemeColorDark).toBe(night['--os-desk']);
+    expect(themeColor).toBe(day['--os-desk']);
+    expect(themeColorDark).toBe(night['--os-desk']);
   });
 });

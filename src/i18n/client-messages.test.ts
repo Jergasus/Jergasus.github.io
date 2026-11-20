@@ -20,7 +20,8 @@ describe('client messages', () => {
   it('carry only the client namespaces', () => {
     const picked = clientMessages(es);
     expect(Object.keys(picked)).toEqual([...CLIENT_NAMESPACES]);
-    expect(picked.hero).toEqual(es.hero);
+    expect(picked.os).toEqual(es.os);
+    expect(picked.work).toEqual(es.work);
   });
 
   // Server components translate on the server; only what a client component

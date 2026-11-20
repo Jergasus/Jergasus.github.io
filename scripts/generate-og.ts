@@ -1,10 +1,11 @@
 /**
  * One-time script to generate OG images (1200×630) for each locale.
  * Uses Playwright (already a devDependency) to screenshot an HTML template
- * built from the site's design tokens (Editorial Brutalism).
+ * built from the site's design tokens (JG-OS day colours).
  *
- * Color values are parsed directly from src/design/tokens.css — if the tokens
- * change, re-running this script keeps the OG art in sync. The host printed
+ * Colour values are parsed from the day :root block of
+ * src/design/os-tokens.css: if the tokens change, re-running this script keeps
+ * the OG art in sync. (The card itself is redrawn in the OS style later.) The host printed
  * on the card is SITE_URL's, so re-run it after adding public/CNAME.
  *
  * Run from the project root:  npx tsx scripts/generate-og.ts
@@ -24,22 +25,23 @@ const root = new URL('..', import.meta.url).pathname;
 // ── Token parser ─────────────────────────────────────────────────────────────
 
 /**
- * Parse `--color-*: <value>;` declarations from a CSS file, ignoring comments.
- * Returns a map of token name → raw value.
+ * Parse `--os-*: <value>;` declarations from the first (day) :root block of
+ * a CSS file, ignoring comments. Returns a map of token name → raw value.
  */
 function parseColorTokens(cssPath: string): Record<string, string> {
   const css = readFileSync(cssPath, 'utf8');
   // Strip comments (/* … */) before matching to avoid picking up values
-  // that appear only in comments (e.g. "5.9:1 on paper").
+  // that appear only in comments.
   const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const day = stripped.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '';
   const tokens: Record<string, string> = {};
-  for (const match of stripped.matchAll(/--color-([\w-]+)\s*:\s*([^;]+);/g)) {
+  for (const match of day.matchAll(/--os-([\w-]+)\s*:\s*([^;]+);/g)) {
     tokens[match[1]] = match[2].trim();
   }
   return tokens;
 }
 
-const tokenCss = join(root, 'src/design/tokens.css');
+const tokenCss = join(root, 'src/design/os-tokens.css');
 const colors = parseColorTokens(tokenCss);
 
 /**
@@ -51,16 +53,16 @@ function hexToken(name: string): string {
   const value = colors[name];
   if (!value || !/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
     throw new Error(
-      `src/design/tokens.css: --color-${name} must be a hex colour for the OG image, found ${value ? `"${value}"` : 'nothing'}`,
+      `src/design/os-tokens.css: --os-${name} must be a hex colour for the OG image, found ${value ? `"${value}"` : 'nothing'}`,
     );
   }
   return value;
 }
 
-const COLOR_PAPER = hexToken('paper');
+const COLOR_PAPER = hexToken('window');
 const COLOR_INK = hexToken('ink');
-const COLOR_INK_MUTED = hexToken('ink-muted');
-const COLOR_ACCENT = hexToken('accent');
+const COLOR_INK_MUTED = hexToken('ink');
+const COLOR_ACCENT = hexToken('desk');
 
 // The handle printed on the card: the site's own host, which follows
 // public/CNAME (src/content/site.ts).
@@ -74,8 +76,8 @@ function fontDataUrl(path: string) {
 }
 
 const FONTS = {
-  display: join(root, 'src/design/fonts/big-shoulders-display-800-latin.woff2'),
-  text: join(root, 'src/design/fonts/schibsted-grotesk-wght-latin.woff2'),
+  display: join(root, 'src/design/fonts/pixelify-sans-wght-latin.woff2'),
+  text: join(root, 'src/design/fonts/ibm-plex-sans-wght-latin.woff2'),
 };
 
 const displayFontUrl = fontDataUrl(FONTS.display);
@@ -98,15 +100,15 @@ function buildHtml(role: string): string {
 <meta charset="utf-8">
 <style>
   @font-face {
-    font-family: 'Big Shoulders Display';
+    font-family: 'Pixelify Sans';
     src: url('${displayFontUrl}') format('woff2');
-    font-weight: 800;
+    font-weight: 400 700;
     font-style: normal;
   }
   @font-face {
-    font-family: 'Schibsted Grotesk';
+    font-family: 'IBM Plex Sans';
     src: url('${textFontUrl}') format('woff2');
-    font-weight: 100 900;
+    font-weight: 400 600;
     font-style: normal;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -137,8 +139,8 @@ function buildHtml(role: string): string {
     margin-bottom: 28px;
   }
   .name {
-    font-family: 'Big Shoulders Display', sans-serif;
-    font-weight: 800;
+    font-family: 'Pixelify Sans', monospace;
+    font-weight: 700;
     font-size: 116px;
     line-height: 1.0;
     letter-spacing: -0.015em;
@@ -146,7 +148,7 @@ function buildHtml(role: string): string {
     color: ${COLOR_INK};
   }
   .role {
-    font-family: 'Schibsted Grotesk', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     font-weight: 400;
     font-size: 26px;
     line-height: 1.4;
@@ -157,7 +159,7 @@ function buildHtml(role: string): string {
     position: absolute;
     top: 56px;
     right: 72px;
-    font-family: 'Schibsted Grotesk', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
     font-weight: 400;
     font-size: 18px;
     color: ${COLOR_ACCENT};

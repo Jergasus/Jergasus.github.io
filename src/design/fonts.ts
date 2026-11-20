@@ -1,40 +1,14 @@
 import localFont from 'next/font/local';
 
 /*
- * Self-hosted faces (SIL OFL 1.1, licences in ./fonts), Latin subset: covers
- * Spanish and Catalan (à è é í ï ò ó ú ü ç ñ, l·l). Each `.variable` class
- * declares one of the font tokens; the root layouts put all three on <html>.
+ * JG-OS typefaces, self-hosted (SIL OFL 1.1, licences in ./fonts), Latin
+ * subset: covers Spanish and Catalan (à è é í ï ò ó ú ü ç ñ, l·l). Each
+ * `.variable` class declares one font variable; os-tokens.css reads them as
+ * --os-font-pixel, --os-font-sans and --os-font-mono. Every root document
+ * puts all three on <html> (osFontVariables).
  */
 
-export const displayFont = localFont({
-  src: './fonts/big-shoulders-display-800-latin.woff2',
-  weight: '800',
-  variable: '--font-display',
-  fallback: ['sans-serif'],
-});
-
-export const textFont = localFont({
-  src: './fonts/schibsted-grotesk-wght-latin.woff2',
-  weight: '400 900',
-  variable: '--font-text',
-  fallback: ['sans-serif'],
-});
-
-export const monoFont = localFont({
-  src: './fonts/fragment-mono-400-latin.woff2',
-  weight: '400',
-  variable: '--font-mono',
-  fallback: ['ui-monospace', 'monospace'],
-  adjustFontFallback: false,
-});
-
-/*
- * JG-OS typefaces (SIL OFL 1.1, licences in ./fonts).
- * Not applied to any page until Task 5; exported here so Task 5 can import
- * and add the .variable class names to <html> without further changes here.
- */
-
-/** Pixelify Sans (wght 400–700) — OS chrome display text, pixel aesthetic. */
+/** Pixelify Sans (wght 400–700): window titles, taskbar and OS chrome. */
 export const osPixelFont = localFont({
   src: './fonts/pixelify-sans-wght-latin.woff2',
   weight: '400 700',
@@ -43,7 +17,7 @@ export const osPixelFont = localFont({
   adjustFontFallback: false,
 });
 
-/** IBM Plex Sans (wght 400–600) — OS UI body and label text. */
+/** IBM Plex Sans (wght 400–600): long-form text (case studies, bio). */
 export const osSansFont = localFont({
   src: './fonts/ibm-plex-sans-wght-latin.woff2',
   weight: '400 600',
@@ -51,7 +25,7 @@ export const osSansFont = localFont({
   fallback: ['sans-serif'],
 });
 
-/** IBM Plex Mono (400 and 500) — OS monospace / data display. */
+/** IBM Plex Mono (400 and 500): data, labels and code. */
 export const osMonoFont = localFont({
   src: [
     { path: './fonts/ibm-plex-mono-400-latin.woff2', weight: '400', style: 'normal' },
@@ -61,3 +35,6 @@ export const osMonoFont = localFont({
   fallback: ['ui-monospace', 'monospace'],
   adjustFontFallback: false,
 });
+
+/** The three variable classes, for the className of every root <html>. */
+export const osFontVariables = [osPixelFont.variable, osSansFont.variable, osMonoFont.variable].join(' ');

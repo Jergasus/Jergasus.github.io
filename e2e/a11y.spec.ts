@@ -1,16 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect } from '@playwright/test';
+import { expect, test, visit } from './fixtures';
 import { ALL_PAGES } from './pages';
 
-// Quality gate (spec §6): axe finds no WCAG 2.0 A/AA or 2.1 AA violation on
-// any page. Scanned with reduced motion so every section is in its settled,
-// static state: content a scroll reveal still holds back (opacity 0) would
-// otherwise be skipped by the contrast check instead of measured.
+// Quality gate (spec §5): axe finds no WCAG 2.0 A/AA or 2.1 AA violation on
+// any page, scanned as the desktop a visitor lands on (hydrated, with the
+// windows open on load), with reduced motion so nothing is mid-animation.
 test.use({ reducedMotion: 'reduce' });
 
 for (const path of ALL_PAGES) {
   test(`no axe violations (${path})`, async ({ page }) => {
-    const response = await page.goto(path);
+    const response = await visit(page, path);
     expect(response!.status()).toBe(200);
     await page.evaluate(() => document.fonts.ready);
 

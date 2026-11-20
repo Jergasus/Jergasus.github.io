@@ -1,6 +1,9 @@
 import { expect, test } from 'vitest';
 import { apps, getApp } from './apps';
 import { caseStudySlugs } from '@/content/projects';
+import es from '../../messages/es.json';
+import ca from '../../messages/ca.json';
+import en from '../../messages/en.json';
 
 test('case apps equal caseStudySlugs', () => {
   expect(apps.filter((a) => a.route === 'case').map((a) => a.id)).toEqual(caseStudySlugs);
@@ -21,5 +24,21 @@ test('terminal, browser and settings are interactive-only', () => {
   }
 });
 
-// Task 5 adds the os.apps.* message keys; enable then.
-test.todo('every app has os.apps.<key>.title and .label in es/ca/en');
+test('every app has os.apps.<key>.title and .label in es/ca/en', () => {
+  for (const [locale, messages] of Object.entries({ es, ca, en })) {
+    const entries = messages.os.apps as Record<string, { title?: string; label?: string } | undefined>;
+    for (const app of apps) {
+      const where = `${locale} os.apps.${app.messageKey}`;
+      expect(entries[app.messageKey]?.title, `${where}.title`).toEqual(expect.stringMatching(/\S/));
+      expect(entries[app.messageKey]?.label, `${where}.label`).toEqual(expect.stringMatching(/\S/));
+    }
+  }
+});
+
+test('project apps are titled with the project name in every locale', () => {
+  for (const messages of [es, ca, en]) {
+    expect(messages.os.apps.questday).toEqual({ title: 'QuestDay', label: 'QuestDay' });
+    expect(messages.os.apps.sakurai).toEqual({ title: 'SakurAI', label: 'SakurAI' });
+    expect(messages.os.apps.rallyVoley).toEqual({ title: 'Rally Voley', label: 'Rally Voley' });
+  }
+});

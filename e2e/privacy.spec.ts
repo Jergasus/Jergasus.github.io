@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 // Spec §4 privacy: from the private repos, only numbers and ISO dates may
 // reach the site. The repo config (owner, repo names, the branch Rally Voley

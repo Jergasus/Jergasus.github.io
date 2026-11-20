@@ -23,7 +23,7 @@ npm run activity   # refresh data/activity.json (needs ACTIVITY_TOKEN)
 | Projects (order, status, links, stack) | `src/content/projects.ts` |
 | Email, WhatsApp, LinkedIn, GitHub | `src/content/contact.ts` |
 | Which repo and branch each project's activity comes from | `src/lib/activity-sources.ts` (build-only; never imported by pages or components) |
-| Colours, type scale, spacing | `src/design/tokens.css`, the only place visual values live |
+| Colours, type scale, geometry | `src/design/os-tokens.css` (day and night); window and layout styles in `src/os/os.css` |
 | Animation timing | `src/design/motion.ts`, the only place motion timing lives |
 
 Pushing to `main` deploys the change.

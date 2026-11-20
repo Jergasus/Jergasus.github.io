@@ -3,19 +3,27 @@ import type { ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
-import { displayFont, textFont, monoFont } from '@/design/fonts';
-import { themeColor } from '@/design/theme-color';
+import { osFontVariables } from '@/design/fonts';
+import { themeColor, themeColorDark } from '@/design/theme-color';
 import { routing, type Locale } from '@/i18n/routing';
 import { SITE_URL } from '@/content/site';
 import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
-import { SiteShell } from '@/components/site/SiteShell';
+import { OsRoot } from '@/os/OsRoot';
+import { OsWindows } from '@/os/OsWindows';
+import { prepaintScript } from '@/os/prepaint';
+import { TaskbarStub } from '@/os/TaskbarStub';
 import '../globals.css';
 
 export const dynamicParams = false;
 
-// The browser chrome (Android toolbar, Safari tab bar) matches the paper.
-export const viewport: Viewport = { themeColor };
+// The browser chrome (Android toolbar, Safari tab bar) takes the desk colour.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: themeColor },
+    { media: '(prefers-color-scheme: dark)', color: themeColorDark },
+  ],
+};
 
 export function generateStaticParams() {
   return [{ locale: 'ca' }, { locale: 'en' }];
@@ -59,14 +67,20 @@ export default async function LocaleLayout({
   const messages = await getMessages({ locale });
 
   return (
-    <html
-      lang={locale}
-      className={`${displayFont.variable} ${textFont.variable} ${monoFont.variable}`}
-    >
+    // The pre-paint script sets data-os, data-wallpaper, data-theme and
+    // data-boot on <html> before React sees it.
+    <html lang={locale} className={osFontVariables} suppressHydrationWarning>
+      <head>
+        <script id="jgos-prepaint" dangerouslySetInnerHTML={{ __html: prepaintScript() }} />
+      </head>
       <body>
         {/* Only what client components translate goes to the browser. */}
         <NextIntlClientProvider messages={clientMessages(messages)}>
-          <SiteShell locale={locale as Locale}>{children}</SiteShell>
+          <OsRoot locale={locale as Locale}>
+            {children}
+            <OsWindows locale={locale as Locale} />
+          </OsRoot>
+          <TaskbarStub locale={locale as Locale} />
         </NextIntlClientProvider>
       </body>
     </html>

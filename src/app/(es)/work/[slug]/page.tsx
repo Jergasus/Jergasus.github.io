@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { caseStudySlugs, isCaseStudySlug } from '@/content/projects';
 import { caseMetadata } from '@/i18n/case-metadata';
-import { CaseStudyPage } from '@/components/pages/CaseStudyPage';
+import { CaseWindow } from '@/os/CaseWindow';
 
 // Only the three case studies exist; anything else (Yokaido included) 404s.
 export const dynamicParams = false;
@@ -22,5 +22,5 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function EsCasePage({ params }: Params) {
   const { slug } = await params;
   if (!isCaseStudySlug(slug)) notFound();
-  return <CaseStudyPage locale="es" slug={slug} />;
+  return <CaseWindow locale="es" slug={slug} />;
 }

@@ -17,17 +17,18 @@ type Props = {
   label: string;
 };
 
+/** ES / CA / EN as plain links to the same page in each language (a full load). */
 export function LanguageSwitcher({ currentLocale, label }: Props) {
   const pathname = usePathname();
   return (
-    <nav aria-label={label} className="flex items-center gap-3xs">
+    <nav aria-label={label} className="os-lang">
       {LOCALES.map(({ code, label: localeLabel }) => (
         <a
           key={code}
           href={localizedPath(pathname, code)}
           hrefLang={code}
           aria-current={code === currentLocale ? 'page' : undefined}
-          className="text-step--1 font-mono px-2xs py-3xs border border-transparent aria-[current=page]:border-rule hover:text-accent active:text-accent"
+          className="os-lang-link"
         >
           {localeLabel}
         </a>

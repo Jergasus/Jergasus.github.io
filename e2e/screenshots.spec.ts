@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 // Visual QA (spec §6): full-page screenshots to read, not to diff. Taken with
 // reduced motion so scroll reveals are in place instead of held back below

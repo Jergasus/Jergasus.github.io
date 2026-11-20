@@ -4,7 +4,7 @@ import { hasLocale } from 'next-intl';
 import { routing, type Locale } from '@/i18n/routing';
 import { caseStudySlugs, isCaseStudySlug } from '@/content/projects';
 import { caseMetadata } from '@/i18n/case-metadata';
-import { CaseStudyPage } from '@/components/pages/CaseStudyPage';
+import { CaseWindow } from '@/os/CaseWindow';
 
 // Spanish lives in the (es) tree, so this one builds ca and en only.
 export const dynamicParams = false;
@@ -26,5 +26,5 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function LocaleCasePage({ params }: Params) {
   const { locale, slug } = await params;
   if (!hasLocale(routing.locales, locale) || !isCaseStudySlug(slug)) notFound();
-  return <CaseStudyPage locale={locale as Locale} slug={slug} />;
+  return <CaseWindow locale={locale as Locale} slug={slug} />;
 }

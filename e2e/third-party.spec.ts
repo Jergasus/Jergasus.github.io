@@ -1,4 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 // Collects every request a page makes while it loads (preloads, fonts, chunks,
 // prefetches) and returns the URLs that leave the site's own origin.
@@ -27,7 +28,7 @@ test('fonts are self-hosted woff2', async ({ page, baseURL }) => {
     if (request.resourceType() === 'font') fonts.push(request.url());
   });
   await page.goto('/', { waitUntil: 'networkidle' });
-  // Display, text and mono faces.
+  // Pixel (chrome), sans (text) and mono (data) faces.
   expect(fonts.length).toBeGreaterThanOrEqual(3);
   for (const url of fonts) {
     expect(new URL(url).origin).toBe(new URL(baseURL!).origin);

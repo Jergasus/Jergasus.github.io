@@ -3,20 +3,10 @@
     "title": "Jesús García · Full-stack web developer",
     "description": "Full-stack web developer in Barcelona. I build websites, apps and digital products."
   },
-  "nav": {
-    "siteLabel": "Main navigation",
-    "work": "Work",
-    "now": "Now",
-    "business": "For businesses",
-    "about": "About",
-    "contact": "Contact",
-    "language": "Language"
-  },
   "switcher": {
     "label": "Switch language"
   },
   "hero": {
-    "heading": "Jesús\nGarcía",
     "lede": "Full-stack developer in Barcelona. I build websites, apps and digital tools from front end to server.",
     "availability": {
       "available": "Taking new projects",
@@ -59,11 +49,6 @@
     "heading": "Let’s talk",
     "whatsappMessage": "Hi Jesús, I've seen your portfolio and I'd like to talk about a website.",
     "whatsappAriaLabel": "WhatsApp: {number}"
-  },
-  "footer": {
-    "copy": "Jesús García",
-    "githubAriaLabel": "Jesús García on GitHub",
-    "linkedinAriaLabel": "Jesús García on LinkedIn"
   },
   "projects": {
     "questday": {
@@ -168,6 +153,90 @@
         }
       ],
       "stackNote": "Next.js 16 as a static export, Dexie over IndexedDB on the phone, and a Cloudflare Worker with D1 for sync. GSAP for motion that respects the reduced-motion preference, and Vitest and Playwright for testing."
+    }
+  },
+  "os": {
+    "name": "JG-OS",
+    "apps": {
+      "about": {
+        "title": "about_me.txt",
+        "label": "About me"
+      },
+      "projects": {
+        "title": "projects",
+        "label": "Projects"
+      },
+      "activity": {
+        "title": "activity",
+        "label": "Activity"
+      },
+      "business": {
+        "title": "new_project",
+        "label": "New project"
+      },
+      "contact": {
+        "title": "contact",
+        "label": "Contact"
+      },
+      "terminal": {
+        "title": "terminal",
+        "label": "Terminal"
+      },
+      "browser": {
+        "title": "browser",
+        "label": "Browser"
+      },
+      "system": {
+        "title": "system properties",
+        "label": "System properties"
+      },
+      "settings": {
+        "title": "personalise",
+        "label": "Personalise"
+      },
+      "yokaido": {
+        "title": "yokaido",
+        "label": "Yokaido"
+      },
+      "questday": {
+        "title": "QuestDay",
+        "label": "QuestDay"
+      },
+      "sakurai": {
+        "title": "SakurAI",
+        "label": "SakurAI"
+      },
+      "rallyVoley": {
+        "title": "Rally Voley",
+        "label": "Rally Voley"
+      }
+    },
+    "window": {
+      "close": "Close",
+      "minimize": "Minimise",
+      "maximize": "Maximise",
+      "restore": "Restore",
+      "move": "Move {title}",
+      "resize": "Resize {title}"
+    },
+    "projects": {
+      "open": "Open {name}"
+    },
+    "activity": {
+      "project": "Project",
+      "total": "Commits",
+      "recent": "26 weeks",
+      "last": "Last commit"
+    },
+    "system": {
+      "heading": "System properties",
+      "os": "System",
+      "user": "User",
+      "location": "Location",
+      "components": "Components"
+    },
+    "yokaido": {
+      "engine": "Engine"
     }
   }
 }

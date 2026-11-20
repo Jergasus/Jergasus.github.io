@@ -5,7 +5,7 @@
  * page load's masked lines and drawn rules, a long expo tail for things that
  * settle and for reveals the visitor's scroll sets off.
  * Durations are in seconds (GSAP units). CSS hover and press transitions use
- * the matching --ease-* and --duration-ui tokens in tokens.css.
+ * the matching CSS easing and duration values.
  */
 export const motion = {
   ease: {

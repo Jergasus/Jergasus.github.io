@@ -28,7 +28,11 @@ describe('activity sources', () => {
   // Spec §4 privacy: repo and branch names are build-only. Pages, layouts and
   // components may not import them, so they can never reach a bundle.
   it('stay out of the app and its components', () => {
-    const importers = [...sourceFiles(join(SRC, 'app')), ...sourceFiles(join(SRC, 'components'))].filter(
+    const importers = [
+      ...sourceFiles(join(SRC, 'app')),
+      ...sourceFiles(join(SRC, 'components')),
+      ...sourceFiles(join(SRC, 'os')),
+    ].filter(
       (file) => /from ['"][^'"]*(activity-sources|github-activity)['"]/.test(readFileSync(file, 'utf8')),
     );
     expect(importers).toEqual([]);

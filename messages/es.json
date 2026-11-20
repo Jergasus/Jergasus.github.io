@@ -3,20 +3,10 @@
     "title": "Jesús García · Desarrollador web full-stack",
     "description": "Desarrollador web full-stack en Barcelona. Construyo webs, apps y productos digitales."
   },
-  "nav": {
-    "siteLabel": "Navegación principal",
-    "work": "Trabajo",
-    "now": "Ahora",
-    "business": "Para negocios",
-    "about": "Sobre mí",
-    "contact": "Contacto",
-    "language": "Idioma"
-  },
   "switcher": {
     "label": "Cambiar idioma"
   },
   "hero": {
-    "heading": "Jesús\nGarcía",
     "lede": "Desarrollador full-stack en Barcelona. Construyo webs, apps y herramientas digitales de la interfaz al servidor.",
     "availability": {
       "available": "Aceptando nuevos proyectos",
@@ -59,11 +49,6 @@
     "heading": "Hablemos",
     "whatsappMessage": "Hola Jesús, he visto tu portfolio y me gustaría hablar de una web.",
     "whatsappAriaLabel": "WhatsApp: {number}"
-  },
-  "footer": {
-    "copy": "Jesús García",
-    "githubAriaLabel": "GitHub de Jesús García",
-    "linkedinAriaLabel": "LinkedIn de Jesús García"
   },
   "projects": {
     "questday": {
@@ -168,6 +153,90 @@
         }
       ],
       "stackNote": "Next.js 16 en exportación estática, Dexie sobre IndexedDB en el móvil y un Worker de Cloudflare con D1 para sincronizar. GSAP para el movimiento, que respeta la preferencia de movimiento reducido, y Vitest y Playwright para las pruebas."
+    }
+  },
+  "os": {
+    "name": "JG-OS",
+    "apps": {
+      "about": {
+        "title": "sobre_mi.txt",
+        "label": "Sobre mí"
+      },
+      "projects": {
+        "title": "proyectos",
+        "label": "Proyectos"
+      },
+      "activity": {
+        "title": "actividad",
+        "label": "Actividad"
+      },
+      "business": {
+        "title": "nuevo_proyecto",
+        "label": "Nuevo proyecto"
+      },
+      "contact": {
+        "title": "contacto",
+        "label": "Contacto"
+      },
+      "terminal": {
+        "title": "terminal",
+        "label": "Terminal"
+      },
+      "browser": {
+        "title": "navegador",
+        "label": "Navegador"
+      },
+      "system": {
+        "title": "propiedades del sistema",
+        "label": "Propiedades del sistema"
+      },
+      "settings": {
+        "title": "personalizar",
+        "label": "Personalizar"
+      },
+      "yokaido": {
+        "title": "yokaido",
+        "label": "Yokaido"
+      },
+      "questday": {
+        "title": "QuestDay",
+        "label": "QuestDay"
+      },
+      "sakurai": {
+        "title": "SakurAI",
+        "label": "SakurAI"
+      },
+      "rallyVoley": {
+        "title": "Rally Voley",
+        "label": "Rally Voley"
+      }
+    },
+    "window": {
+      "close": "Cerrar",
+      "minimize": "Minimizar",
+      "maximize": "Maximizar",
+      "restore": "Restaurar",
+      "move": "Mover {title}",
+      "resize": "Cambiar el tamaño de {title}"
+    },
+    "projects": {
+      "open": "Abrir {name}"
+    },
+    "activity": {
+      "project": "Proyecto",
+      "total": "Commits",
+      "recent": "26 semanas",
+      "last": "Último commit"
+    },
+    "system": {
+      "heading": "Propiedades del sistema",
+      "os": "Sistema",
+      "user": "Usuario",
+      "location": "Ubicación",
+      "components": "Componentes"
+    },
+    "yokaido": {
+      "engine": "Motor"
     }
   }
 }

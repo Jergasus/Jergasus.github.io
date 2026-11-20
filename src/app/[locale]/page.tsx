@@ -1,8 +1,9 @@
 import { hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
-import { routing, type Locale } from '@/i18n/routing';
-import { HomePage } from '@/components/pages/HomePage';
+import { routing } from '@/i18n/routing';
+import { HomeTitle } from '@/os/HomeTitle';
 
+// The windows live in the layout; the home page adds only its title.
 export default async function LocaleHomePage({
   params,
 }: {
@@ -10,5 +11,5 @@ export default async function LocaleHomePage({
 }) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
-  return <HomePage locale={locale as Locale} />;
+  return <HomeTitle locale={locale} />;
 }

@@ -18,7 +18,7 @@ import { parseActivitySnapshot, type ActivitySnapshot } from '../src/lib/activit
 const DATA_PATH = resolve(process.cwd(), 'data', 'activity.json');
 const inActions = process.env.GITHUB_ACTIONS === 'true';
 
-// Same whitelist as the build's reader (src/components/pages/HomePage.tsx).
+// Same whitelist as the build's reader (src/os/apps/ActivityApp.tsx).
 async function readSnapshot(): Promise<ActivitySnapshot> {
   const raw = await readFile(DATA_PATH, 'utf-8');
   return parseActivitySnapshot(JSON.parse(raw));

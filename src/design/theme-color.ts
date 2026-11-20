@@ -1,18 +1,10 @@
 /**
- * The page colour as a plain value, for the one surface CSS cannot reach:
- * the browser's own chrome (Android Chrome's toolbar, Safari's tab bar),
- * which reads <meta name="theme-color"> from the root layouts' `viewport`
- * export. The site has one light theme, so one value serves both OS colour
- * schemes. It must equal --color-paper in tokens.css; tokens.test.ts keeps
- * the two in step, so a new token file cannot silently leave it behind.
+ * The desk colour as plain values, for the one surface CSS cannot reach: the
+ * browser's own chrome (Android Chrome's toolbar, Safari's tab bar), which
+ * reads <meta name="theme-color"> from the root layouts' `viewport` export.
+ * One per colour scheme: themeColor for day, themeColorDark for night. Both
+ * must equal the matching --os-desk value in os-tokens.css; os-tokens.test.ts
+ * keeps them in step.
  */
-export const themeColor = '#efede7';
-
-/**
- * JG-OS: the desk colour as a plain value for <meta name="theme-color">.
- * osThemeColor targets day mode; osThemeColorDark targets night mode.
- * Both must equal the corresponding --os-desk value in os-tokens.css;
- * os-tokens.test.ts enforces this.
- */
-export const osThemeColor = '#5b7fa6';
-export const osThemeColorDark = '#141b2b';
+export const themeColor = '#5b7fa6';
+export const themeColorDark = '#141b2b';
