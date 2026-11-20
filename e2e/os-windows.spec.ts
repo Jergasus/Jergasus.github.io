@@ -133,6 +133,51 @@ test('double-click on the titlebar maximises and restores', async ({ page }) => 
 });
 
 // ---------------------------------------------------------------------------
+// Maximised window – drag guard
+// ---------------------------------------------------------------------------
+
+test('dragging the titlebar of a maximised window is a no-op and restore returns to pre-maximise rect', async ({
+  page,
+}) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/');
+
+  const about = win(page, 'about');
+  const titlebar = about.locator('[data-titlebar]');
+
+  // Record the pre-maximise rect (percentage-based default position).
+  const box0 = (await about.boundingBox())!;
+
+  // Maximise via the button — avoids the dblclick's first-click drag side-effect
+  // which would start pointer capture before the maximize fires.
+  await about.locator('[data-win-maximize]').click();
+  await expect(about).toHaveAttribute('data-maximized', 'true');
+
+  // Try to drag the titlebar — the window must remain maximised.
+  const tbBox = (await titlebar.boundingBox())!;
+  const startX = tbBox.x + 50;
+  const startY = tbBox.y + 10;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + 100, startY + 60, { steps: 10 });
+  await page.mouse.up();
+
+  // Still maximised after the drag attempt.
+  await expect(about).toHaveAttribute('data-maximized', 'true');
+
+  // Restore via the button.
+  await about.locator('[data-win-maximize]').click();
+  await expect(about).toHaveAttribute('data-maximized', 'false');
+
+  // After restore the window returns to the pre-maximise rect.
+  const box1 = (await about.boundingBox())!;
+  expect(Math.abs(box1.x - box0.x)).toBeLessThan(2);
+  expect(Math.abs(box1.y - box0.y)).toBeLessThan(2);
+  expect(Math.abs(box1.width - box0.width)).toBeLessThan(2);
+  expect(Math.abs(box1.height - box0.height)).toBeLessThan(2);
+});
+
+// ---------------------------------------------------------------------------
 // Keyboard move + resize
 // ---------------------------------------------------------------------------
 

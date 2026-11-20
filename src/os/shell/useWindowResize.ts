@@ -13,6 +13,9 @@ type ResizeState = {
   startX: number;
   startY: number;
   orig: { x: number; y: number; w: number; h: number };
+  /** Most recent delta from onPointerMove — used for the synchronous final apply on pointerup. */
+  lastDx?: number;
+  lastDy?: number;
 };
 
 type Options = {
@@ -69,6 +72,7 @@ function computeRect(
  */
 export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) {
   const resize = useRef<ResizeState | null>(null);
+  const rafId = useRef<number | null>(null);
 
   function onHandlePointerDown(dir: ResizeDir, e: PointerEvent<HTMLElement>) {
     // Skip when not in desktop OS mode.
@@ -97,18 +101,36 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
 
     const dx = e.clientX - rs.startX;
     const dy = e.clientY - rs.startY;
-    const { x, y, w, h } = computeRect(rs.orig, rs.dir, dx, dy, minSize);
+    // Store for the synchronous final apply on pointerup/cancel.
+    rs.lastDx = dx;
+    rs.lastDy = dy;
 
-    // Write to override vars — React controls --x/--y/--w/--h and never touches these.
-    section.style.setProperty('--rx', `${x}px`);
-    section.style.setProperty('--ry', `${y}px`);
-    section.style.setProperty('--rw', `${w}px`);
-    section.style.setProperty('--rh', `${h}px`);
+    // Coalesce CSS var writes into one rAF so we write at most once per frame.
+    if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      rafId.current = null;
+      const rs2 = resize.current;
+      const sec = sectionRef.current;
+      if (!rs2 || !sec) return;
+      const { x, y, w, h } = computeRect(rs2.orig, rs2.dir, rs2.lastDx ?? 0, rs2.lastDy ?? 0, minSize);
+      // Write to override vars — React controls --x/--y/--w/--h and never touches these.
+      sec.style.setProperty('--rx', `${x}px`);
+      sec.style.setProperty('--ry', `${y}px`);
+      sec.style.setProperty('--rw', `${w}px`);
+      sec.style.setProperty('--rh', `${h}px`);
+    });
   }
 
   function onPointerUp(e: PointerEvent<HTMLElement>) {
     const rs = resize.current;
     if (!rs || rs.pointerId !== e.pointerId) return;
+
+    // Cancel any pending rAF before reading the final state.
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+
     const section = sectionRef.current;
     if (!section) return;
 
@@ -117,10 +139,12 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
     section.style.removeProperty('--ry');
     section.style.removeProperty('--rw');
     section.style.removeProperty('--rh');
+
+    // Use stored deltas (from the last pointermove) for the final rect.
+    const dx = rs.lastDx ?? (e.clientX - rs.startX);
+    const dy = rs.lastDy ?? (e.clientY - rs.startY);
     resize.current = null;
 
-    const dx = e.clientX - rs.startX;
-    const dy = e.clientY - rs.startY;
     if (dx === 0 && dy === 0) return;
 
     const rect = computeRect(rs.orig, rs.dir, dx, dy, minSize);
@@ -130,6 +154,12 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
   function onPointerCancel(e: PointerEvent<HTMLElement>) {
     const rs = resize.current;
     if (!rs || rs.pointerId !== e.pointerId) return;
+
+    if (rafId.current !== null) {
+      cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+    }
+
     const section = sectionRef.current;
     if (!section) return;
     section.style.removeProperty('--rx');

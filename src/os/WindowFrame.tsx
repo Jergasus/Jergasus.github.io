@@ -162,13 +162,16 @@ export function WindowFrame({ id, title, children, labels }: Props) {
       return;
     }
     lastTitlePdTime.current = now;
-    onTitlebarPointerDown(e);
+    // Dragging a maximised window is a no-op; double-click (above) still works.
+    if (!win.maximized) onTitlebarPointerDown(e);
   };
 
   // ── Keyboard move / resize (via the move handle button) ───────────────────
   const handleMoveKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
     const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
     if (!ARROWS.includes(e.key)) return;
+    // No-op when maximised — arrows would snap a maximised window out of its full-screen position.
+    if (win.maximized) return;
     e.preventDefault();
 
     const delta = e.shiftKey ? 64 : 16;

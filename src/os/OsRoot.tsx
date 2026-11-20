@@ -280,7 +280,9 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
 
   // On mount: hydrate window state from the session (same tab, reload) and
   // immediately reclamp to the current desktop size.
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so hydration applies before the first paint,
+  // avoiding a visible position jump on reload.
+  useLayoutEffect(() => {
     const saved = readSession<SavedWindows>(SESSION_KEY);
     if (saved) {
       dispatch({ type: 'hydrate', saved });
