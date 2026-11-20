@@ -12,6 +12,7 @@ import { openGraph } from '@/i18n/open-graph';
 import { availabilityLabel, status } from '@/lib/status';
 import { aggregate, parseActivitySnapshot } from '@/lib/activity';
 import { SITE_NAME } from '@/content/site';
+import { projects } from '@/content/projects';
 import { OsRoot } from '@/os/OsRoot';
 import snapshot from '../../../data/activity.json';
 import { OsWindows } from '@/os/OsWindows';
@@ -76,7 +77,9 @@ export default async function LocaleLayout({
     available: tHero('availability.available'),
     unavailable: tHero('availability.unavailable'),
   });
-  const activity = aggregate(parseActivitySnapshot(snapshot));
+  const rawActivity = parseActivitySnapshot(snapshot);
+  const activity = aggregate(rawActivity);
+  const notifRepos = rawActivity.repos.map((r) => ({ slug: r.slug, lastCommitAt: r.lastCommitAt }));
 
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
@@ -98,6 +101,8 @@ export default async function LocaleLayout({
             lastCommitAt={activity.lastCommitAt}
             weekly={activity.weekly}
             whatsappMessage={tContact('whatsappMessage')}
+            projectCount={projects.length}
+            notifRepos={notifRepos}
           >
             {children}
             <OsWindows locale={locale as Locale} />

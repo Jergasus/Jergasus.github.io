@@ -281,6 +281,18 @@
         "lastServer": "últim {date}",
         "lastLive": "últim fa {time}"
       }
+    },
+    "boot": {
+      "line1": "Iniciant JG-OS…",
+      "line2": "Carregant {count, plural, one {# projecte} other {# projectes}}…",
+      "line3": "{total, number} commits trobats",
+      "line4": "Llest.",
+      "skip": "Prem qualsevol tecla per continuar"
+    },
+    "notifications": {
+      "commit": "Nou commit a {project} {when}",
+      "dismiss": "Tancar avis",
+      "region": "Avisos"
     }
   }
 }

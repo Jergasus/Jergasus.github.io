@@ -24,6 +24,8 @@ import { PREF_KEYS, readPref, SESSION_KEY, readSession, writeSession } from './s
 import { initialState, nextActiveCase, reduce, serialize, type SavedWindows } from './window-manager';
 import { desktopBounds } from './shell/desktopBounds';
 import { forgetWindow } from './window-memory';
+import { BootScreen } from './shell/BootScreen';
+import { Toasts, type NotifRepo } from './shell/Toasts';
 import { DesktopIcons } from './shell/DesktopIcons';
 import { Taskbar } from './shell/Taskbar';
 import { ContextMenu } from './shell/ContextMenu';
@@ -75,6 +77,13 @@ type Props = {
   lastCommitAt?: string;
   weekly?: number[];
   whatsappMessage?: string;
+  /** Boot screen: total number of projects. */
+  projectCount?: number;
+  /**
+   * Notification source repos — only { slug, lastCommitAt } pairs.
+   * Freshness filtering happens client-side so page.clock can control it in e2e tests.
+   */
+  notifRepos?: NotifRepo[];
 };
 
 const LOCALES_NOJS: { code: Locale; label: string }[] = [
@@ -94,6 +103,8 @@ export function OsRoot({
   lastCommitAt = new Date().toISOString(),
   weekly = new Array<number>(26).fill(0),
   whatsappMessage = '',
+  projectCount = 0,
+  notifRepos = [],
 }: Props) {
   const router = useRouter();
   // Derived in this render, so CaseHost and the page always agree on which
@@ -419,6 +430,14 @@ export function OsRoot({
 
   return (
     <OsContext value={os}>
+      {/* Boot screen overlay — visible only on first visit (html[data-boot="1"]).
+          Renders server-side so the lines appear on the first paint; JS handles
+          the timer and skip-on-input logic.  Content renders underneath it. */}
+      <BootScreen projectCount={projectCount} totalCommits={totalCommits} />
+
+      {/* Toast notifications — once per session, after the boot clears. */}
+      <Toasts repos={notifRepos} locale={locale} />
+
       {/* R5: Document-mode language links. Hidden via CSS once data-os is set.
           They render in the SSR HTML so a no-JS visitor can switch language. */}
       <nav aria-label="Language" className="os-nojs-only os-doc-lang">

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { PREF_KEYS, SESSION_KEY, readPref, readSession, writePref, writeSession } from './storage';
+import { PREF_KEYS, SESSION_KEY, SESSION_KEY_TOASTS, readPref, readSession, writePref, writeSession } from './storage';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -109,6 +109,13 @@ describe('readSession', () => {
     const ss = makeSS({ [SESSION_KEY]: 'not-json{{{' });
     vi.stubGlobal('window', { sessionStorage: ss });
     expect(readSession(SESSION_KEY)).toBe(null);
+  });
+
+  it('stores and reads the toasts session flag with SESSION_KEY_TOASTS', () => {
+    const ss = makeSS();
+    vi.stubGlobal('window', { sessionStorage: ss });
+    writeSession(SESSION_KEY_TOASTS, '1');
+    expect(readSession<string>(SESSION_KEY_TOASTS)).toBe('1');
   });
 });
 

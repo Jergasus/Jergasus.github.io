@@ -281,6 +281,18 @@
         "lastServer": "último {date}",
         "lastLive": "último hace {time}"
       }
+    },
+    "boot": {
+      "line1": "Iniciando JG-OS…",
+      "line2": "Cargando {count, plural, one {# proyecto} other {# proyectos}}…",
+      "line3": "{total, number} commits encontrados",
+      "line4": "Listo.",
+      "skip": "Pulsa cualquier tecla para continuar"
+    },
+    "notifications": {
+      "commit": "Nuevo commit en {project} {when}",
+      "dismiss": "Cerrar aviso",
+      "region": "Avisos"
     }
   }
 }

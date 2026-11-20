@@ -11,9 +11,16 @@ export const PREF_KEYS = {
 /** Derived union type — always in sync with PREF_KEYS. */
 export type PrefKey = (typeof PREF_KEYS)[keyof typeof PREF_KEYS];
 
-/** sessionStorage key — exported so prepaint and other modules share it. */
+/** sessionStorage key for window state — exported so prepaint and other modules share it. */
 export const SESSION_KEY = 'jgos-windows' as const;
 export type SessionKey = typeof SESSION_KEY;
+
+/** sessionStorage key for the once-per-session toasts flag. */
+export const SESSION_KEY_TOASTS = 'jgos-toasts' as const;
+export type ToastsSessionKey = typeof SESSION_KEY_TOASTS;
+
+/** Union of all session storage keys — single source of truth. */
+export type AnySessionKey = typeof SESSION_KEY | typeof SESSION_KEY_TOASTS;
 
 export function readPref(key: PrefKey): string | null {
   if (typeof window === 'undefined') return null;
@@ -37,7 +44,7 @@ export function writePref(key: PrefKey, value: string | null): void {
   }
 }
 
-export function readSession<T>(key: 'jgos-windows'): T | null {
+export function readSession<T>(key: AnySessionKey): T | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.sessionStorage.getItem(key);
@@ -48,7 +55,7 @@ export function readSession<T>(key: 'jgos-windows'): T | null {
   }
 }
 
-export function writeSession(key: 'jgos-windows', value: unknown): void {
+export function writeSession(key: AnySessionKey, value: unknown): void {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.setItem(key, JSON.stringify(value));
