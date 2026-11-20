@@ -244,7 +244,7 @@
 
   .os-specs > div {
     display: grid;
-    grid-template-columns: 8.5rem 1fr;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
     gap: 4px 12px;
     align-items: baseline;
   }
@@ -262,7 +262,7 @@
   /* sobre_mi.txt */
   .os-about {
     display: grid;
-    grid-template-columns: 96px 1fr;
+    grid-template-columns: 96px minmax(0, 1fr);
     gap: 14px 16px;
     align-items: center;
   }
@@ -321,7 +321,7 @@
   /* Compact enough that all four show in the window on load. */
   .os-project {
     display: grid;
-    grid-template-columns: 36px 1fr auto;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
     grid-template-areas:
       "icon name status"
       "icon summary summary";
@@ -521,10 +521,10 @@
     font-weight: 600;
   }
 
+  /* Cells may wrap (a date, a two-word header) so the table fits a phone. */
   .os-table td {
     font-family: var(--os-font-mono);
     font-variant-numeric: tabular-nums;
-    white-space: nowrap;
   }
 
   .os-bar {
@@ -583,7 +583,7 @@
 
   .os-steps li {
     display: grid;
-    grid-template-columns: 2rem 1fr;
+    grid-template-columns: 2rem minmax(0, 1fr);
     column-gap: 10px;
     counter-increment: step;
   }
@@ -647,6 +647,27 @@
     gap: 12px;
     justify-items: start;
     padding: var(--os-pad);
+  }
+
+  /* Single-column content grids: the column may shrink below its content's
+     min-content width (a long table, an unbroken word), so a window never
+     pushes past a narrow viewport. */
+  :is(
+      .os-case,
+      .os-case-head,
+      .os-case-section,
+      .os-card,
+      .os-activity,
+      .os-activity-building,
+      .os-grid,
+      .os-business,
+      .os-contact,
+      .os-contact-main,
+      .os-system,
+      .os-about-head,
+      .os-notice-body
+    ) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   /* Links and buttons pressed on a touch screen (no hover there). */

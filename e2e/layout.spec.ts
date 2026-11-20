@@ -10,6 +10,7 @@ import { ALL_PAGES, HOME_PAGES } from './pages';
 test.describe('375 x 812', () => {
   test.use({ viewport: { width: 375, height: 812 } });
 
+  // The phone: a case page shows its project full screen.
   for (const path of ALL_PAGES) {
     test(`no horizontal scroll (${path})`, async ({ page }) => {
       const response = await page.goto(path);
@@ -20,6 +21,26 @@ test.describe('375 x 812', () => {
       expect(scrollWidth).toBeLessThanOrEqual(375);
     });
   }
+
+  // The document: every content window at once, the widest content there is.
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+
+    for (const path of ALL_PAGES) {
+      test(`no horizontal scroll in the document (${path})`, async ({ page }) => {
+        const response = await page.goto(path);
+        expect(response!.status()).toBe(200);
+        await page.evaluate(() => document.fonts.ready);
+        const { scrollWidth, windows } = await page.evaluate(() => ({
+          scrollWidth: document.documentElement.scrollWidth,
+          windows: document.querySelectorAll('[data-app]').length,
+        }));
+        // Not a vacuous pass: the windows are there to measure.
+        expect(windows).toBeGreaterThanOrEqual(7);
+        expect(scrollWidth).toBeLessThanOrEqual(375);
+      });
+    }
+  });
 });
 
 type Stop = {
