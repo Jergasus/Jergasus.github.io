@@ -16,6 +16,7 @@ import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { localizedPath } from '@/i18n/localized-path';
 import { isCaseApp, type AppId, type CaseAppId } from './apps';
+import { projects } from '@/content/projects';
 import { CaseHost } from './CaseHost';
 import { OsContext, type OsInternal, type OsMode } from './context';
 import { DESKTOP_QUERY, WALLPAPERS } from './prepaint';
@@ -92,6 +93,11 @@ const LOCALES_NOJS: { code: Locale; label: string }[] = [
   { code: 'en', label: 'EN' },
 ];
 
+/** The set of URLs that may be loaded in the retro browser. */
+const ALLOWED_BROWSER_URLS = new Set(
+  projects.flatMap((p) => (p.liveUrl ? [p.liveUrl] : [])),
+);
+
 export function OsRoot({
   locale,
   children,
@@ -113,6 +119,9 @@ export function OsRoot({
 
   const [state, dispatch] = useReducer(reduce, routedSlug, initialState);
   const mode = useSyncExternalStore(subscribeMode, readMode, readServerMode);
+
+  /** URL currently loaded in the browser window (null = start page). */
+  const [browserUrl, setBrowserUrl] = useState<string | null>(null);
 
   // Back, forward and every navigation: the routed project comes to the
   // front. Done while rendering (React's "adjust state when a prop changes"),
@@ -293,12 +302,28 @@ export function OsRoot({
       const next = ownsUrl ? nextActiveCase(now.state, id) : null;
       if (wantedUrl.current === id) wantedUrl.current = null;
 
+      // Closing the browser clears the URL so the next open shows the start page.
+      if (id === 'browser') setBrowserUrl(null);
+
       dispatch({ type: 'close', id });
       if (now.mode === 'phone') dispatch({ type: 'phoneHome' });
       focusPlan.current = ownsUrl ? { kind: 'back', to: opener, afterRoute: next } : { kind: 'back', to: opener };
       if (ownsUrl) navigate('push', next);
     },
     [navigate],
+  );
+
+  /**
+   * Open the retro browser and load `url`.
+   * Silently refuses URLs that are not in projects[].liveUrl.
+   */
+  const openBrowser = useCallback(
+    (url: string) => {
+      if (!ALLOWED_BROWSER_URLS.has(url)) return;
+      setBrowserUrl(url);
+      openApp('browser');
+    },
+    [openApp],
   );
 
   const minimizeApp = useCallback((id: AppId) => {
@@ -405,6 +430,14 @@ export function OsRoot({
     return () => desktopMq.removeEventListener('change', onChange);
   }, []);
 
+  // E2E test hook — exposes openBrowser so tests can call it directly.
+  // Compiled out in production builds (NEXT_PUBLIC_E2E is always defined).
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_E2E !== '1') return;
+    // @ts-expect-error e2e test hook only
+    window.__jgos = { openBrowser };
+  }, [openBrowser]);
+
   const os = useMemo<OsInternal>(
     () => ({
       state,
@@ -420,8 +453,10 @@ export function OsRoot({
       dropCase,
       minimizeApp,
       phoneBack,
+      openBrowser,
+      browserUrl,
     }),
-    [state, mode, locale, routedSlug, openApp, closeApp, focusApp, registerCase, cases, dropCase, minimizeApp, phoneBack],
+    [state, mode, locale, routedSlug, openApp, closeApp, focusApp, registerCase, cases, dropCase, minimizeApp, phoneBack, openBrowser, browserUrl],
   );
 
   // The pathname is used for the document-mode language links (os-nojs-only).

@@ -2022,6 +2022,139 @@
     .os-toast { animation: none; }
   }
 
+  /* ── Browser app ──────────────────────────────────────────────────────── */
+  .os-browser {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    font-family: var(--os-font-mono, monospace);
+    font-size: var(--os-font-size-sm, 11px);
+  }
+
+  .os-browser-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: var(--os-window, #fff);
+    border-bottom: 1px solid var(--os-border, rgba(0 0 0 / .12));
+    flex-shrink: 0;
+  }
+
+  /* Address bar: fills available space and clips long URLs without scroll. */
+  .os-browser-address {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 2px 6px;
+    background: color-mix(in srgb, var(--os-ink) 6%, var(--os-window));
+    border: 1px solid var(--os-border, rgba(0 0 0 / .12));
+    border-radius: 3px;
+    color: var(--os-ink-muted);
+    font-size: inherit;
+    font-family: inherit;
+  }
+
+  .os-browser-reload {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--os-ink-muted);
+    border-radius: 3px;
+  }
+
+  .os-browser-reload:hover {
+    background: color-mix(in srgb, var(--os-ink) 8%, var(--os-window));
+    color: var(--os-ink);
+  }
+
+  .os-browser-new-tab {
+    flex-shrink: 0;
+    font-size: inherit;
+    white-space: nowrap;
+    color: var(--os-accent, #2563eb);
+    text-decoration: none;
+  }
+
+  .os-browser-new-tab:hover {
+    text-decoration: underline;
+  }
+
+  .os-browser-viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--os-window, #fff);
+  }
+
+  .os-browser-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  /* Loading / failure overlay — covers the viewport while the site loads. */
+  .os-browser-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: var(--os-window, #fff);
+    color: var(--os-ink-muted);
+    font-size: var(--os-font-size-sm, 11px);
+    z-index: 1;
+  }
+
+  .os-browser-overlay--failed {
+    color: var(--os-ink);
+  }
+
+  /* Start page — displayed when the browser has no URL yet. */
+  .os-browser-start {
+    padding: var(--os-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .os-browser-start-prompt {
+    margin: 0;
+    color: var(--os-ink-muted);
+    font-size: var(--os-font-size-sm, 11px);
+  }
+
+  .os-browser-start-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* os-case-actions: flex row for Visit + Open in browser buttons */
+  .os-case-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin: 0;
+  }
+
   @media print {
     body {
       padding: 0;

@@ -353,6 +353,17 @@
         "name": "Me llamo {name}.",
         "details": "{details}"
       }
+    },
+    "browser": {
+      "openButton": "Abrir en el navegador",
+      "toolbarLabel": "Barra del navegador",
+      "addressLabel": "Dirección",
+      "reload": "Recargar",
+      "openInNewTab": "Abrir en una pestaña nueva",
+      "loading": "Cargando...",
+      "failed": "No se ha podido cargar aquí.",
+      "startPrompt": "Visita un proyecto:",
+      "iframeTitle": "Vista previa de {url}"
     }
   }
 }

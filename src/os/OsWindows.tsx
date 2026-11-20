@@ -4,6 +4,7 @@ import type { Locale } from '@/i18n/routing';
 import { getApp, type AppId } from './apps';
 import { AboutApp } from './apps/AboutApp';
 import { ActivityApp } from './apps/ActivityApp';
+import { BrowserApp } from './apps/BrowserApp';
 import { BusinessApp } from './apps/BusinessApp';
 import { ContactApp } from './apps/ContactApp';
 import { ProjectsApp } from './apps/ProjectsApp';
@@ -29,6 +30,7 @@ export async function OsWindows({ locale }: { locale: Locale }) {
     ['business', <BusinessApp key="business" locale={locale} />],
     ['contact', <ContactApp key="contact" locale={locale} />],
     ['terminal', <TerminalApp key="terminal" />],
+    ['browser', <BrowserApp key="browser" />],
     ['system', <SystemApp key="system" locale={locale} />],
     ['settings', <SettingsApp key="settings" locale={locale} />],
   ];

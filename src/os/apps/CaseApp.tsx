@@ -4,6 +4,7 @@ import { getProject, type ProjectSlug } from '@/content/projects';
 import type { Locale } from '@/i18n/routing';
 import { projectMessageKey } from '@/i18n/project-message-key';
 import { CaseTitle } from '../CaseTitle';
+import { OpenBrowserButton } from '../OpenBrowserButton';
 import { StatusMark } from './StatusMark';
 
 type Decision = { title: string; body: string };
@@ -15,10 +16,11 @@ const siteName = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 export async function CaseApp({ locale, slug }: { locale: Locale; slug: ProjectSlug }) {
   const project = getProject(slug);
   if (!project?.hasCaseStudy) throw new Error(`No case study for "${slug}"`);
-  const [t, tStudy, tWork] = await Promise.all([
+  const [t, tStudy, tWork, tBrowser] = await Promise.all([
     getTranslations({ locale, namespace: 'casePage' }),
     getTranslations({ locale, namespace: `caseStudies.${projectMessageKey[slug]}` }),
     getTranslations({ locale, namespace: 'work' }),
+    getTranslations({ locale, namespace: 'os.browser' }),
   ]);
   const decisions = tStudy.raw('decisions') as Decision[];
   // Two project windows can be open at once: every id carries the slug.
@@ -48,11 +50,13 @@ export async function CaseApp({ locale, slug }: { locale: Locale; slug: ProjectS
           </picture>
         )}
         {project.liveUrl && (
-          <p>
+          <p className="os-case-actions">
             <a href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="os-button">
               {t('visit', { site: siteName(project.liveUrl) })}
               <span className="sr-only">, {t('newTab')}</span>
             </a>
+            {/* Opens the retro browser window and loads the live site inside it. */}
+            <OpenBrowserButton url={project.liveUrl} label={tBrowser('openButton')} />
           </p>
         )}
       </div>

@@ -349,10 +349,21 @@
       "message": {
         "greeting": "Hola Jesús,",
         "business": "El meu negoci: {business}.",
-        "needs": "M'interessa: {needs}.",
+        "needs": "M’interessa: {needs}.",
         "name": "Em dic {name}.",
         "details": "{details}"
       }
+    },
+    "browser": {
+      "openButton": "Obre al navegador",
+      "toolbarLabel": "Barra del navegador",
+      "addressLabel": "Adreça",
+      "reload": "Recarrega",
+      "openInNewTab": "Obre en una pestanya nova",
+      "loading": "Carregant...",
+      "failed": "No s’ha pogut carregar aquí.",
+      "startPrompt": "Visita un projecte:",
+      "iframeTitle": "Previsualització de {url}"
     }
   }
 }

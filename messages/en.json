@@ -349,10 +349,21 @@
       "message": {
         "greeting": "Hi Jesús,",
         "business": "My business: {business}.",
-        "needs": "I'm interested in: {needs}.",
+        "needs": "I’m interested in: {needs}.",
         "name": "My name is {name}.",
         "details": "{details}"
       }
+    },
+    "browser": {
+      "openButton": "Open in browser",
+      "toolbarLabel": "Browser toolbar",
+      "addressLabel": "Address",
+      "reload": "Reload",
+      "openInNewTab": "Open in a new tab",
+      "loading": "Loading…",
+      "failed": "Couldn’t load here.",
+      "startPrompt": "Visit a project:",
+      "iframeTitle": "Preview of {url}"
     }
   }
 }

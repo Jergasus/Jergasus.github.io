@@ -20,6 +20,14 @@ export interface OsApi {
   closeApp: (id: AppId) => void;
   focusApp: (id: AppId) => void;
   registerCase: (slug: CaseAppId, node: ReactNode) => void;
+  /**
+   * Open the retro browser window and load a URL.
+   * Only URLs from projects[].liveUrl are accepted — any other value is silently
+   * refused so arbitrary browsing is impossible.
+   */
+  openBrowser: (url: string) => void;
+  /** The URL currently loaded in the browser, or null for the start page. */
+  browserUrl: string | null;
 }
 
 /** What the shell's own parts (window frames, the case host) need besides the public API. */
