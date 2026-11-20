@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apps, type AppId } from '../apps';
 import { useOsInternal } from '../context';
-import type { Size } from '../window-manager';
+import { localizedPath } from '@/i18n/localized-path';
+import type { Locale } from '@/i18n/routing';
 
 type Props = {
   open: boolean;
@@ -12,21 +14,57 @@ type Props = {
   startRef: React.RefObject<HTMLButtonElement | null>;
 };
 
+const LOCALES: { code: Locale; label: string }[] = [
+  { code: 'es', label: 'ES' },
+  { code: 'ca', label: 'CA' },
+  { code: 'en', label: 'EN' },
+];
+
+/** Returns the desktop element's client rect size (excludes the taskbar). */
+function desktopBounds() {
+  const el = document.querySelector('[data-desktop]');
+  if (el) {
+    const r = el.getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  }
+  const taskbarH = parseInt(
+    getComputedStyle(document.documentElement).getPropertyValue('--os-taskbar-h') || '40',
+    10,
+  );
+  return { w: window.innerWidth, h: window.innerHeight - taskbarH };
+}
+
+/** All menuitems within the menu element (buttons and links with the role). */
+function getItems(el: HTMLElement): HTMLElement[] {
+  return Array.from(el.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+}
+
 export function StartMenu({ open, onClose, startRef }: Props) {
   const t = useTranslations('os');
   const os = useOsInternal();
+  const { locale } = os;
+  const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Focus first item whenever the menu opens.
+  useEffect(() => {
+    if (!open || !menuRef.current) return;
+    const items = getItems(menuRef.current);
+    items[0]?.focus();
+  }, [open]);
+
+  // Close on outside click.
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node) &&
-          startRef.current && !startRef.current.contains(e.target as Node)) {
+      if (
+        menuRef.current && !menuRef.current.contains(e.target as Node) &&
+        startRef.current && !startRef.current.contains(e.target as Node)
+      ) {
         onClose();
       }
     };
-    // Delay one tick so the opening click itself does not immediately close the menu
+    // Delay one tick so the opening click itself does not immediately close the menu.
     const id = window.setTimeout(() => document.addEventListener('click', handleClick), 0);
     return () => {
       window.clearTimeout(id);
@@ -34,17 +72,39 @@ export function StartMenu({ open, onClose, startRef }: Props) {
     };
   }, [open, onClose, startRef]);
 
-  // Escape closes and returns focus to start button
+  // Keyboard: Escape closes + returns focus; Arrow keys move between items; Home/End jump.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !menuRef.current) return;
+    const menu = menuRef.current;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
         startRef.current?.focus();
+        return;
+      }
+      const items = getItems(menu);
+      if (!items.length) return;
+      const focused = document.activeElement as HTMLElement;
+      const idx = items.indexOf(focused);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        const next = idx < 0 ? 0 : (idx + 1) % items.length;
+        items[next]?.focus();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const prev = idx <= 0 ? items.length - 1 : idx - 1;
+        items[prev]?.focus();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        items[0]?.focus();
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        items[items.length - 1]?.focus();
       }
     };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    menu.addEventListener('keydown', handleKey);
+    return () => menu.removeEventListener('keydown', handleKey);
   }, [open, onClose, startRef]);
 
   const openApp = (id: AppId) => {
@@ -54,11 +114,7 @@ export function StartMenu({ open, onClose, startRef }: Props) {
   };
 
   const arrange = () => {
-    const bounds: Size = {
-      w: window.innerWidth,
-      h: window.innerHeight - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--os-taskbar-h') || '40', 10),
-    };
-    os.dispatch({ type: 'arrange', bounds });
+    os.dispatch({ type: 'arrange', bounds: desktopBounds() });
     onClose();
   };
 
@@ -74,12 +130,14 @@ export function StartMenu({ open, onClose, startRef }: Props) {
       role="menu"
       aria-label={t('taskbar.start')}
     >
+      {/* App list — includes settings ("Personalizar") since it has inStartMenu:true */}
       <ul className="os-start-list" role="presentation">
         {startMenuApps.map((app) => (
           <li key={app.id} role="none">
             <button
               type="button"
               role="menuitem"
+              tabIndex={-1}
               className="os-start-item"
               data-open-app={app.id}
               onClick={() => openApp(app.id)}
@@ -93,17 +151,39 @@ export function StartMenu({ open, onClose, startRef }: Props) {
 
       <div className="os-start-divider" role="separator" />
 
+      {/* System actions */}
       <ul className="os-start-list" role="presentation">
         <li role="none">
           <button
             type="button"
             role="menuitem"
+            tabIndex={-1}
             className="os-start-item"
             onClick={arrange}
           >
             {t('menu.arrange')}
           </button>
         </li>
+      </ul>
+
+      <div className="os-start-divider" role="separator" />
+
+      {/* Language links — path-aware, hrefLang */}
+      <ul className="os-start-list" role="presentation">
+        {LOCALES.map(({ code, label }) => (
+          <li key={code} role="none">
+            <a
+              role="menuitem"
+              tabIndex={-1}
+              className="os-start-item"
+              href={localizedPath(pathname, code)}
+              hrefLang={code}
+              aria-current={code === locale ? 'page' : undefined}
+            >
+              {label}
+            </a>
+          </li>
+        ))}
       </ul>
     </div>
   );

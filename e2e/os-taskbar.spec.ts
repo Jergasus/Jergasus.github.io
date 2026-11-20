@@ -75,6 +75,43 @@ test('right-click → Cambiar fondo → Atardecer sets data-wallpaper=sunset and
   await expect(page.locator('html')).toHaveAttribute('data-wallpaper', 'sunset');
 });
 
+// ── Context menu viewport clamping ────────────────────────────────────────
+
+test('context menu near right edge is clamped within viewport', async ({ page }) => {
+  await visit(page, '/');
+  const viewport = page.viewportSize()!;
+  // Right-click 10px from the right edge — menu would overflow if unclamped.
+  await page.locator('[data-desktop]').click({
+    button: 'right',
+    position: { x: viewport.width - 10, y: 300 },
+  });
+  const menu = page.locator('[data-context-menu]');
+  await expect(menu).toBeVisible();
+  const box = await menu.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 1);
+  await page.keyboard.press('Escape');
+  await expect(menu).not.toBeVisible();
+});
+
+test('context menu near bottom edge is clamped within desktop area', async ({ page }) => {
+  await visit(page, '/');
+  const viewport = page.viewportSize()!;
+  // Right-click 10px from the desktop bottom (viewport - taskbar 40px).
+  const desktopBottom = viewport.height - 40;
+  await page.locator('[data-desktop]').click({
+    button: 'right',
+    position: { x: 400, y: desktopBottom - 10 },
+  });
+  const menu = page.locator('[data-context-menu]');
+  await expect(menu).toBeVisible();
+  const box = await menu.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.y + box!.height).toBeLessThanOrEqual(desktopBottom + 1);
+  await page.keyboard.press('Escape');
+  await expect(menu).not.toBeVisible();
+});
+
 // ── Settings app ──────────────────────────────────────────────────────────
 
 test('settings sets the wallpaper and theme without a pointer', async ({ page }) => {

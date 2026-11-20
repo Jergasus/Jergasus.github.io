@@ -75,7 +75,7 @@ export function Tray({ currentLocale, available, availabilityLabel }: Props) {
       <time
         data-tray="clock"
         className="os-tray-clock"
-        aria-label={time ? `Hora en Barcelona: ${time}` : undefined}
+        aria-label={time ? t('taskbar.clockLabel', { time }) : undefined}
       >
         {time}
       </time>

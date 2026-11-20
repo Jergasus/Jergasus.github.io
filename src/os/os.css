@@ -1116,6 +1116,12 @@
     z-index: 1;
   }
 
+  /* Flip submenu to the left when it would overflow the right viewport edge */
+  .os-context-submenu[data-flipped] {
+    left: auto;
+    right: 100%;
+  }
+
   /* ── Desktop icon column ─────────────────────────────────────────────── */
 
   /* Hidden in document mode; revealed by the desktop @media screen block. */

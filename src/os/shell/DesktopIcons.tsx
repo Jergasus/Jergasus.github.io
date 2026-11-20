@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { DESKTOP_ICON_ORDER, getApp, type AppId } from '../apps';
 import { useOsInternal } from '../context';
@@ -9,6 +9,13 @@ export function DesktopIcons() {
   const t = useTranslations('os.apps');
   const os = useOsInternal();
   const [selected, setSelected] = useState<AppId | null>(null);
+
+  // "Arrange icons" clears the icon selection; dispatched by ContextMenu.
+  useEffect(() => {
+    const handler = () => setSelected(null);
+    document.addEventListener('os:arrange-icons', handler);
+    return () => document.removeEventListener('os:arrange-icons', handler);
+  }, []);
   const lastClickRef = useRef<{ id: AppId; time: number } | null>(null);
   const columnRef = useRef<HTMLDivElement>(null);
 

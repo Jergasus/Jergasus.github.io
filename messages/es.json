@@ -240,7 +240,8 @@
     },
     "taskbar": {
       "start": "★ Inicio",
-      "language": "Idioma"
+      "language": "Idioma",
+      "clockLabel": "Hora en Barcelona: {time}"
     },
     "menu": {
       "arrange": "Ordenar ventanas",
