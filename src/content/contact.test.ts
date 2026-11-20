@@ -15,4 +15,10 @@ describe('contact', () => {
       '/in/jesús-josé-garcía-ayala-716294331/',
     );
   });
+
+  it('mailtoHref with subject and body encodes both', () => {
+    expect(mailtoHref('Hola', 'a b&c')).toBe(
+      'mailto:jergasus04@gmail.com?subject=Hola&body=a%20b%26c',
+    );
+  });
 });
