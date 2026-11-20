@@ -115,6 +115,12 @@
     flex: 1 1 0;
   }
 
+  /* Move handle and resize handles: hidden in document / phone mode. */
+  [data-win-move],
+  [data-resize] {
+    display: none;
+  }
+
   .os-win-buttons {
     display: none;
     gap: 3px;
@@ -793,10 +799,12 @@
 
     html[data-os="desktop"] .os-win {
       position: absolute;
-      left: var(--x);
-      top: var(--y);
-      width: var(--w);
-      height: var(--h);
+      /* --rx/--ry/--rw/--rh are set only during an active resize drag and
+         override the React-controlled --x/--y/--w/--h without a render cycle. */
+      left: var(--rx, var(--x));
+      top: var(--ry, var(--y));
+      width: var(--rw, var(--w));
+      height: var(--rh, var(--h));
       min-width: min(280px, 100%);
       z-index: var(--z);
       pointer-events: auto;
@@ -808,6 +816,88 @@
       width: 100%;
       height: 100%;
       box-shadow: none;
+    }
+
+    /* Resize handles: 8 transparent strips/corners around each window. */
+    html[data-os="desktop"] [data-resize] {
+      display: block;
+      position: absolute;
+      z-index: 10;
+    }
+
+    html[data-os="desktop"] [data-resize="n"] {
+      inset: -4px 8px auto 8px;
+      height: 8px;
+      cursor: n-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="s"] {
+      inset: auto 8px -4px 8px;
+      height: 8px;
+      cursor: s-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="e"] {
+      inset: 8px -4px 8px auto;
+      width: 8px;
+      cursor: e-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="w"] {
+      inset: 8px auto 8px -4px;
+      width: 8px;
+      cursor: w-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="ne"] {
+      inset: -4px -4px auto auto;
+      width: 12px;
+      height: 12px;
+      cursor: ne-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="nw"] {
+      inset: -4px auto auto -4px;
+      width: 12px;
+      height: 12px;
+      cursor: nw-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="se"] {
+      inset: auto -4px -4px auto;
+      width: 12px;
+      height: 12px;
+      cursor: se-resize;
+    }
+
+    html[data-os="desktop"] [data-resize="sw"] {
+      inset: auto auto -4px -4px;
+      width: 12px;
+      height: 12px;
+      cursor: sw-resize;
+    }
+
+    /* Maximised windows have no resize handles. */
+    html[data-os="desktop"] .os-win[data-maximized="true"] [data-resize] {
+      display: none;
+    }
+
+    /* Move handle button: fills the grip area; visually transparent. */
+    html[data-os="desktop"] [data-win-move] {
+      display: block;
+      flex: 1 1 0;
+      min-width: 0;
+      height: 100%;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      cursor: move;
+      /* Focus ring instead of default outline, matching the rest of the OS. */
+    }
+
+    html[data-os="desktop"] [data-win-move]:focus-visible {
+      outline: 2px dashed var(--os-border);
+      outline-offset: -2px;
     }
 
     html[data-os="desktop"] .os-win:is([data-win-state="closed"], [data-win-state="minimized"]) {

@@ -258,3 +258,36 @@ test('hydrate restores rects and open state but never reopens a case window the 
   expect(hydrated.windows.contact.rect).toEqual({ x: 100, y: 100, w: 400, h: 300 });
   expect(hydrated.windows.questday.open).toBe(false); // never opened — not routed
 });
+
+// Carried item 1: hydrate must give opened non-case windows non-zero z values.
+test('hydrate assigns non-zero z to opened non-case windows and raises nextZ', () => {
+  const s = initialState(null); // about z=1, projects z=2, nextZ=3
+  const saved: SavedWindows = {
+    contact: { open: true, minimized: false, maximized: false, rect: null },
+  };
+  const h = reduce(s, { type: 'hydrate', saved });
+  expect(h.windows.contact.open).toBe(true);
+  expect(h.windows.contact.z).toBeGreaterThan(0);
+  expect(h.nextZ).toBeGreaterThan(h.windows.contact.z);
+  // initialState windows keep their z
+  expect(h.windows.about.z).toBe(1);
+  expect(h.windows.projects.z).toBe(2);
+});
+
+// Carried item 2: arrange must clamp cascaded rects to the given bounds.
+test('arrange clamps cascaded rects to small desktop bounds', () => {
+  let s = initialState(null); // about, projects open
+  // Open more windows so cascade overflows a tiny desktop
+  for (const id of ['activity', 'business', 'contact', 'system'] as AppId[]) {
+    s = reduce(s, { type: 'open', id });
+  }
+  // 400 × 200 — cascade index 5 gives y = 24 + 5 × 32 = 184 > 200 − 30 = 170
+  const bounds = { w: 400, h: 200 };
+  s = reduce(s, { type: 'arrange', bounds });
+  for (const id of visibleOrder(s)) {
+    const rect = s.windows[id].rect!;
+    expect(rect.y, `${id}.y`).toBeLessThanOrEqual(bounds.h - TITLEBAR_H);
+    expect(rect.x, `${id}.x`).toBeGreaterThanOrEqual(-(rect.w - MIN_VISIBLE_X));
+    expect(rect.x, `${id}.x`).toBeLessThanOrEqual(bounds.w - MIN_VISIBLE_X);
+  }
+});

@@ -20,8 +20,9 @@ import { CaseHost } from './CaseHost';
 import { OsContext, type OsInternal, type OsMode } from './context';
 import { DESKTOP_QUERY, WALLPAPERS } from './prepaint';
 import { caseHref, routedSlugOf } from './route';
-import { PREF_KEYS, readPref } from './storage';
-import { initialState, nextActiveCase, reduce } from './window-manager';
+import { PREF_KEYS, readPref, SESSION_KEY, readSession, writeSession } from './storage';
+import { initialState, nextActiveCase, reduce, serialize, type SavedWindows } from './window-manager';
+import { desktopBounds } from './shell/desktopBounds';
 import { forgetWindow } from './window-memory';
 import { DesktopIcons } from './shell/DesktopIcons';
 import { Taskbar } from './shell/Taskbar';
@@ -273,6 +274,43 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
   const minimizeApp = useCallback((id: AppId) => {
     dispatch({ type: 'minimize', id });
     focusPlan.current = { kind: 'back', to: null };
+  }, []);
+
+  // ── Session persistence ──────────────────────────────────────────────────
+
+  // On mount: hydrate window state from the session (same tab, reload) and
+  // immediately reclamp to the current desktop size.
+  useEffect(() => {
+    const saved = readSession<SavedWindows>(SESSION_KEY);
+    if (saved) {
+      dispatch({ type: 'hydrate', saved });
+      dispatch({ type: 'reclamp', bounds: desktopBounds() });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounce persisting: write 200 ms after the last state change so we do
+  // not thrash sessionStorage on rapid pointer events.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      writeSession(SESSION_KEY, serialize(state));
+    }, 200);
+    return () => window.clearTimeout(timer);
+  }, [state]);
+
+  // ── Desktop bounds ───────────────────────────────────────────────────────
+
+  // Reclamp all windows whenever the desktop resizes (viewport resize or
+  // taskbar height change): ensures no window is permanently off-screen.
+  useEffect(() => {
+    const desktop = document.querySelector<HTMLElement>('[data-desktop]');
+    if (!desktop) return;
+    const obs = new ResizeObserver(() => {
+      const { w, h } = desktopBounds();
+      dispatch({ type: 'reclamp', bounds: { w, h } });
+    });
+    obs.observe(desktop);
+    return () => obs.disconnect();
   }, []);
 
   // ── Environment ─────────────────────────────────────────────────────────

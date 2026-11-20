@@ -1,19 +1,33 @@
 'use client';
 
-import { useLayoutEffect, useRef, type CSSProperties, type PointerEvent, type ReactNode } from 'react';
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { useTranslations } from 'next-intl';
 import { caseStudySlugs } from '@/content/projects';
 import { getApp, isCaseApp, type AppId } from './apps';
 import { useOsInternal } from './context';
 import { recallWindow, rememberWindow, windowReopened } from './window-memory';
+import { useWindowDrag } from './shell/useWindowDrag';
+import { useWindowResize, type ResizeDir } from './shell/useWindowResize';
+import { desktopBounds } from './shell/desktopBounds';
 
 export type WindowLabels = { close: string; minimize: string; maximize: string; restore: string };
 
 type Props = { id: AppId; title: string; children: ReactNode; labels: WindowLabels };
 
-/** Each project window sits this far below and right of the one before it, so a covered one still shows its title bar. */
+/** Each project window sits this far below and right of the one before it. */
 const CASCADE_PX = 28;
 const FOCUSABLE = 'a[href], button, input, select, textarea, [tabindex]';
 const percent = (fraction: number) => `${Number((fraction * 100).toFixed(3))}%`;
+
+const RESIZE_DIRS: ResizeDir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 
 /**
  * A window: a labelled section with a title bar and three buttons. Its state
@@ -24,6 +38,7 @@ const percent = (fraction: number) => `${Number((fraction * 100).toFixed(3))}%`;
  */
 export function WindowFrame({ id, title, children, labels }: Props) {
   const { state, dispatch, focusApp, closeApp, minimizeApp } = useOsInternal();
+  const t = useTranslations('os.window');
   const win = state.windows[id];
   const app = getApp(id)!;
   const section = useRef<HTMLElement>(null);
@@ -42,6 +57,32 @@ export function WindowFrame({ id, title, children, labels }: Props) {
     '--app': `var(--os-c-${app.colour})`,
   } as CSSProperties;
 
+  // ── Drag ──────────────────────────────────────────────────────────────────
+  const { onTitlebarPointerDown, onPointerMove: onDragMove, onPointerUp: onDragUp, onPointerCancel: onDragCancel } =
+    useWindowDrag({ id, sectionRef: section, dispatch });
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+  const {
+    onHandlePointerDown,
+    onPointerMove: onResizeMove,
+    onPointerUp: onResizeUp,
+    onPointerCancel: onResizeCancel,
+  } = useWindowResize({ id, sectionRef: section, dispatch, minSize: app.minSize });
+
+  // ── Body scrollability — fix WCAG tab stop (carried item 3) ──────────────
+  // The body is focusable in OS mode only when it overflows (so keyboard
+  // scrolling works) and has an accessible name via aria-labelledby.
+  const [scrollable, setScrollable] = useState(false);
+  useLayoutEffect(() => {
+    const b = body.current;
+    if (!b) return;
+    const check = () => setScrollable(b.scrollHeight > b.clientHeight || b.scrollWidth > b.clientWidth);
+    check();
+    const obs = new ResizeObserver(check);
+    obs.observe(b);
+    return () => obs.disconnect();
+  }, []);
+
   useLayoutEffect(() => {
     if (win.open) windowReopened(id);
   }, [id, win.open]);
@@ -52,9 +93,7 @@ export function WindowFrame({ id, title, children, labels }: Props) {
     inFront.current = state.focused === id;
   });
 
-  // A project window remounts when the URL moves (window-memory.ts): give it
-  // back its scroll position, and keyboard focus if it is the window in
-  // front (one that went behind, by back or forward, does not take it).
+  // A project window remounts when the URL moves: restore scroll and focus.
   useLayoutEffect(() => {
     const frame = section.current!;
     const scroller = body.current!;
@@ -69,7 +108,6 @@ export function WindowFrame({ id, title, children, labels }: Props) {
       }
     }
     return () => {
-      // Still attached here: React removes the DOM after this cleanup.
       const active = document.activeElement;
       const focus =
         active === frame
@@ -81,19 +119,79 @@ export function WindowFrame({ id, title, children, labels }: Props) {
     };
   }, [id]);
 
-  const onPointerDown = (event: PointerEvent) => {
+  // ── Pointer handlers ──────────────────────────────────────────────────────
+  const onPointerDown = (event: PointerEvent<HTMLElement>) => {
     keepBehind.current = (event.target as Element).closest('[data-win-close], [data-win-minimize]') !== null;
     if (!keepBehind.current) focusApp(id);
   };
 
-  // Keyboard focus landing in a window brings it forward, so focus is never
-  // hidden behind another window.
+  // Merge drag and resize pointermove/up/cancel.
+  const onSectionPointerMove = (e: PointerEvent<HTMLElement>) => {
+    onDragMove(e);
+    onResizeMove(e);
+  };
+  const onSectionPointerUp = (e: PointerEvent<HTMLElement>) => {
+    onDragUp(e);
+    onResizeUp(e);
+  };
+  const onSectionPointerCancel = (e: PointerEvent<HTMLElement>) => {
+    onDragCancel(e);
+    onResizeCancel(e);
+  };
+
+  // Keyboard focus landing in a window brings it forward.
   const onFocus = () => {
     if (keepBehind.current) {
       keepBehind.current = false;
       return;
     }
     focusApp(id);
+  };
+
+  // ── Titlebar pointer handler (single click = drag, double click = maximise) ─
+  // We cannot rely on `e.detail` because Playwright's synthetic pointer events
+  // always send detail=0. Track inter-click time manually instead.
+  const lastTitlePdTime = useRef(0);
+  const handleTitlebarPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if ((e.target as Element).closest('button')) return;
+    const now = Date.now();
+    if (now - lastTitlePdTime.current < 500) {
+      // Double-click: toggle maximise, do not start a drag.
+      lastTitlePdTime.current = 0;
+      dispatch({ type: 'toggleMaximize', id });
+      return;
+    }
+    lastTitlePdTime.current = now;
+    onTitlebarPointerDown(e);
+  };
+
+  // ── Keyboard move / resize (via the move handle button) ───────────────────
+  const handleMoveKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+    const ARROWS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+    if (!ARROWS.includes(e.key)) return;
+    e.preventDefault();
+
+    const delta = e.shiftKey ? 64 : 16;
+    const frame = section.current!;
+    const box = frame.getBoundingClientRect();
+    const bounds = desktopBounds();
+    let { left: bx, top: by, width: bw, height: bh } = box;
+
+    if (e.altKey) {
+      // Alt + Arrow: resize.
+      if (e.key === 'ArrowRight') bw += delta;
+      if (e.key === 'ArrowLeft') bw = Math.max(app.minSize.w, bw - delta);
+      if (e.key === 'ArrowDown') bh += delta;
+      if (e.key === 'ArrowUp') bh = Math.max(app.minSize.h, bh - delta);
+    } else {
+      // Arrow: move.
+      if (e.key === 'ArrowRight') bx += delta;
+      if (e.key === 'ArrowLeft') bx -= delta;
+      if (e.key === 'ArrowDown') by += delta;
+      if (e.key === 'ArrowUp') by -= delta;
+    }
+
+    dispatch({ type: 'setRect', id, rect: { x: bx, y: by, w: bw, h: bh }, bounds });
   };
 
   return (
@@ -111,16 +209,30 @@ export function WindowFrame({ id, title, children, labels }: Props) {
       className="os-win"
       style={style}
       onPointerDown={onPointerDown}
-      onPointerUp={() => {
+      onPointerMove={onSectionPointerMove}
+      onPointerUp={(e) => {
         keepBehind.current = false;
+        onSectionPointerUp(e);
       }}
+      onPointerCancel={onSectionPointerCancel}
       onFocus={onFocus}
     >
-      <div data-titlebar className="os-titlebar">
+      <div
+        data-titlebar
+        className="os-titlebar"
+        onPointerDown={handleTitlebarPointerDown}
+      >
         <span id={`${id}-title`} className="os-title">
           {title}
         </span>
-        <span className="os-grip" aria-hidden="true" />
+        {/* Move handle — the grip area doubles as a keyboard-accessible move button. */}
+        <button
+          type="button"
+          data-win-move
+          aria-label={t('move', { title })}
+          className="os-grip"
+          onKeyDown={handleMoveKeyDown}
+        />
         <span className="os-win-buttons">
           <button
             type="button"
@@ -151,15 +263,35 @@ export function WindowFrame({ id, title, children, labels }: Props) {
           </button>
         </span>
       </div>
-      {/* Focusable so a keyboard can scroll a window with nothing to tab to. */}
-      <div ref={body} className="os-win-body" tabIndex={0}>
+
+      {/* Body: focusable only when it overflows, with an accessible name. */}
+      <div
+        ref={body}
+        className="os-win-body"
+        aria-labelledby={`${id}-title`}
+        tabIndex={scrollable ? 0 : -1}
+      >
         {children}
       </div>
+
+      {/* Resize handles — 8 directions, pointer-only (keyboard via the move button). */}
+      {RESIZE_DIRS.map((dir) => (
+        <div
+          key={dir}
+          data-resize={dir}
+          aria-hidden="true"
+          onPointerDown={(e) => {
+            // Bring window to front on resize start.
+            focusApp(id);
+            onHandlePointerDown(dir, e);
+          }}
+        />
+      ))}
     </section>
   );
 }
 
-// 12 x 12 pixel glyphs, drawn on whole pixels so they stay crisp.
+// 12 × 12 pixel glyphs, drawn on whole pixels so they stay crisp.
 const GLYPHS = {
   minimize: 'M2 8h8v2H2z',
   maximize: 'M2 2h8v8H2zM4 5v3h4V5z',

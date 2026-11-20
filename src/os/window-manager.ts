@@ -277,7 +277,10 @@ export function reduce(state: WmState, action: WmAction): WmState {
       const newWindows = { ...state.windows };
       for (const id of order) {
         const r = rects[id];
-        if (r) newWindows[id] = { ...newWindows[id], rect: r };
+        if (!r) continue;
+        const appDef = getApp(id);
+        const min = appDef?.minSize ?? { w: 100, h: 100 };
+        newWindows[id] = { ...newWindows[id], rect: clampRect(r, action.bounds, min) };
       }
       return { ...state, windows: newWindows };
     }
@@ -360,6 +363,7 @@ export function reduce(state: WmState, action: WmAction): WmState {
       const { saved } = action;
       const newWindows = { ...state.windows };
       let changed = false;
+      let nextZ = state.nextZ;
 
       for (const id of Object.keys(saved) as AppId[]) {
         const savedWin = saved[id];
@@ -382,18 +386,25 @@ export function reduce(state: WmState, action: WmAction): WmState {
           }
         } else {
           // For non-case apps: apply the full saved state.
+          // When re-opening a window that was closed in initialState, assign a real z so it
+          // renders above the default windows (which start at z=1 and z=2).
+          const wasOpen = current.open;
+          const willOpen = savedWin.open;
+          const z = willOpen && !wasOpen ? nextZ++ : current.z;
           const next: WinState = {
             ...current,
             open: savedWin.open,
             minimized: savedWin.minimized,
             maximized: savedWin.maximized,
             rect: savedWin.rect ?? current.rect,
+            z,
           };
           if (
             next.open !== current.open ||
             next.minimized !== current.minimized ||
             next.maximized !== current.maximized ||
-            next.rect !== current.rect
+            next.rect !== current.rect ||
+            next.z !== current.z
           ) {
             newWindows[id] = next;
             changed = true;
@@ -401,7 +412,7 @@ export function reduce(state: WmState, action: WmAction): WmState {
         }
       }
 
-      return changed ? { ...state, windows: newWindows } : state;
+      return changed ? { ...state, windows: newWindows, nextZ } : state;
     }
 
     // -----------------------------------------------------------------------
