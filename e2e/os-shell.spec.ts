@@ -234,6 +234,47 @@ test('back and forward follow the active project window', async ({ page }) => {
   await expect(win(page, 'sakurai')).toHaveCount(1);
 });
 
+// Ruling R7: home means no project windows.
+test('back to / after opening a project closes it and keeps home in history', async ({ page }) => {
+  await visit(page, '/');
+  await openProject(page, 'questday');
+
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await expect(win(page, 'questday')).toHaveCount(0);
+  await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'open');
+
+  await page.goForward();
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(win(page, 'questday')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'questday')).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await expect(win(page, 'questday')).toHaveCount(0);
+});
+
+test('/ → questday → sakurai, back twice', async ({ page }) => {
+  await visit(page, '/');
+  await openProject(page, 'questday');
+  await openProject(page, 'sakurai');
+
+  await page.goBack();
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(win(page, 'questday')).toHaveAttribute('data-focused', 'true');
+  expect(await zIndex(page, 'questday')).toBeGreaterThan(await zIndex(page, 'sakurai'));
+  await expect(win(page, 'sakurai')).toHaveAttribute('data-win-state', 'open');
+
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await expect(page.locator('[data-app="questday"], [data-app="sakurai"], [data-app="rally-voley"]')).toHaveCount(0);
+  // Nothing left to touch that could rewrite home's history entry.
+  const length = await page.evaluate(() => history.length);
+  await win(page, 'projects').locator('[data-titlebar]').click({ position: { x: 12, y: 10 } });
+  await expect(page).toHaveURL('/');
+  expect(await page.evaluate(() => history.length)).toBe(length);
+});
+
 test('reload on /work/sakurai/ after opening two projects shows only sakurai', async ({ page }) => {
   await visit(page, '/');
   await openProject(page, 'questday');

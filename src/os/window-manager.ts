@@ -110,8 +110,10 @@ export function serialize(state: WmState): SavedWindows {
 }
 
 /** The topmost other open case window by z, or null. Used when closing the active case. */
+const CASE_IDS: readonly CaseAppId[] = ['questday', 'sakurai', 'rally-voley'];
+
 export function nextActiveCase(state: WmState, closing: CaseAppId): CaseAppId | null {
-  const candidates = (['questday', 'sakurai', 'rally-voley'] as CaseAppId[])
+  const candidates = CASE_IDS
     .filter((id) => id !== closing && state.windows[id].open)
     .sort((a, b) => state.windows[b].z - state.windows[a].z);
   return candidates[0] ?? null;
@@ -306,9 +308,18 @@ export function reduce(state: WmState, action: WmAction): WmState {
       const { slug } = action;
 
       if (slug === null) {
-        // No-op if already cleared
-        if (state.activeCase === null && state.phoneActive === null) return state;
-        return { ...state, activeCase: null, phoneActive: null };
+        // Home means no project windows (ruling R7), on the desktop and the phone.
+        const openCases = CASE_IDS.filter((id) => state.windows[id].open);
+        if (openCases.length === 0 && state.activeCase === null && state.phoneActive === null) {
+          return state; // no-op
+        }
+        const windows = { ...state.windows };
+        for (const id of openCases) windows[id] = { ...windows[id], open: false, maximized: false };
+        const focused =
+          state.focused !== null && isCaseApp(state.focused)
+            ? topVisibleExcluding({ ...state, windows }, state.focused)
+            : state.focused;
+        return { ...state, windows, focused, activeCase: null, phoneActive: null };
       }
 
       // Open (or bring to front) the case window

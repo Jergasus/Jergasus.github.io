@@ -51,13 +51,32 @@ test('route opens and focuses the case window and sets activeCase; other case wi
   expect(s2).toBe(s1);
 });
 
-test('route null clears activeCase and closes the phone app, but leaves desktop case windows open', () => {
-  const s0 = initialState('questday');
-  const s1 = reduce(s0, { type: 'route', slug: null });
+// Ruling R7: home means no project windows, on the desktop and the phone.
+test('route null closes every case window, clears activeCase and the phone app, and focuses the top other window', () => {
+  let s = initialState('questday');
+  s = reduce(s, { type: 'route', slug: 'sakurai' });
+  s = reduce(s, { type: 'toggleMaximize', id: 'sakurai' });
+  const s1 = reduce(s, { type: 'route', slug: null });
   expect(s1.activeCase).toBeNull();
   expect(s1.phoneActive).toBeNull();
-  expect(s1.windows.questday.open).toBe(true); // desktop window untouched
-  expect(s1.focused).toBe('questday'); // focus unchanged
+  expect(s1.windows.questday.open).toBe(false);
+  expect(s1.windows.sakurai.open).toBe(false);
+  expect(s1.windows.sakurai.maximized).toBe(false);
+  expect(visibleOrder(s1)).toEqual(['about', 'projects']);
+  expect(s1.focused).toBe('projects');
+});
+
+test('route null keeps a non-case window that has focus', () => {
+  let s = initialState('questday');
+  s = reduce(s, { type: 'focus', id: 'about' });
+  const s1 = reduce(s, { type: 'route', slug: null });
+  expect(s1.windows.questday.open).toBe(false);
+  expect(s1.focused).toBe('about');
+});
+
+test('route null at home with no case window open is a no-op', () => {
+  const s0 = initialState(null);
+  expect(reduce(s0, { type: 'route', slug: null })).toBe(s0);
 });
 
 // ---------------------------------------------------------------------------
