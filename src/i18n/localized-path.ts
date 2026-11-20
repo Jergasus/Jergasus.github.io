@@ -10,10 +10,14 @@ import type { Locale } from './routing';
  *   English paths carry /en prefix: /en/work/questday/
  */
 export function localizedPath(pathname: string, target: Locale): string {
+  // Collapse leading slashes so protocol-relative paths like //evil.com/x
+  // can never be produced. The result always starts with exactly one "/".
+  const safe = '/' + pathname.replace(/^\/+/, '');
+
   // Strip /ca or /en prefix to reach the canonical path.
-  let canonical = pathname;
-  if (pathname.startsWith('/ca/')) canonical = pathname.slice(3);
-  else if (pathname.startsWith('/en/')) canonical = pathname.slice(3);
+  let canonical = safe;
+  if (safe.startsWith('/ca/')) canonical = safe.slice(3);
+  else if (safe.startsWith('/en/')) canonical = safe.slice(3);
   if (!canonical) canonical = '/';
 
   if (target === 'es') return canonical;

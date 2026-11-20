@@ -31,4 +31,18 @@ describe('localizedPath', () => {
     expect(localizedPath('/work/questday/', 'ca')).toBe('/ca/work/questday/');
     expect(localizedPath('/work/questday/', 'en')).toBe('/en/work/questday/');
   });
+
+  it('never produces a protocol-relative URL from a double-slash path', () => {
+    // A pathname starting with // must be canonicalised to a single-slash path
+    // so the href can never be interpreted as //host (open redirect).
+    const result_es = localizedPath('//evil.com/x/', 'es');
+    const result_ca = localizedPath('//evil.com/x/', 'ca');
+    const result_en = localizedPath('//evil.com/x/', 'en');
+    expect(result_es).not.toMatch(/^\/\//);
+    expect(result_ca).not.toMatch(/^\/\//);
+    expect(result_en).not.toMatch(/^\/\//);
+    expect(result_en).toMatch(/^\/en\//);
+    expect(result_ca).toMatch(/^\/ca\//);
+    expect(result_es).toMatch(/^\//);
+  });
 });
