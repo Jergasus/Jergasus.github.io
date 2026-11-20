@@ -1,0 +1,99 @@
+/*
+ * os-tokens.css — JG-OS design system (additive; v1 tokens in tokens.css
+ * are untouched).
+ *
+ * Day colours are on :root. Night overrides sit in the @media block and in
+ * :root[data-theme="dark"] so that Task 7's theme toggle can override the
+ * system preference. App colours, signals, geometry and type scale are
+ * theme-independent and appear only in :root.
+ *
+ * Mode: JG-OS retro operating-system UI.
+ */
+
+:root {
+  /* ── Desk and window colours (day) ──────────────────────────────────── */
+  --os-desk: #5b7fa6;
+  --os-window: #ede7d9;
+  --os-ink: #111111;
+  --os-border: #111111;
+  --os-shadow: #111111;
+  /* Icon label chip: a neutral surface so labels stay readable on any
+     wallpaper. #111111 on #ede7d9 is 13.6:1 — well above AA. */
+  --os-label-bg: #ede7d9;
+  --os-label-ink: #111111;
+
+  /* ── App colours (identical in day and night) ────────────────────────── */
+  /* These are titlebar fills. Text colour on all is always #111111; every
+     one of them delivers ≥ 4.5:1 contrast (os-tokens.test.ts asserts this). */
+  --os-c-yellow: #ffd84d;
+  --os-c-pink: #f2a7c3;
+  --os-c-green: #b6e36b;
+  --os-c-blue: #9db8ff;
+  --os-c-lilac: #c9b8ff;
+  --os-c-peach: #ffb38a;
+  --os-c-mint: #9de0ad;
+  --os-c-sky: #a9dcf2;
+  --os-c-cream: #f4ecd2;
+
+  /* ── Signals ─────────────────────────────────────────────────────────── */
+  --os-ok: #2ea043;
+  --os-off: #8a8f98;
+
+  /* ── Geometry ────────────────────────────────────────────────────────── */
+  --os-border-w: 2px;
+  --os-shadow-offset: 4px;
+  --os-radius-icon: 10px;
+  --os-taskbar-h: 40px;
+  --os-titlebar-h: 30px;
+  --os-icon-col: 104px;
+
+  /* ── Type families ───────────────────────────────────────────────────── */
+  /* Resolved from the next/font/local variables; set on <html> in Task 5. */
+  --os-font-pixel: var(--font-os-pixel);
+  --os-font-sans: var(--font-os-sans);
+  --os-font-mono: var(--font-os-mono);
+
+  /* ── Type scale ──────────────────────────────────────────────────────── */
+  --os-step--1: 0.8125rem; /* 13px — small labels, tooltips */
+  --os-step-0: 0.9375rem; /* 15px — UI body text */
+  --os-step-1: 1.125rem; /* 18px — section headings */
+  --os-step-2: 1.5rem; /* 24px — window titles */
+  --os-step-3: clamp(1.75rem, 1.4rem + 1.2vw, 2.25rem); /* 28→36px — hero */
+
+  /* ── Wallpapers (background shorthand values) ────────────────────────── */
+  /* Dots: tiny repeating dot grid over the desk colour. */
+  --os-wp-dots: radial-gradient(circle, rgba(0 0 0 / 0.25) 1.5px, transparent 1.5px) 0 0 / 24px 24px var(--os-desk);
+  /* Grid: thin-line crosshatch over the desk colour. */
+  --os-wp-grid: linear-gradient(rgba(0 0 0 / 0.15) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgba(0 0 0 / 0.15) 1px, transparent 1px) 0 0 / 24px 24px var(--os-desk);
+  /* Sunset: warm dusk-to-horizon gradient. */
+  --os-wp-sunset: linear-gradient(to bottom, #2a1b4e 0%, #c05c3f 50%, #f0a05a 100%);
+  /* Cream: warm solid surface. */
+  --os-wp-cream: #f4ecd2;
+  /* Barcelona: placeholder flat colour until Task 13 ships the SVG. */
+  --os-wp-barcelona: #23305a;
+}
+
+/* ── Night mode overrides ────────────────────────────────────────────────── */
+/* Applied when the OS preference is dark AND the user has not locked light. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --os-desk: #141b2b;
+    --os-window: #252a38;
+    --os-ink: #e8e4da;
+    --os-border: #000000;
+    --os-shadow: #000000;
+    --os-label-bg: #252a38;
+    --os-label-ink: #e8e4da;
+  }
+}
+
+/* Applied when the user has explicitly toggled dark (overrides system pref). */
+:root[data-theme="dark"] {
+  --os-desk: #141b2b;
+  --os-window: #252a38;
+  --os-ink: #e8e4da;
+  --os-border: #000000;
+  --os-shadow: #000000;
+  --os-label-bg: #252a38;
+  --os-label-ink: #e8e4da;
+}

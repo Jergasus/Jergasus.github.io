@@ -7,3 +7,12 @@
  * the two in step, so a new token file cannot silently leave it behind.
  */
 export const themeColor = '#efede7';
+
+/**
+ * JG-OS: the desk colour as a plain value for <meta name="theme-color">.
+ * osThemeColor targets day mode; osThemeColorDark targets night mode.
+ * Both must equal the corresponding --os-desk value in os-tokens.css;
+ * os-tokens.test.ts enforces this.
+ */
+export const osThemeColor = '#5b7fa6';
+export const osThemeColorDark = '#141b2b';

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../design/tokens.css";
+@import "../design/os-tokens.css";
 
 /* Only design tokens become utilities: Tailwind's default palette, families,
    sizes, leading, radii and easings are removed, so a component cannot reach
@@ -94,6 +95,33 @@
   --ease-in-out: var(--ease-in-out);
   --default-transition-duration: var(--duration-ui);
   --default-transition-timing-function: var(--ease-out);
+
+  /* ── JG-OS colour tokens (os- prefix → bg-os-desk, text-os-ink, …) ──── */
+  --color-os-desk: var(--os-desk);
+  --color-os-window: var(--os-window);
+  --color-os-ink: var(--os-ink);
+  --color-os-border: var(--os-border);
+  --color-os-shadow: var(--os-shadow);
+  --color-os-label-bg: var(--os-label-bg);
+  --color-os-label-ink: var(--os-label-ink);
+
+  /* App colours */
+  --color-os-c-yellow: var(--os-c-yellow);
+  --color-os-c-pink: var(--os-c-pink);
+  --color-os-c-green: var(--os-c-green);
+  --color-os-c-blue: var(--os-c-blue);
+  --color-os-c-lilac: var(--os-c-lilac);
+  --color-os-c-peach: var(--os-c-peach);
+  --color-os-c-mint: var(--os-c-mint);
+  --color-os-c-sky: var(--os-c-sky);
+  --color-os-c-cream: var(--os-c-cream);
+
+  /* ── JG-OS font tokens ────────────────────────────────────────────────── */
+  /* References the CSS vars set by next/font via os-tokens.css indirection.
+     Not populated until Task 5 applies the .variable classes to <html>. */
+  --font-os-pixel: var(--os-font-pixel);
+  --font-os-sans: var(--os-font-sans);
+  --font-os-mono: var(--os-font-mono);
 }
 
 /* Custom utilities that consume tokens but don't map to Tailwind's default
