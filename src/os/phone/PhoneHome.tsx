@@ -77,7 +77,7 @@ export function PhoneHome({
 
   return (
     // role="region" + aria-label makes this a named landmark so axe is satisfied.
-    <div data-phone-home role="region" aria-label="Inicio" className="os-phone-home">
+    <div data-phone-home role="region" aria-label={tPhone('homeLabel')} className="os-phone-home">
       {/* Status bar: language links left, clock right */}
       <div className="os-phone-statusbar">
         <nav aria-label={t('taskbar.language')} className="os-lang">

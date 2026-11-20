@@ -270,6 +270,8 @@
     },
     "phone": {
       "back": "‹ Inici",
+      "homeLabel": "Inici",
+      "activityTitle": "activitat",
       "dock": {
         "mailLabel": "Correu",
         "whatsappLabel": "WhatsApp"

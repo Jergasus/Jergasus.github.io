@@ -447,8 +447,9 @@ export function OsRoot({
         <DesktopIcons />
       </div>
 
-      {/* All windows — hidden from AT in phone mode (windows are display:none on phone) */}
-      <main data-windows aria-hidden={mode === 'phone' ? 'true' : undefined}>
+      {/* All windows — hidden from AT in phone mode when no app is active.
+          When an app IS phoneActive it is focused and must remain visible to AT. */}
+      <main data-windows aria-hidden={mode === 'phone' && !state.phoneActive ? 'true' : undefined}>
         {children}
         <CaseHost />
       </main>

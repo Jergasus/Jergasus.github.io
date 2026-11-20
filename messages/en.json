@@ -270,6 +270,8 @@
     },
     "phone": {
       "back": "‹ Home",
+      "homeLabel": "Home",
+      "activityTitle": "activity",
       "dock": {
         "mailLabel": "Mail",
         "whatsappLabel": "WhatsApp"

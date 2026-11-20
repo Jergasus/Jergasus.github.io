@@ -148,3 +148,19 @@ test('phone home has no axe violations', async ({ page }) => {
   const results = await new AxeBuilder({ page }).analyze();
   expect(results.violations).toEqual([]);
 });
+
+test('open app on phone has no axe violations and its heading is in the AT', async ({ page }) => {
+  await visit(page, '/');
+
+  // Open a non-case app (Sobre mí) on the phone.
+  await phoneIcon(page, 'about').tap();
+  await expect(appWindow(page, 'about')).toHaveAttribute('data-phone-active', 'true');
+
+  // The app heading (AboutApp renders an h2 with the author's name) must be
+  // reachable by screen readers — confirms [data-windows] is not aria-hidden.
+  await expect(page.getByRole('heading', { level: 2 })).toBeVisible();
+
+  // No axe violations while the app is open.
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});

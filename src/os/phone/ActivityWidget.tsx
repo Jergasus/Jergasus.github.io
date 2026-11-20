@@ -42,7 +42,7 @@ export function ActivityWidget({ locale, totalCommits, lastCommitAt, weekly }: P
   return (
     <div data-widget="activity" className="os-phone-widget">
       <div className="os-phone-widget-titlebar">
-        <span className="os-phone-widget-title">actividad</span>
+        <span className="os-phone-widget-title">{t('activityTitle')}</span>
       </div>
       <div className="os-phone-widget-body os-phone-activity-body">
         <p className="os-phone-activity-stats">
