@@ -8,7 +8,10 @@ import { SITE_URL } from '@/content/site';
 import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
 import { availabilityLabel, status } from '@/lib/status';
+import { aggregate, parseActivitySnapshot } from '@/lib/activity';
+import { SITE_NAME } from '@/content/site';
 import { OsRoot } from '@/os/OsRoot';
+import snapshot from '../../../data/activity.json';
 import { OsWindows } from '@/os/OsWindows';
 import { prepaintScript } from '@/os/prepaint';
 import '../globals.css';
@@ -43,14 +46,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function EsLayout({ children }: { children: ReactNode }) {
   setRequestLocale('es');
-  const [messages, tHero] = await Promise.all([
+  const [messages, tHero, tContact] = await Promise.all([
     getMessages({ locale: 'es' }),
     getTranslations({ locale: 'es', namespace: 'hero' }),
+    getTranslations({ locale: 'es', namespace: 'contact' }),
   ]);
   const avail = availabilityLabel(status, 'es', {
     available: tHero('availability.available'),
     unavailable: tHero('availability.unavailable'),
   });
+  const activity = aggregate(parseActivitySnapshot(snapshot));
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
     // data-boot on <html> before React sees it.
@@ -61,7 +66,17 @@ export default async function EsLayout({ children }: { children: ReactNode }) {
       <body>
         {/* Only what client components translate goes to the browser. */}
         <NextIntlClientProvider messages={clientMessages(messages)}>
-          <OsRoot locale="es" available={status.available} availabilityLabel={avail}>
+          <OsRoot
+            locale="es"
+            available={status.available}
+            availabilityLabel={avail}
+            name={SITE_NAME}
+            lede={tHero('lede')}
+            totalCommits={activity.totalCommits}
+            lastCommitAt={activity.lastCommitAt}
+            weekly={activity.weekly}
+            whatsappMessage={tContact('whatsappMessage')}
+          >
             {children}
             <OsWindows locale="es" />
           </OsRoot>

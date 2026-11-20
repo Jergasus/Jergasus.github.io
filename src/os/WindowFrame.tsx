@@ -20,7 +20,7 @@ import { desktopBounds } from './shell/desktopBounds';
 
 export type WindowLabels = { close: string; minimize: string; maximize: string; restore: string };
 
-type Props = { id: AppId; title: string; children: ReactNode; labels: WindowLabels };
+type Props = { id: AppId; title: string; children: ReactNode; labels: WindowLabels; phoneBackLabel?: string };
 
 /** Each project window sits this far below and right of the one before it. */
 const CASCADE_PX = 28;
@@ -36,9 +36,10 @@ const RESIZE_DIRS: ResizeDir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
  * and from --x/--y/--w/--h. With no saved rect those are the app's default
  * rect as percentages of the desktop, so the server HTML is already placed.
  */
-export function WindowFrame({ id, title, children, labels }: Props) {
-  const { state, dispatch, focusApp, closeApp, minimizeApp } = useOsInternal();
+export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Props) {
+  const { state, dispatch, focusApp, closeApp, minimizeApp, phoneBack } = useOsInternal();
   const t = useTranslations('os.window');
+  const tPhone = useTranslations('os.phone');
   const win = state.windows[id];
   const app = getApp(id)!;
   const section = useRef<HTMLElement>(null);
@@ -225,6 +226,17 @@ export function WindowFrame({ id, title, children, labels }: Props) {
         className="os-titlebar"
         onPointerDown={handleTitlebarPointerDown}
       >
+        {/* Phone back button — only visible in phone mode (CSS). */}
+        <button
+          type="button"
+          data-phone-back
+          aria-label={tPhone('back')}
+          className="os-phone-back-btn"
+          onClick={() => phoneBack(id)}
+        >
+          {tPhone('back')}
+        </button>
+
         <span id={`${id}-title`} className="os-title">
           {title}
         </span>

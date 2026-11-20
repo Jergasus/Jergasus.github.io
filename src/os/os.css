@@ -42,7 +42,8 @@
   [data-desktop],
   [data-taskbar],
   [data-phone-home],
-  .os-win[data-interactive-only] {
+  .os-win[data-interactive-only],
+  .os-phone-back-btn {
     display: none;
   }
 
@@ -723,7 +724,7 @@
       background: none;
     }
 
-    html[data-os] [data-desktop] {
+    html[data-os="desktop"] [data-desktop] {
       display: block;
       position: fixed;
       inset: 0 0 var(--os-taskbar-h);
@@ -762,7 +763,7 @@
       background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
     }
 
-    html[data-os] [data-taskbar] {
+    html[data-os="desktop"] [data-taskbar] {
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -917,14 +918,51 @@
     html[data-os="phone"] .os-win[data-phone-active="true"]:not([data-win-state="closed"]) {
       display: flex;
       position: fixed;
-      inset: 0;
+      inset: 0 0 env(safe-area-inset-bottom) 0;
       z-index: 10;
       border: 0;
       box-shadow: none;
     }
 
-    html[data-os="phone"] :is([data-win-minimize], [data-win-maximize]) {
+    html[data-os="phone"] :is([data-win-minimize], [data-win-maximize], [data-win-move], [data-resize]) {
       display: none;
+    }
+
+    /* Phone app: top bar has the back button and close, not minimize/maximize. */
+    html[data-os="phone"] .os-phone-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+      height: 100%;
+      padding: 0 10px 0 6px;
+      font-family: var(--os-font-pixel);
+      font-size: var(--os-step-0);
+      font-weight: 600;
+      color: #111111;
+      background: transparent;
+      border: 0;
+      border-right: var(--os-border-w) solid #111111;
+      cursor: pointer;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html[data-os="phone"] .os-phone-back-btn:active {
+      background: #111111;
+      color: var(--app, var(--os-c-cream));
+    }
+
+    /* Phone home screen */
+    html[data-os="phone"] [data-phone-home] {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      inset: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+      background: var(--os-wp);
+      overflow: hidden;
+      z-index: 0;
     }
   }
 
@@ -1337,6 +1375,262 @@
       padding: 1px 3px;
       max-width: 88px;
       line-height: 1.2;
+    }
+  }
+
+  /* ── Phone home screen components ───────────────────────────────────── */
+
+  .os-phone-home {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overflow: hidden;
+    touch-action: pan-y;
+  }
+
+  .os-phone-statusbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 12px;
+    background: var(--os-window);
+    border-bottom: var(--os-border-w) solid var(--os-border);
+    flex-shrink: 0;
+  }
+
+  .os-phone-widgets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 12px 0;
+    flex-shrink: 0;
+  }
+
+  /* Widget card */
+  .os-phone-widget {
+    background: var(--os-window);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: 3px 3px 0 var(--os-shadow);
+    flex-shrink: 0;
+  }
+
+  .os-phone-widget-titlebar {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 1px 8px;
+    background: #111111;
+    color: var(--os-window);
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    font-weight: 600;
+  }
+
+  .os-phone-widget-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .os-phone-widget-body {
+    padding: 10px 12px;
+  }
+
+  /* Hello widget */
+  .os-phone-hello-body {
+    display: grid;
+    gap: 6px;
+  }
+
+  .os-phone-hello-name {
+    margin: 0;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-1);
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .os-phone-hello-lede {
+    margin: 0;
+    font-size: var(--os-step--1);
+    line-height: 1.4;
+  }
+
+  .os-phone-hello-avail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+  }
+
+  .os-phone-avail-dot {
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--os-off);
+  }
+
+  [data-available="true"] .os-phone-avail-dot {
+    background: var(--os-ok);
+  }
+
+  /* Activity widget */
+  .os-phone-activity-body {
+    display: grid;
+    gap: 8px;
+  }
+
+  .os-phone-activity-stats {
+    margin: 0;
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+    line-height: 1.3;
+  }
+
+  .os-phone-activity-sep {
+    color: var(--os-ink-muted);
+  }
+
+  .os-phone-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(26, 1fr);
+    gap: 2px;
+  }
+
+  .os-phone-mini-grid > span {
+    aspect-ratio: 1;
+    background: color-mix(in srgb, var(--os-ink) 10%, var(--os-window));
+  }
+
+  .os-phone-mini-grid > [data-intensity="1"] {
+    background: color-mix(in srgb, var(--os-ok) 30%, var(--os-window));
+  }
+  .os-phone-mini-grid > [data-intensity="2"] {
+    background: color-mix(in srgb, var(--os-ok) 55%, var(--os-window));
+  }
+  .os-phone-mini-grid > [data-intensity="3"] {
+    background: color-mix(in srgb, var(--os-ok) 80%, var(--os-window));
+  }
+  .os-phone-mini-grid > [data-intensity="4"] {
+    background: var(--os-ok);
+  }
+
+  /* Icon grid */
+  .os-phone-icon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px 12px;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    align-content: start;
+    min-height: 0;
+    list-style: none;
+    margin: 0;
+  }
+
+  .os-phone-icon-li {
+    display: contents;
+  }
+
+  .os-phone-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: var(--os-label-ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .os-phone-icon:active .os-phone-icon-tile {
+    opacity: 0.75;
+    translate: 1px 1px;
+  }
+
+  .os-phone-icon-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+    background: var(--app, var(--os-c-cream));
+    border: var(--os-border-w) solid var(--os-border);
+    border-radius: var(--os-radius-icon);
+    box-shadow: 2px 2px 0 var(--os-shadow);
+    flex-shrink: 0;
+  }
+
+  .os-phone-icon-label {
+    font-family: var(--os-font-pixel);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.1;
+    word-break: break-word;
+    max-width: 56px;
+    background: var(--os-label-bg);
+    color: var(--os-label-ink);
+    padding: 1px 2px;
+  }
+
+  /* Dock */
+  [data-dock] {
+    display: none;
+  }
+
+  .os-phone-dock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 8px 12px;
+    background: var(--os-window);
+    border-top: var(--os-border-w) solid var(--os-border);
+    flex-shrink: 0;
+  }
+
+  .os-phone-dock-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    color: var(--os-ink);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .os-phone-dock-btn:active {
+    opacity: 0.6;
+  }
+
+  .os-phone-dock-icon {
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .os-phone-dock-label {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    font-weight: 600;
+  }
+
+  /* Reveal dock on phone OS mode */
+  @media screen {
+    html[data-os="phone"] [data-dock] {
+      display: flex;
     }
   }
 

@@ -274,6 +274,25 @@ test('hydrate assigns non-zero z to opened non-case windows and raises nextZ', (
   expect(h.windows.projects.z).toBe(2);
 });
 
+// Carried item (Task 8): close must clear phoneActive when the closed window is the active phone app.
+test('close clears phoneActive when the closed window is the phone active app', () => {
+  let s = initialState(null);
+  s = reduce(s, { type: 'open', id: 'activity' });
+  s = reduce(s, { type: 'phoneOpen', id: 'activity' });
+  expect(s.phoneActive).toBe('activity');
+  s = reduce(s, { type: 'close', id: 'activity' });
+  expect(s.phoneActive).toBeNull();
+});
+
+test('close does not clear phoneActive when a different window is closed', () => {
+  let s = initialState(null);
+  s = reduce(s, { type: 'open', id: 'business' });
+  s = reduce(s, { type: 'phoneOpen', id: 'business' });
+  s = reduce(s, { type: 'open', id: 'contact' });
+  s = reduce(s, { type: 'close', id: 'contact' });
+  expect(s.phoneActive).toBe('business');
+});
+
 // Carried item 2: arrange must clamp cascaded rects to the given bounds.
 test('arrange clamps cascaded rects to small desktop bounds', () => {
   let s = initialState(null); // about, projects open

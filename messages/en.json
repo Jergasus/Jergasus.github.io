@@ -267,6 +267,18 @@
     "settings": {
       "heading": "Personalise",
       "language": "Language"
+    },
+    "phone": {
+      "back": "‹ Home",
+      "dock": {
+        "mailLabel": "Mail",
+        "whatsappLabel": "WhatsApp"
+      },
+      "activity": {
+        "commits": "{total, number} commits",
+        "lastServer": "last {date}",
+        "lastLive": "last {time}"
+      }
     }
   }
 }

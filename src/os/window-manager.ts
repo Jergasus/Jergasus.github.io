@@ -212,7 +212,10 @@ export function reduce(state: WmState, action: WmAction): WmState {
         activeCase = nextActiveCase(state, id);
       }
 
-      return { ...state, windows: newWindows, focused, activeCase };
+      // Carried item (Task 8): closing the active phone app clears phoneActive.
+      const phoneActive = state.phoneActive === id ? null : state.phoneActive;
+
+      return { ...state, windows: newWindows, focused, activeCase, phoneActive };
     }
 
     // -----------------------------------------------------------------------

@@ -27,6 +27,7 @@ import { forgetWindow } from './window-memory';
 import { DesktopIcons } from './shell/DesktopIcons';
 import { Taskbar } from './shell/Taskbar';
 import { ContextMenu } from './shell/ContextMenu';
+import { PhoneHome } from './phone/PhoneHome';
 
 export { useOs } from './context';
 export type { OsApi, OsMode } from './context';
@@ -67,6 +68,13 @@ type Props = {
   children: ReactNode;
   available?: boolean;
   availabilityLabel?: string;
+  /** Phone home screen data — all passed from the server so no extra client namespace is needed. */
+  name?: string;
+  lede?: string;
+  totalCommits?: number;
+  lastCommitAt?: string;
+  weekly?: number[];
+  whatsappMessage?: string;
 };
 
 const LOCALES_NOJS: { code: Locale; label: string }[] = [
@@ -75,7 +83,18 @@ const LOCALES_NOJS: { code: Locale; label: string }[] = [
   { code: 'en', label: 'EN' },
 ];
 
-export function OsRoot({ locale, children, available = false, availabilityLabel = '' }: Props) {
+export function OsRoot({
+  locale,
+  children,
+  available = false,
+  availabilityLabel = '',
+  name = '',
+  lede = '',
+  totalCommits = 0,
+  lastCommitAt = new Date().toISOString(),
+  weekly = new Array<number>(26).fill(0),
+  whatsappMessage = '',
+}: Props) {
   const router = useRouter();
   // Derived in this render, so CaseHost and the page always agree on which
   // project window the page renders: the same window never renders twice.
@@ -276,6 +295,20 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
     focusPlan.current = { kind: 'back', to: null };
   }, []);
 
+  const phoneBack = useCallback(
+    (id: AppId) => {
+      if (isCaseApp(id)) {
+        // Navigate to / → triggers route(null) → closes cases, clears phoneActive.
+        navigate('push', null);
+      } else {
+        // Just go home without closing the window so its state is preserved.
+        dispatch({ type: 'phoneHome' });
+        focusPlan.current = { kind: 'back', to: null };
+      }
+    },
+    [navigate],
+  );
+
   // ── Session persistence ──────────────────────────────────────────────────
 
   // On mount: hydrate window state from the session (same tab, reload) and
@@ -334,15 +367,31 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
 
   useEffect(() => {
     const html = document.documentElement;
-    // Crossing the breakpoint switches between desktop and phone.
-    const desktop = window.matchMedia(DESKTOP_QUERY);
+    // Crossing the breakpoint switches between desktop and phone, keeping state in sync.
+    const desktopMq = window.matchMedia(DESKTOP_QUERY);
     const onChange = () => {
-      if (html.hasAttribute('data-os')) html.setAttribute('data-os', desktop.matches ? 'desktop' : 'phone');
+      if (!html.hasAttribute('data-os')) return;
+      const { state: s } = latest.current;
+      if (desktopMq.matches) {
+        // Phone → desktop: focus the previously active phone app if still open.
+        html.setAttribute('data-os', 'desktop');
+        if (s.phoneActive && s.windows[s.phoneActive]?.open) {
+          dispatch({ type: 'focus', id: s.phoneActive });
+        }
+      } else {
+        // Desktop → phone: set phoneActive to the focused case window, if any.
+        html.setAttribute('data-os', 'phone');
+        const focusedCase = s.focused && isCaseApp(s.focused) ? s.focused : null;
+        if (focusedCase !== s.phoneActive) {
+          if (focusedCase) dispatch({ type: 'phoneOpen', id: focusedCase });
+          else dispatch({ type: 'phoneHome' });
+        }
+      }
     };
-    desktop.addEventListener('change', onChange);
+    desktopMq.addEventListener('change', onChange);
     // Hydrated: from here on the windows answer clicks and keys.
     html.setAttribute('data-os-ready', '1');
-    return () => desktop.removeEventListener('change', onChange);
+    return () => desktopMq.removeEventListener('change', onChange);
   }, []);
 
   const os = useMemo<OsInternal>(
@@ -359,8 +408,9 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
       cases,
       dropCase,
       minimizeApp,
+      phoneBack,
     }),
-    [state, mode, locale, routedSlug, openApp, closeApp, focusApp, registerCase, cases, dropCase, minimizeApp],
+    [state, mode, locale, routedSlug, openApp, closeApp, focusApp, registerCase, cases, dropCase, minimizeApp, phoneBack],
   );
 
   // The pathname is used for the document-mode language links (os-nojs-only).
@@ -379,13 +429,26 @@ export function OsRoot({ locale, children, available = false, availabilityLabel 
         ))}
       </nav>
 
+      {/* Phone home screen — hidden on desktop/document via CSS */}
+      <PhoneHome
+        locale={locale}
+        available={available}
+        availabilityLabel={availabilityLabel}
+        name={name}
+        lede={lede}
+        totalCommits={totalCommits}
+        lastCommitAt={lastCommitAt}
+        weekly={weekly}
+        whatsappMessage={whatsappMessage}
+      />
+
       {/* Desktop wallpaper and icon column */}
       <div data-desktop>
         <DesktopIcons />
       </div>
 
-      {/* All windows */}
-      <main data-windows>
+      {/* All windows — hidden from AT in phone mode (windows are display:none on phone) */}
+      <main data-windows aria-hidden={mode === 'phone' ? 'true' : undefined}>
         {children}
         <CaseHost />
       </main>

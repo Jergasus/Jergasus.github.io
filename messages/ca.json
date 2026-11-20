@@ -267,6 +267,18 @@
     "settings": {
       "heading": "Personalitzar",
       "language": "Idioma"
+    },
+    "phone": {
+      "back": "‹ Inici",
+      "dock": {
+        "mailLabel": "Correu",
+        "whatsappLabel": "WhatsApp"
+      },
+      "activity": {
+        "commits": "{total, number} commits",
+        "lastServer": "últim {date}",
+        "lastLive": "últim fa {time}"
+      }
     }
   }
 }

@@ -27,6 +27,11 @@ export interface OsInternal extends OsApi {
   cases: Partial<Record<CaseAppId, ReactNode>>;
   dropCase: (slug: CaseAppId) => void;
   minimizeApp: (id: AppId) => void;
+  /**
+   * Phone-mode back action. For case apps: navigates to / (which triggers route(null)).
+   * For non-case apps: dispatches phoneHome without closing the window.
+   */
+  phoneBack: (id: AppId) => void;
 }
 
 export const OsContext = createContext<OsInternal | null>(null);

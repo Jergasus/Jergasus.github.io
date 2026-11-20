@@ -10,7 +10,10 @@ import { SITE_URL } from '@/content/site';
 import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
 import { availabilityLabel, status } from '@/lib/status';
+import { aggregate, parseActivitySnapshot } from '@/lib/activity';
+import { SITE_NAME } from '@/content/site';
 import { OsRoot } from '@/os/OsRoot';
+import snapshot from '../../../data/activity.json';
 import { OsWindows } from '@/os/OsWindows';
 import { prepaintScript } from '@/os/prepaint';
 import '../globals.css';
@@ -64,14 +67,16 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const [messages, tHero] = await Promise.all([
+  const [messages, tHero, tContact] = await Promise.all([
     getMessages({ locale }),
     getTranslations({ locale, namespace: 'hero' }),
+    getTranslations({ locale, namespace: 'contact' }),
   ]);
   const avail = availabilityLabel(status, locale as Locale, {
     available: tHero('availability.available'),
     unavailable: tHero('availability.unavailable'),
   });
+  const activity = aggregate(parseActivitySnapshot(snapshot));
 
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
@@ -83,7 +88,17 @@ export default async function LocaleLayout({
       <body>
         {/* Only what client components translate goes to the browser. */}
         <NextIntlClientProvider messages={clientMessages(messages)}>
-          <OsRoot locale={locale as Locale} available={status.available} availabilityLabel={avail}>
+          <OsRoot
+            locale={locale as Locale}
+            available={status.available}
+            availabilityLabel={avail}
+            name={SITE_NAME}
+            lede={tHero('lede')}
+            totalCommits={activity.totalCommits}
+            lastCommitAt={activity.lastCommitAt}
+            weekly={activity.weekly}
+            whatsappMessage={tContact('whatsappMessage')}
+          >
             {children}
             <OsWindows locale={locale as Locale} />
           </OsRoot>
