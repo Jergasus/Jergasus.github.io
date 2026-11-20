@@ -16,7 +16,7 @@ import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
 import { localizedPath } from '@/i18n/localized-path';
 import { isCaseApp, type AppId, type CaseAppId } from './apps';
-import { projects } from '@/content/projects';
+import { isAllowedBrowserUrl } from './browser-allowlist';
 import { CaseHost } from './CaseHost';
 import { OsContext, type OsInternal, type OsMode } from './context';
 import { DESKTOP_QUERY, WALLPAPERS } from './prepaint';
@@ -92,11 +92,6 @@ const LOCALES_NOJS: { code: Locale; label: string }[] = [
   { code: 'ca', label: 'CA' },
   { code: 'en', label: 'EN' },
 ];
-
-/** The set of URLs that may be loaded in the retro browser. */
-const ALLOWED_BROWSER_URLS = new Set(
-  projects.flatMap((p) => (p.liveUrl ? [p.liveUrl] : [])),
-);
 
 export function OsRoot({
   locale,
@@ -319,7 +314,7 @@ export function OsRoot({
    */
   const openBrowser = useCallback(
     (url: string) => {
-      if (!ALLOWED_BROWSER_URLS.has(url)) return;
+      if (!isAllowedBrowserUrl(url)) return;
       setBrowserUrl(url);
       openApp('browser');
     },
@@ -430,13 +425,6 @@ export function OsRoot({
     return () => desktopMq.removeEventListener('change', onChange);
   }, []);
 
-  // E2E test hook — exposes openBrowser so tests can call it directly.
-  // Compiled out in production builds (NEXT_PUBLIC_E2E is always defined).
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_E2E !== '1') return;
-    // @ts-expect-error e2e test hook only
-    window.__jgos = { openBrowser };
-  }, [openBrowser]);
 
   const os = useMemo<OsInternal>(
     () => ({

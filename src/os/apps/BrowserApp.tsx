@@ -54,19 +54,30 @@ export function BrowserApp() {
   }, [showIframe, browserUrl]);
 
   const handleLoad = useCallback(() => {
-    // In e2e test builds (NEXT_PUBLIC_E2E=1), Playwright's route.abort() causes
-    // Chromium to fire onLoad for the error page, which is also cross-origin
-    // (chrome-error://…) and therefore indistinguishable from a real page load
-    // via SecurityError. We skip the timer-clear entirely in e2e mode and let
-    // the 8-second fallback govern the state — that is exactly what Test 3 relies on.
-    if (process.env.NEXT_PUBLIC_E2E === '1') return;
-
+    // R10 limitation: a cross-origin iframe's onLoad fires for BOTH a real page
+    // and the browser's own error/blocked page, because both produce a
+    // SecurityError when you try to read contentWindow.location.  We cannot
+    // distinguish the two cases here.
+    //
+    // Design consequence:
+    //   • The URL allowlist (isAllowedBrowserUrl) restricts iframes to known
+    //     project sites, so arbitrary URLs can never be loaded.
+    //   • The "Abrir en una pestaña nueva" link is always visible in the toolbar
+    //     so users can reach a blocked/offline site directly.
+    //   • The 8-second timer provides the fallback for stalled or offline loads.
+    //
+    // When a real cross-origin page loads, contentWindow.location throws
+    // SecurityError → catch block clears the timer (success path).
+    // When the browser shows an error page (also cross-origin), the same
+    // SecurityError fires → timer is cleared too, but Chrome's error UI is
+    // already visible inside the iframe.
     try {
-      // If we can read the href the frame is same-origin (about:blank = error page).
+      // If we can read the href the frame is same-origin (e.g. about:blank),
+      // which means the navigation has not yet reached a real page.
       const href = iframeRef.current?.contentWindow?.location?.href ?? '';
       if (href === 'about:blank' || href === '') return;
     } catch {
-      // SecurityError = cross-origin page loaded = success
+      // SecurityError = cross-origin page loaded (real site or error page).
     }
     window.clearTimeout(timerRef.current);
     setLoading(false);

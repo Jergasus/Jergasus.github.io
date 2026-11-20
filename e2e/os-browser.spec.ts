@@ -1,19 +1,19 @@
 /**
  * Retro browser e2e tests (Task 11).
  *
- * Uses page.route to fulfil or abort project URLs — never makes real network
+ * Uses page.route to fulfil or stall project URLs — never makes real network
  * requests to the live sites.
+ *
+ * URL-refusal logic is covered by unit tests in
+ * src/os/browser-allowlist.test.ts (R11).
  */
-import { expect, test, win, visit } from './fixtures';
+import { expect, test, win, visit, openFromIcon } from './fixtures';
 import { projects } from '../src/content/projects';
 
 /** Only projects with a live URL. */
 const liveProjects = projects.filter((p) => p.liveUrl !== null);
 const questday = projects.find((p) => p.slug === 'questday')!;
 const questdayUrl = questday.liveUrl!; // https://playquestday.com
-
-/** A URL that is not in projects[].liveUrl. */
-const forbiddenUrl = 'https://www.google.com';
 
 /** Stub HTML returned by page.route instead of the real site. */
 const STUB_HTML = '<html><head><title>Stub</title></head><body>stub</body></html>';
@@ -49,13 +49,13 @@ test('no iframe and no request to the project site before the browser opens', as
   expect(thirdParty, 'no requests to live project sites before browser opens').toEqual([]);
 });
 
-// ── Test 2: Abrir en el navegador loads the iframe ───────────────────────────
+// ── Test 2: Abrir en el navegador loads the iframe (success path) ─────────────
 
 test('QuestDay window → Abrir en el navegador loads playquestday.com in an iframe', async ({
   page,
 }) => {
+  // Fulfil the route with a stub so the iframe loads without hitting the real site.
   await stubRoute(page, `${questdayUrl}/**`);
-  // Also stub the root URL itself
   await page.route(questdayUrl, (route) =>
     route.fulfill({ status: 200, contentType: 'text/html', body: STUB_HTML }),
   );
@@ -79,18 +79,32 @@ test('QuestDay window → Abrir en el navegador loads playquestday.com in an ifr
   await expect(
     win(page, 'browser').locator('[data-browser-address]'),
   ).toContainText('playquestday.com');
+
+  // ── Success path: loading state must clear and iframe become visible ───────
+  // The stub loads immediately (cross-origin SecurityError → handleLoad clears the
+  // 8-second timer).  Wait for the loading overlay to leave the DOM.
+  await expect(
+    win(page, 'browser').locator('.os-browser-overlay'),
+  ).not.toBeAttached();
+
+  // Iframe is now visible (style.visibility changed from 'hidden' to 'visible').
+  await expect(
+    win(page, 'browser').locator(`iframe[src="${questdayUrl}"]`),
+  ).toBeVisible();
 });
 
-// ── Test 3: fallback when the site does not load ──────────────────────────────
+// ── Test 3: fallback when the site stalls ─────────────────────────────────────
 
 test('shows the fallback when the site does not load', async ({ page }) => {
-  // Abort the iframe's request to simulate a failed load
-  await page.route(questdayUrl, (route) => route.abort());
-  await page.route(`${questdayUrl}/**`, (route) => route.abort());
+  // Stall the request: the route handler is registered but never calls
+  // route.fulfill() or route.abort(), so the iframe's navigation hangs
+  // indefinitely.  onLoad never fires; the 8-second timer governs the state.
+  await page.route(questdayUrl, (_route) => { /* stalled — intentional */ });
+  await page.route(`${questdayUrl}/**`, (_route) => { /* stalled — intentional */ });
 
   await visit(page, '/work/questday/');
 
-  // Install the fake clock before the click so the 8 s timer is controlled
+  // Install the fake clock before the click so the 8 s timer is controlled.
   await page.clock.install({ time: Date.now() });
 
   await win(page, 'questday')
@@ -99,7 +113,7 @@ test('shows the fallback when the site does not load', async ({ page }) => {
 
   await expect(win(page, 'browser')).toHaveAttribute('data-win-state', 'open');
 
-  // Skip past the 8 second timeout
+  // Skip past the 8-second timeout
   await page.clock.fastForward(9_000);
 
   // The fallback message should be visible (os.browser.failed)
@@ -107,7 +121,7 @@ test('shows the fallback when the site does not load', async ({ page }) => {
     win(page, 'browser').locator('[data-browser-failed]'),
   ).toBeVisible();
 
-  // The "Abrir en una pestaña nueva" link in the fallback must be prominent and visible
+  // The "Abrir en una pestaña nueva" link in the fallback must be visible
   await expect(
     win(page, 'browser').locator('[data-browser-failed]').getByRole('link', {
       name: /abrir en una pestaña nueva/i,
@@ -137,25 +151,61 @@ test('closing the browser removes the iframe', async ({ page }) => {
   // Close the browser window
   await win(page, 'browser').getByRole('button', { name: /cerrar/i }).click();
 
-  // Iframe must be removed
+  // Iframe must be removed from the DOM
   await expect(page.locator('iframe')).toHaveCount(0);
 });
 
-// ── Test 5: refuses non-project URLs ─────────────────────────────────────────
+// ── Test 5: browser only surfaces live project URLs ───────────────────────────
+//
+// URL refusal is proven by browser-allowlist.test.ts unit tests.
+// This test proves the UI only offers and loads allowlisted project URLs.
 
-test('browser refuses URLs that are not a project live URL', async ({ page }) => {
+test('browser only surfaces live project URLs', async ({ page }) => {
+  const liveUrls = new Set(liveProjects.map((p) => p.liveUrl!));
+
+  // ── 5a. Browser start page lists exactly one button per live project ───────
   await visit(page, '/');
 
-  // Call openBrowser with a URL not in projects[].liveUrl via the e2e test hook
-  await page.evaluate((url) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const jgos = (window as any).__jgos;
-    if (jgos?.openBrowser) jgos.openBrowser(url);
-  }, forbiddenUrl);
+  // Open the browser window via its desktop icon (keyboard-style: focus + Enter).
+  await openFromIcon(page, 'browser');
+  await expect(win(page, 'browser')).toHaveAttribute('data-win-state', 'open');
 
-  // Browser window must remain closed
-  await expect(win(page, 'browser')).toHaveAttribute('data-win-state', 'closed');
+  // The start page shows one button per live project — not for projects without
+  // a live URL (rally-voley, yokaido).
+  await expect(
+    win(page, 'browser').locator('.os-browser-start-list button'),
+  ).toHaveCount(liveProjects.length);
 
-  // No iframe in the DOM
-  await expect(page.locator('iframe')).toHaveCount(0);
+  // Close so we can visit case pages cleanly
+  await win(page, 'browser').getByRole('button', { name: /cerrar/i }).click();
+
+  // ── 5b. Case windows: "Abrir en el navegador" appears only for live projects ─
+  // questday has a live URL → button present
+  await visit(page, '/work/questday/');
+  await expect(
+    win(page, 'questday').getByRole('button', { name: /abrir en el navegador/i }),
+  ).toHaveCount(1);
+
+  // rally-voley has no live URL → button absent
+  await visit(page, '/work/rally-voley/');
+  await expect(
+    win(page, 'rally-voley').getByRole('button', { name: /abrir en el navegador/i }),
+  ).toHaveCount(0);
+
+  // ── 5c. The iframe src produced by clicking the button is in the allowlist ─
+  await stubRoute(page, `${questdayUrl}/**`);
+  await page.route(questdayUrl, (route) =>
+    route.fulfill({ status: 200, contentType: 'text/html', body: STUB_HTML }),
+  );
+
+  await visit(page, '/work/questday/');
+  await win(page, 'questday')
+    .getByRole('button', { name: /abrir en el navegador/i })
+    .click();
+
+  const iframeSrc = await win(page, 'browser').locator('iframe').getAttribute('src');
+  expect(
+    liveUrls.has(iframeSrc!),
+    `iframe src "${iframeSrc}" must be in the live URL allowlist`,
+  ).toBe(true);
 });
