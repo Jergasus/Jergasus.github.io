@@ -293,6 +293,66 @@
       "commit": "New commit in {project} {when}",
       "dismiss": "Dismiss notification",
       "region": "Notifications"
+    },
+    "terminal": {
+      "welcome": "Welcome to JG-OS. Type 'help' to list commands.",
+      "inputLabel": "Terminal",
+      "help": {
+        "ayuda": "help — show this help",
+        "proyectos": "projects — list all projects",
+        "abrir": "open <app> — open a window",
+        "contacto": "contact — open contact",
+        "sobre": "about — open about me",
+        "idioma": "lang <es|ca|en> — switch language",
+        "tema": "theme <day|night> — switch theme",
+        "limpiar": "clear — clear the screen",
+        "sudo": "sudo hire — open contact"
+      },
+      "project": "{name} — {status}",
+      "contact": "Opening contact...",
+      "about": "Jesús García, full-stack developer in Barcelona.",
+      "badLocale": "Unknown locale '{locale}'. Try: lang es, lang ca, lang en.",
+      "unknownApp": "'{app}' not found. Type 'help' to see available apps.",
+      "sudo": "Hiring...",
+      "unknown": "'{cmd}' not recognised. Type 'help' to see commands."
+    },
+    "wizard": {
+      "step1": "What kind of business do you have?",
+      "step2": "What do you need?",
+      "step3": "How should I get in touch?",
+      "nameLabel": "Your name (optional)",
+      "detailsLabel": "Tell me a bit more (optional)",
+      "channelTitle": "How should I reach you?",
+      "channelWhatsapp": "WhatsApp",
+      "channelEmail": "Email",
+      "back": "Back",
+      "next": "Next",
+      "emailSubject": "A website for my business",
+      "summaryTitle": "Your message",
+      "send": {
+        "whatsapp": "Send via WhatsApp",
+        "email": "Send by email"
+      },
+      "business": {
+        "hospitality": "Bar or restaurant",
+        "beauty": "Hair salon or beauty",
+        "shop": "Shop",
+        "other": "Other"
+      },
+      "needs": {
+        "newSite": "A new website",
+        "redesign": "Redesign my current one",
+        "bookings": "Online bookings",
+        "menu": "Menu or catalogue",
+        "other": "Something else"
+      },
+      "message": {
+        "greeting": "Hi Jesús,",
+        "business": "My business: {business}.",
+        "needs": "I'm interested in: {needs}.",
+        "name": "My name is {name}.",
+        "details": "{details}"
+      }
     }
   }
 }

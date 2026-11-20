@@ -1,11 +1,12 @@
 import { getTranslations } from 'next-intl/server';
 import type { Locale } from '@/i18n/routing';
 import { OpenAppButton } from '../OpenApp';
+import { Wizard } from '../business/Wizard';
 
 /**
- * nuevo_proyecto: the three steps for a local business, as static copy. The
- * wizard (a later task) mounts in [data-wizard-slot]; until then, and in a
- * document, the call to action leads to contact.
+ * nuevo_proyecto: the three steps for a local business, as static copy in
+ * document / no-JS mode. The interactive Wizard mounts in [data-wizard-slot]
+ * in JS mode and replaces the static steps.
  */
 export async function BusinessApp({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale, namespace: 'business' });
@@ -19,8 +20,8 @@ export async function BusinessApp({ locale }: { locale: Locale }) {
     <div className="os-business">
       <h2 className="os-heading">{t('heading')}</h2>
       <p>{t('intro')}</p>
-      {/* A real sequence, so an ordered list. */}
-      <ol className="os-steps">
+      {/* Static steps — visible only in document / no-JS mode. */}
+      <ol className="os-steps os-nojs-only">
         {steps.map(({ label, desc }) => (
           <li key={label}>
             <span className="os-step-label">{label}</span>
@@ -28,7 +29,10 @@ export async function BusinessApp({ locale }: { locale: Locale }) {
           </li>
         ))}
       </ol>
-      <div data-wizard-slot />
+      {/* Interactive wizard — visible only in JS mode. */}
+      <div data-wizard-slot className="os-js-only">
+        <Wizard />
+      </div>
       <p>
         <OpenAppButton app="contact" className="os-button os-js-only">
           {t('ctaLabel')}

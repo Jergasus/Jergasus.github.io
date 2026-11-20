@@ -293,6 +293,66 @@
       "commit": "Nuevo commit en {project} {when}",
       "dismiss": "Cerrar aviso",
       "region": "Avisos"
+    },
+    "terminal": {
+      "welcome": "Bienvenido a JG-OS. Escribe 'ayuda' para ver los comandos.",
+      "inputLabel": "Terminal",
+      "help": {
+        "ayuda": "ayuda — muestra esta ayuda",
+        "proyectos": "proyectos — lista todos los proyectos",
+        "abrir": "abrir <app> — abre una ventana",
+        "contacto": "contacto — abre el contacto",
+        "sobre": "sobre — abre el sobre mí",
+        "idioma": "idioma <es|ca|en> — cambia el idioma",
+        "tema": "tema <dia|noche> — cambia el tema",
+        "limpiar": "limpiar — limpia la pantalla",
+        "sudo": "sudo contratar — abre el contacto"
+      },
+      "project": "{name} — {status}",
+      "contact": "Abriendo contacto...",
+      "about": "Jesús García, desarrollador full-stack en Barcelona.",
+      "badLocale": "Idioma '{locale}' desconocido. Prueba: idioma es, idioma ca, idioma en.",
+      "unknownApp": "'{app}' no encontrado. Escribe 'ayuda' para ver las apps disponibles.",
+      "sudo": "Contratando...",
+      "unknown": "'{cmd}' no reconocido. Escribe 'ayuda' para ver los comandos."
+    },
+    "wizard": {
+      "step1": "¿Qué negocio tienes?",
+      "step2": "¿Qué necesitas?",
+      "step3": "¿Cómo te contacto?",
+      "nameLabel": "Tu nombre (opcional)",
+      "detailsLabel": "Cuéntame algo más (opcional)",
+      "channelTitle": "¿Por dónde te llego?",
+      "channelWhatsapp": "WhatsApp",
+      "channelEmail": "Correo",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "emailSubject": "Una web para mi negocio",
+      "summaryTitle": "Tu mensaje",
+      "send": {
+        "whatsapp": "Enviar por WhatsApp",
+        "email": "Enviar por correo"
+      },
+      "business": {
+        "hospitality": "Bar o restaurante",
+        "beauty": "Peluquería o estética",
+        "shop": "Tienda",
+        "other": "Otro"
+      },
+      "needs": {
+        "newSite": "Una web nueva",
+        "redesign": "Renovar la que tengo",
+        "bookings": "Reservas online",
+        "menu": "Carta o catálogo",
+        "other": "Otra cosa"
+      },
+      "message": {
+        "greeting": "Hola Jesús,",
+        "business": "Mi negocio: {business}.",
+        "needs": "Me interesa: {needs}.",
+        "name": "Me llamo {name}.",
+        "details": "{details}"
+      }
     }
   }
 }

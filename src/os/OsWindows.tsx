@@ -9,6 +9,7 @@ import { ContactApp } from './apps/ContactApp';
 import { ProjectsApp } from './apps/ProjectsApp';
 import { SettingsApp } from './apps/SettingsApp';
 import { SystemApp } from './apps/SystemApp';
+import { TerminalApp } from './apps/TerminalApp';
 import { YokaidoApp } from './apps/YokaidoApp';
 import { windowLabels } from './window-labels';
 import { WindowFrame } from './WindowFrame';
@@ -27,6 +28,7 @@ export async function OsWindows({ locale }: { locale: Locale }) {
     ['activity', <ActivityApp key="activity" locale={locale} />],
     ['business', <BusinessApp key="business" locale={locale} />],
     ['contact', <ContactApp key="contact" locale={locale} />],
+    ['terminal', <TerminalApp key="terminal" />],
     ['system', <SystemApp key="system" locale={locale} />],
     ['settings', <SettingsApp key="settings" locale={locale} />],
   ];
