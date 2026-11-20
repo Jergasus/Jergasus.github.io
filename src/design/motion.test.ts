@@ -1,66 +1,49 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { motion, prefersReducedMotion, previewFollow } from './motion';
+import { gsap } from 'gsap';
+import * as presets from './motion';
+import { motion, prefersReducedMotion } from './motion';
 
-describe('motion presets', () => {
-  it('durations are ascending and under 1.2s', () => {
-    const { fast, base, slow } = motion.duration;
-    expect(fast).toBeGreaterThan(0);
-    expect(fast).toBeLessThan(base);
-    expect(base).toBeLessThan(slow);
-    expect(slow).toBeLessThanOrEqual(1.2);
-  });
+describe('JG-OS motion presets', () => {
+  const { open, close, minimize, phoneApp, toast, bootLine } = motion.os;
+  const sequences = { open, close, minimize, phoneApp, toast };
 
-  it('preview lerp in (0,1]', () => {
-    expect(previewFollow.lerp).toBeGreaterThan(0);
-    expect(previewFollow.lerp).toBeLessThanOrEqual(1);
+  it('durations ascend from the quickest exit to the springy phone app, and stay snappy', () => {
+    // Leaving is quicker than arriving; the phone app, which travels the
+    // furthest (icon to full screen) and overshoots, gets the longest beat.
+    const ascending = [close, minimize, open, toast, phoneApp].map(({ duration }) => duration);
+    expect(ascending[0]).toBeGreaterThan(0);
+    for (let i = 1; i < ascending.length; i++) expect(ascending[i]).toBeGreaterThan(ascending[i - 1]);
+    // Snappy and retro, never slow or floaty.
+    expect(ascending.at(-1)).toBeLessThanOrEqual(0.35);
   });
 
   it('eases are GSAP ease names', () => {
-    const gsapEase = /^(power[1-4]|expo|circ|sine)\.(in|out|inOut)$/;
-    expect(motion.ease.out).toMatch(gsapEase);
-    expect(motion.ease.inOut).toMatch(gsapEase);
+    const gsapEase = /^(none|(power[1-4]|expo|circ|sine)\.(in|out|inOut)|back\.(in|out|inOut)\(\d+(\.\d+)?\))$/;
+    for (const [name, { ease }] of Object.entries(sequences)) {
+      expect(ease, name).toMatch(gsapEase);
+      // GSAP itself reads it as a curve from 0 to 1 (a typo would not).
+      const curve = gsap.parseEase(ease);
+      expect(curve(0), name).toBeCloseTo(0);
+      expect(curve(1), name).toBeCloseTo(1);
+    }
   });
 
-  it('staggers are shorter than the fastest duration', () => {
-    expect(motion.stagger.rows).toBeGreaterThan(0);
-    expect(motion.stagger.lines).toBeGreaterThan(0);
-    expect(motion.stagger.rows).toBeLessThan(motion.duration.fast);
-    expect(motion.stagger.lines).toBeLessThan(motion.duration.fast);
+  it('arrivals ease out, the exit eases in, the trip to the taskbar eases both ways', () => {
+    for (const { ease } of [open, phoneApp, toast]) expect(ease).toMatch(/\.out\b/);
+    expect(close.ease).toMatch(/\.in$/);
+    expect(minimize.ease).toMatch(/\.inOut$/);
   });
 
-  it('page-load beats overlap in order: rules, lines, content, rows', () => {
-    const { lines, content, rows } = motion.load;
-    expect(lines).toBeGreaterThan(0);
-    expect(lines).toBeLessThan(content);
-    expect(content).toBeLessThan(rows);
-    // Each beat starts before the one it follows has settled, so the
-    // sequence reads as one gesture rather than four.
-    expect(lines).toBeLessThan(motion.duration.base);
-    expect(content).toBeLessThan(lines + motion.duration.slow);
+  it('the boot prints its four lines and the skip hint in about a second', () => {
+    // Five beats: line 1 on the first paint, then one per step (BootScreen.tsx).
+    expect(bootLine).toBeGreaterThan(0);
+    expect(5 * bootLine).toBeGreaterThanOrEqual(0.8);
+    expect(5 * bootLine).toBeLessThanOrEqual(1.2);
   });
 
-  it('the page-load sequence only starts close to the first paint', () => {
-    // Later than this, the visitor has already seen the page in place.
-    expect(motion.load.latest).toBeGreaterThan(0);
-    expect(motion.load.latest).toBeLessThanOrEqual(0.2);
-  });
-
-  it('the page-load sequence settles well inside 2.5s', () => {
-    // Four index rows, staggered, are the last thing to land (e2e budget: 2.5s).
-    const end = motion.load.rows + 3 * motion.stagger.rows + motion.duration.fast;
-    expect(end).toBeLessThanOrEqual(2);
-  });
-
-  it('scroll reveals start inside the viewport and items follow the heading', () => {
-    expect(motion.reveal.at).toBeGreaterThan(0.5);
-    expect(motion.reveal.at).toBeLessThanOrEqual(1);
-    expect(motion.reveal.items).toBeGreaterThan(0);
-    expect(motion.reveal.items).toBeLessThan(motion.duration.base);
-  });
-
-  it('items settle over a short distance', () => {
-    expect(motion.settle).toBeGreaterThan(0);
-    expect(motion.settle).toBeLessThanOrEqual(24);
+  it('holds only the JG-OS presets (the v1 values are gone)', () => {
+    expect(Object.keys(presets).sort()).toEqual(['REDUCED_MOTION', 'motion', 'prefersReducedMotion']);
+    expect(Object.keys(motion)).toEqual(['os']);
   });
 });
 
