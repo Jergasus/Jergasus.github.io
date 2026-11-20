@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { buildProjectMessage, type BusinessKind, type NeedKind } from './message';
 import { whatsappHref, mailtoHref } from '@/content/contact';
@@ -31,6 +31,17 @@ export function Wizard() {
   const [name, setName] = useState('');
   const [details, setDetails] = useState('');
   const [channel, setChannel] = useState<Channel>('whatsapp');
+
+  // Focus the new step's heading after each navigation (but not on first render).
+  const stepHeadingRef = useRef<HTMLElement | null>(null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    stepHeadingRef.current?.focus();
+  }, [step]);
 
   const isValid: Record<Step, boolean> = {
     1: business !== null,
@@ -75,7 +86,13 @@ export function Wizard() {
       {step === 1 && (
         <div data-wizard-step="1">
           <fieldset className="os-wizard-fieldset">
-            <legend className="os-wizard-legend">{t('wizard.step1')}</legend>
+            <legend
+              ref={(el) => { stepHeadingRef.current = el; }}
+              tabIndex={-1}
+              className="os-wizard-legend"
+            >
+              {t('wizard.step1')}
+            </legend>
             <div className="os-wizard-radios">
               {BUSINESS_KINDS.map((kind) => (
                 <label key={kind} className="os-wizard-radio-label">
@@ -107,7 +124,13 @@ export function Wizard() {
       {step === 2 && (
         <div data-wizard-step="2">
           <fieldset className="os-wizard-fieldset">
-            <legend className="os-wizard-legend">{t('wizard.step2')}</legend>
+            <legend
+              ref={(el) => { stepHeadingRef.current = el; }}
+              tabIndex={-1}
+              className="os-wizard-legend"
+            >
+              {t('wizard.step2')}
+            </legend>
             <div className="os-wizard-checks">
               {NEED_KINDS.map((kind) => (
                 <label key={kind} className="os-wizard-check-label">
@@ -138,7 +161,13 @@ export function Wizard() {
       {/* ── Step 3: name, details, channel ───────────────────────────── */}
       {step === 3 && (
         <div data-wizard-step="3">
-          <p className="os-wizard-legend">{t('wizard.step3')}</p>
+          <p
+            ref={(el) => { stepHeadingRef.current = el; }}
+            tabIndex={-1}
+            className="os-wizard-legend"
+          >
+            {t('wizard.step3')}
+          </p>
           <div className="os-wizard-fields">
             <label className="os-wizard-field-label">
               <span className="os-wizard-label-text">{t('wizard.nameLabel')}</span>
@@ -202,7 +231,13 @@ export function Wizard() {
       {/* ── Summary ──────────────────────────────────────────────────── */}
       {step === 4 && (
         <div data-wizard-step="4">
-          <p className="os-wizard-legend">{t('wizard.summaryTitle')}</p>
+          <p
+            ref={(el) => { stepHeadingRef.current = el; }}
+            tabIndex={-1}
+            className="os-wizard-legend"
+          >
+            {t('wizard.summaryTitle')}
+          </p>
           <pre className="os-wizard-message">{message}</pre>
           <div className="os-wizard-send">
             <a href={href} className="os-button os-wizard-send-btn">

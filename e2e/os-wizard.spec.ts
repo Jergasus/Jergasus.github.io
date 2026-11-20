@@ -36,6 +36,32 @@ test('walking the 3 steps produces a wa.me link whose text includes the choices'
   expect(decoded).toContain('Una web nueva');
 });
 
+// ── Focus management ──────────────────────────────────────────────────────
+
+test('keyboard Next moves focus to step 2 heading; Back returns it to step 1', async ({
+  page,
+}) => {
+  await visit(page, '/');
+  await openFromIcon(page, 'business');
+
+  const w = wizard(page);
+
+  // Step 1: select a business type, then press Enter on Next
+  await w.locator('input[name="business"][value="hospitality"]').check();
+  await w.getByRole('button', { name: /siguiente/i }).focus();
+  await page.keyboard.press('Enter');
+
+  // Focus should land on the step-2 legend
+  await expect(w.locator('[data-wizard-step="2"] legend')).toBeFocused();
+
+  // Press Enter on Back to return to step 1
+  await w.getByRole('button', { name: /atrás/i }).focus();
+  await page.keyboard.press('Enter');
+
+  // Focus should land on the step-1 legend
+  await expect(w.locator('[data-wizard-step="1"] legend')).toBeFocused();
+});
+
 // ── Validity guard ─────────────────────────────────────────────────────────
 
 test('Next is disabled until a step is valid', async ({ page }) => {
