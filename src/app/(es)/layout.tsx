@@ -7,10 +7,10 @@ import { themeColor, themeColorDark } from '@/design/theme-color';
 import { SITE_URL } from '@/content/site';
 import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
+import { availabilityLabel, status } from '@/lib/status';
 import { OsRoot } from '@/os/OsRoot';
 import { OsWindows } from '@/os/OsWindows';
 import { prepaintScript } from '@/os/prepaint';
-import { TaskbarStub } from '@/os/TaskbarStub';
 import '../globals.css';
 
 // The browser chrome (Android toolbar, Safari tab bar) takes the desk colour.
@@ -43,7 +43,14 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function EsLayout({ children }: { children: ReactNode }) {
   setRequestLocale('es');
-  const messages = await getMessages({ locale: 'es' });
+  const [messages, tHero] = await Promise.all([
+    getMessages({ locale: 'es' }),
+    getTranslations({ locale: 'es', namespace: 'hero' }),
+  ]);
+  const avail = availabilityLabel(status, 'es', {
+    available: tHero('availability.available'),
+    unavailable: tHero('availability.unavailable'),
+  });
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
     // data-boot on <html> before React sees it.
@@ -54,11 +61,10 @@ export default async function EsLayout({ children }: { children: ReactNode }) {
       <body>
         {/* Only what client components translate goes to the browser. */}
         <NextIntlClientProvider messages={clientMessages(messages)}>
-          <OsRoot locale="es">
+          <OsRoot locale="es" available={status.available} availabilityLabel={avail}>
             {children}
             <OsWindows locale="es" />
           </OsRoot>
-          <TaskbarStub locale="es" />
         </NextIntlClientProvider>
       </body>
     </html>

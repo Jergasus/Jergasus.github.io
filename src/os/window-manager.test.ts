@@ -211,18 +211,19 @@ test('reclamp moves every window back into a smaller desktop', () => {
 // arrange / cascade
 // ---------------------------------------------------------------------------
 
-test('arrange cascades open windows from (24,24) in z order', () => {
+test('arrange cascades open windows from (112,24) in z order, skipping the 104px icon column', () => {
   let s = initialState(null); // about z=1, projects z=2
   const bounds = { w: 1280, h: 720 };
   s = reduce(s, { type: 'arrange', bounds });
 
   const aboutApp = getApp('about')!;
   const { w: aw, h: ah } = fracToRect(aboutApp.defaultRect, bounds);
-  expect(s.windows.about.rect).toEqual({ x: 24, y: 24, w: aw, h: ah });
+  // R8: icon column is 104px + 8px gap = 112px x offset
+  expect(s.windows.about.rect).toEqual({ x: 112, y: 24, w: aw, h: ah });
 
   const projectsApp = getApp('projects')!;
   const { w: pw, h: ph } = fracToRect(projectsApp.defaultRect, bounds);
-  expect(s.windows.projects.rect).toEqual({ x: 56, y: 56, w: pw, h: ph });
+  expect(s.windows.projects.rect).toEqual({ x: 144, y: 56, w: pw, h: ph });
 });
 
 // ---------------------------------------------------------------------------

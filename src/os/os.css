@@ -720,7 +720,7 @@
     html[data-os] [data-desktop] {
       display: block;
       position: fixed;
-      inset: 0;
+      inset: 0 0 var(--os-taskbar-h);
       background: var(--os-wp);
     }
 
@@ -759,12 +759,13 @@
     html[data-os] [data-taskbar] {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: flex-start;
+      gap: 4px;
       position: fixed;
       inset: auto 0 0;
       z-index: 2;
       height: var(--os-taskbar-h);
-      padding-inline: 8px;
+      padding-inline: 4px;
       background: var(--os-window);
       color: var(--os-ink);
       border-top: var(--os-border-w) solid var(--os-border);
@@ -834,6 +835,412 @@
 
     html[data-os="phone"] :is([data-win-minimize], [data-win-maximize]) {
       display: none;
+    }
+  }
+
+  /* ── Document-mode language nav (.os-nojs-only) ─────────────────────── */
+  /* Visible without data-os; hidden when data-os is set (via .os-nojs-only). */
+
+  .os-doc-lang {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 8px var(--os-pad) 0;
+  }
+
+  .os-doc-lang-link {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    font-weight: 600;
+    color: var(--os-ink);
+    text-decoration: none;
+    padding: 2px 6px;
+    border: var(--os-border-w) solid var(--os-border);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-doc-lang-link:hover {
+      background: var(--os-ink);
+      color: var(--os-window);
+    }
+  }
+
+  /* ── Taskbar: start button ───────────────────────────────────────────── */
+
+  .os-start-btn {
+    flex-shrink: 0;
+    padding: 2px 10px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--os-ink);
+    background: var(--os-window);
+    border: var(--os-border-w) solid var(--os-border);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-start-btn:hover {
+      background: var(--os-ink);
+      color: var(--os-window);
+    }
+  }
+
+  .os-start-btn:active,
+  .os-start-btn[aria-expanded="true"] {
+    background: var(--os-ink);
+    color: var(--os-window);
+  }
+
+  /* ── Taskbar: task buttons ───────────────────────────────────────────── */
+
+  .os-tasks {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+    gap: 3px;
+    overflow: hidden;
+  }
+
+  .os-task-btn {
+    min-width: 60px;
+    max-width: 160px;
+    height: calc(var(--os-taskbar-h) - 8px);
+    padding: 0 8px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    font-weight: 600;
+    color: var(--os-ink);
+    background: var(--app, var(--os-window));
+    border: var(--os-border-w) solid var(--os-border);
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .os-task-btn[aria-pressed="true"] {
+    box-shadow: inset 1px 1px 0 rgba(0 0 0 / 0.5), inset -1px -1px 0 rgba(0 0 0 / 0.25);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-task-btn:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  /* ── Start menu ──────────────────────────────────────────────────────── */
+
+  .os-start-menu {
+    position: fixed;
+    bottom: var(--os-taskbar-h);
+    left: 0;
+    min-width: 200px;
+    max-height: calc(100vh - var(--os-taskbar-h) - 16px);
+    overflow-y: auto;
+    background: var(--os-window);
+    color: var(--os-ink);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+    z-index: 20;
+  }
+
+  .os-start-list {
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+  }
+
+  .os-start-item {
+    display: block;
+    width: 100%;
+    padding: 5px 16px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 600;
+    color: var(--os-ink);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-start-item:hover {
+      background: var(--os-ink);
+      color: var(--os-window);
+    }
+  }
+
+  .os-start-item:active {
+    background: var(--os-ink);
+    color: var(--os-window);
+  }
+
+  .os-start-divider {
+    height: var(--os-border-w);
+    margin: 4px 8px;
+    background: var(--os-border);
+  }
+
+  /* ── Tray ────────────────────────────────────────────────────────────── */
+
+  .os-tray {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: 8px;
+    border-left: var(--os-border-w) solid var(--os-border);
+  }
+
+  .os-tray-avail {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .os-tray-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--os-off);
+    flex-shrink: 0;
+  }
+
+  [data-available="true"] .os-tray-dot {
+    background: var(--os-ok);
+  }
+
+  .os-tray-btn {
+    display: grid;
+    place-items: center;
+    min-width: 28px;
+    padding: 1px 4px;
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--os-ink);
+    background: transparent;
+    border: var(--os-border-w) solid transparent;
+    cursor: pointer;
+  }
+
+  .os-tray-btn[aria-pressed="true"] {
+    background: var(--os-ink);
+    color: var(--os-window);
+    border-color: var(--os-border);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-tray-btn:hover {
+      border-color: var(--os-border);
+    }
+  }
+
+  .os-tray-clock {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 36px;
+    text-align: right;
+  }
+
+  /* ── Context menu ────────────────────────────────────────────────────── */
+
+  .os-context-menu {
+    min-width: 180px;
+    background: var(--os-window);
+    color: var(--os-ink);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+    padding: 4px 0;
+    z-index: 100;
+  }
+
+  .os-context-item {
+    position: relative;
+  }
+
+  .os-context-btn {
+    display: block;
+    width: 100%;
+    padding: 5px 16px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 600;
+    color: var(--os-ink);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .os-context-btn:hover {
+      background: var(--os-ink);
+      color: var(--os-window);
+    }
+  }
+
+  .os-context-btn:active {
+    background: var(--os-ink);
+    color: var(--os-window);
+  }
+
+  .os-context-sep {
+    height: var(--os-border-w);
+    margin: 4px 8px;
+    background: var(--os-border);
+  }
+
+  .os-context-submenu-trigger {
+    position: relative;
+  }
+
+  .os-context-submenu {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 160px;
+    background: var(--os-window);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+    padding: 4px 0;
+    z-index: 1;
+  }
+
+  /* ── Desktop icon column ─────────────────────────────────────────────── */
+
+  /* Hidden in document mode; revealed by the desktop @media screen block. */
+  .os-icon-col {
+    display: none;
+  }
+
+  .os-icon {
+    display: none;
+  }
+
+  /* ── Settings app ────────────────────────────────────────────────────── */
+
+  .os-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .os-settings-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .os-settings-heading {
+    margin: 0;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 700;
+    padding-bottom: 4px;
+    border-bottom: var(--os-border-w) solid var(--os-border);
+  }
+
+  .os-settings-radios {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .os-settings-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    cursor: pointer;
+  }
+
+  /* ── Desktop icon column (desktop mode) ──────────────────────────────── */
+
+  @media screen {
+    html[data-os="desktop"] .os-icon-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      width: var(--os-icon-col);
+      height: 100%;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    html[data-os="desktop"] .os-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 4px;
+      width: calc(var(--os-icon-col) - 16px);
+      background: transparent;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--os-label-ink);
+    }
+
+    html[data-os="desktop"] .os-icon--selected {
+      border-color: rgba(255 255 255 / 0.6);
+      background: rgba(255 255 255 / 0.15);
+      outline: none;
+    }
+
+    html[data-os="desktop"] .os-icon:focus-visible {
+      border-color: rgba(255 255 255 / 0.9);
+      outline: none;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      html[data-os="desktop"] .os-icon:hover {
+        background: rgba(255 255 255 / 0.1);
+      }
+    }
+
+    html[data-os="desktop"] .os-icon-tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: var(--app, var(--os-window));
+      border: var(--os-border-w) solid var(--os-border);
+      border-radius: var(--os-radius-icon);
+      box-shadow: 2px 2px 0 var(--os-shadow);
+      flex-shrink: 0;
+    }
+
+    html[data-os="desktop"] .os-icon-glyph {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    html[data-os="desktop"] .os-icon-label {
+      font-family: var(--os-font-pixel);
+      font-size: var(--os-step--1);
+      font-weight: 600;
+      text-align: center;
+      word-break: break-word;
+      hyphens: auto;
+      background: var(--os-label-bg);
+      color: var(--os-label-ink);
+      padding: 1px 3px;
+      max-width: 88px;
+      line-height: 1.2;
     }
   }
 

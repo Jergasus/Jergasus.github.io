@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { contact, mailtoHref } from '@/content/contact';
-import { expect, test, win } from './fixtures';
+import { expect, test, visit, win, openFromIcon } from './fixtures';
 
 // Read message files the same way the other specs read data — avoids
 // retyping expected strings and keeps the test in sync with the source.
@@ -12,6 +12,16 @@ const messages = {
   es: readJson<Subset>('../messages/es.json'),
   en: readJson<Subset>('../messages/en.json'),
 };
+
+// R3 follow-up: contact opens from its desktop icon (JS on).
+test('contact opens from its desktop icon and shows links (JS on)', async ({ page }) => {
+  await visit(page, '/');
+  await openFromIcon(page, 'contact');
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'contact')).toBeFocused();
+  // Email link is present in the open window
+  await expect(win(page, 'contact').locator(`a[href="${mailtoHref()}"]`)).toBeVisible();
+});
 
 // The contact window is closed on load and opens from its desktop icon (a
 // later task); until then its links are checked where every visitor

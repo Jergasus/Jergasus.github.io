@@ -4,7 +4,7 @@ import type { Status } from '@/lib/status';
 import type { Locale } from '@/i18n/routing';
 import { projects } from '@/content/projects';
 import { STACK } from '@/content/stack';
-import { expect, test, visit, win } from './fixtures';
+import { expect, test, visit, win, openFromIcon } from './fixtures';
 
 // What each window says, from the committed data and copy (v1's hero, now and
 // work guards, moved onto the windows). Expected values are read with fs, not
@@ -93,6 +93,30 @@ test('project links keep the locale', async ({ page }) => {
       `/en/work/${slug}/`,
     );
   }
+});
+
+// R3 follow-up: JS-on variants that open windows through the desktop icons /
+// start menu. These complement the existing document-mode assertions below.
+
+test('activity opens from its desktop icon (JS on)', async ({ page }) => {
+  await visit(page, '/');
+  await openFromIcon(page, 'activity');
+  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'activity')).toBeFocused();
+});
+
+test('business opens from its desktop icon (JS on)', async ({ page }) => {
+  await visit(page, '/');
+  await openFromIcon(page, 'business');
+  await expect(win(page, 'business')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'business')).toBeFocused();
+});
+
+test('system opens from the start menu (JS on)', async ({ page }) => {
+  await visit(page, '/');
+  await page.locator('[data-start]').click();
+  await page.locator('[data-start-menu] [data-open-app="system"]').click();
+  await expect(win(page, 'system')).toHaveAttribute('data-win-state', 'open');
 });
 
 // Activity, system and the other closed-on-load windows are read as a

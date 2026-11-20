@@ -84,7 +84,8 @@ export function cascade(ids: AppId[], bounds: Size): Partial<Record<AppId, Rect>
     const def = getApp(id);
     if (!def) return;
     const { w, h } = fracToRect(def.defaultRect, bounds);
-    result[id] = { x: 24 + 32 * i, y: 24 + 32 * i, w, h };
+    // R8: icon column is 104px wide + 8px gap = 112px offset so windows don't overlap icons
+    result[id] = { x: 112 + 32 * i, y: 24 + 32 * i, w, h };
   });
   return result;
 }

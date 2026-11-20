@@ -7,6 +7,7 @@ import { ActivityApp } from './apps/ActivityApp';
 import { BusinessApp } from './apps/BusinessApp';
 import { ContactApp } from './apps/ContactApp';
 import { ProjectsApp } from './apps/ProjectsApp';
+import { SettingsApp } from './apps/SettingsApp';
 import { SystemApp } from './apps/SystemApp';
 import { YokaidoApp } from './apps/YokaidoApp';
 import { windowLabels } from './window-labels';
@@ -27,6 +28,7 @@ export async function OsWindows({ locale }: { locale: Locale }) {
     ['business', <BusinessApp key="business" locale={locale} />],
     ['contact', <ContactApp key="contact" locale={locale} />],
     ['system', <SystemApp key="system" locale={locale} />],
+    ['settings', <SettingsApp key="settings" locale={locale} />],
   ];
 
   return windows.map(([id, content]) => (

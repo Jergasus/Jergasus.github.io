@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
+import { DESKTOP_ICON_ORDER } from '@/os/apps';
 import { projects } from '@/content/projects';
-import { expect, test, win } from './fixtures';
+import { expect, test, visit, win, openFromIcon } from './fixtures';
 
 // Expected copy comes from the committed message files (read with fs, as in
 // contact.spec.ts), so the assertions follow the copy instead of retyping it.
@@ -137,6 +138,21 @@ test.describe('without JavaScript', () => {
     await expect(study.getByText(copy.decisions[0].body)).toBeVisible();
     await expect(study).toHaveCSS('opacity', '1');
   });
+});
+
+// R4 replacement: "from a case page every app is reachable"
+// (replaces the deleted v1 "header anchors lead back to home" test)
+test('from a case page every app is reachable', async ({ page }) => {
+  await visit(page, '/work/questday/');
+  // Every desktop icon is visible and can be interacted with
+  for (const id of DESKTOP_ICON_ORDER) {
+    await expect(page.locator(`[data-icon="${id}"]`), `icon ${id}`).toBeVisible();
+  }
+  // Opening from icon works for a couple of representative apps
+  await openFromIcon(page, 'about');
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
+  await openFromIcon(page, 'contact');
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
 });
 
 // Copy is rendered on the server; only what client components translate is

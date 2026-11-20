@@ -14,6 +14,7 @@ import {
 import { usePathname } from 'next/navigation';
 import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
+import { localizedPath } from '@/i18n/localized-path';
 import { isCaseApp, type AppId, type CaseAppId } from './apps';
 import { CaseHost } from './CaseHost';
 import { OsContext, type OsInternal, type OsMode } from './context';
@@ -22,6 +23,9 @@ import { caseHref, routedSlugOf } from './route';
 import { PREF_KEYS, readPref } from './storage';
 import { initialState, nextActiveCase, reduce } from './window-manager';
 import { forgetWindow } from './window-memory';
+import { DesktopIcons } from './shell/DesktopIcons';
+import { Taskbar } from './shell/Taskbar';
+import { ContextMenu } from './shell/ContextMenu';
 
 export { useOs } from './context';
 export type { OsApi, OsMode } from './context';
@@ -57,9 +61,20 @@ type FocusPlan =
   | { kind: 'into'; id: AppId }
   | { kind: 'back'; to: HTMLElement | null; afterRoute?: CaseAppId | null };
 
-type Props = { locale: Locale; children: ReactNode };
+type Props = {
+  locale: Locale;
+  children: ReactNode;
+  available?: boolean;
+  availabilityLabel?: string;
+};
 
-export function OsRoot({ locale, children }: Props) {
+const LOCALES_NOJS: { code: Locale; label: string }[] = [
+  { code: 'es', label: 'ES' },
+  { code: 'ca', label: 'CA' },
+  { code: 'en', label: 'EN' },
+];
+
+export function OsRoot({ locale, children, available = false, availabilityLabel = '' }: Props) {
   const router = useRouter();
   // Derived in this render, so CaseHost and the page always agree on which
   // project window the page renders: the same window never renders twice.
@@ -308,14 +323,42 @@ export function OsRoot({ locale, children }: Props) {
     [state, mode, locale, routedSlug, openApp, closeApp, focusApp, registerCase, cases, dropCase, minimizeApp],
   );
 
+  // The pathname is used for the document-mode language links (os-nojs-only).
+  // On the server these match the request URL; on the client usePathname() is live.
+  const pathname = usePathname();
+
   return (
     <OsContext value={os}>
-      {/* The wallpaper, and the icons from the taskbar task on. */}
-      <div data-desktop />
+      {/* R5: Document-mode language links. Hidden via CSS once data-os is set.
+          They render in the SSR HTML so a no-JS visitor can switch language. */}
+      <nav aria-label="Language" className="os-nojs-only os-doc-lang">
+        {LOCALES_NOJS.map(({ code, label }) => (
+          <a key={code} href={localizedPath(pathname, code)} className="os-doc-lang-link">
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      {/* Desktop wallpaper and icon column */}
+      <div data-desktop>
+        <DesktopIcons />
+      </div>
+
+      {/* All windows */}
       <main data-windows>
         {children}
         <CaseHost />
       </main>
+
+      {/* Taskbar: start button, task buttons, tray */}
+      <Taskbar
+        locale={locale}
+        available={available}
+        availabilityLabel={availabilityLabel}
+      />
+
+      {/* Right-click context menu */}
+      <ContextMenu />
     </OsContext>
   );
 }

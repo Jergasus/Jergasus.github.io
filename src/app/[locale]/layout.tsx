@@ -9,10 +9,10 @@ import { routing, type Locale } from '@/i18n/routing';
 import { SITE_URL } from '@/content/site';
 import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
+import { availabilityLabel, status } from '@/lib/status';
 import { OsRoot } from '@/os/OsRoot';
 import { OsWindows } from '@/os/OsWindows';
 import { prepaintScript } from '@/os/prepaint';
-import { TaskbarStub } from '@/os/TaskbarStub';
 import '../globals.css';
 
 export const dynamicParams = false;
@@ -64,7 +64,14 @@ export default async function LocaleLayout({
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const messages = await getMessages({ locale });
+  const [messages, tHero] = await Promise.all([
+    getMessages({ locale }),
+    getTranslations({ locale, namespace: 'hero' }),
+  ]);
+  const avail = availabilityLabel(status, locale as Locale, {
+    available: tHero('availability.available'),
+    unavailable: tHero('availability.unavailable'),
+  });
 
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
@@ -76,11 +83,10 @@ export default async function LocaleLayout({
       <body>
         {/* Only what client components translate goes to the browser. */}
         <NextIntlClientProvider messages={clientMessages(messages)}>
-          <OsRoot locale={locale as Locale}>
+          <OsRoot locale={locale as Locale} available={status.available} availabilityLabel={avail}>
             {children}
             <OsWindows locale={locale as Locale} />
           </OsRoot>
-          <TaskbarStub locale={locale as Locale} />
         </NextIntlClientProvider>
       </body>
     </html>

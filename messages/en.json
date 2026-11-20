@@ -237,6 +237,35 @@
     },
     "yokaido": {
       "engine": "Engine"
+    },
+    "taskbar": {
+      "start": "★ Start",
+      "language": "Language"
+    },
+    "menu": {
+      "arrange": "Arrange windows",
+      "arrangeIcons": "Arrange icons",
+      "settings": "Personalise...",
+      "changeWallpaper": "Change wallpaper"
+    },
+    "wallpapers": {
+      "heading": "Wallpaper",
+      "dots": "Dots",
+      "grid": "Grid",
+      "sunset": "Sunset",
+      "cream": "Cream",
+      "barcelona": "Barcelona"
+    },
+    "theme": {
+      "heading": "Theme",
+      "system": "System",
+      "light": "Day",
+      "dark": "Night",
+      "toggle": "Change theme"
+    },
+    "settings": {
+      "heading": "Personalise",
+      "language": "Language"
     }
   }
 }

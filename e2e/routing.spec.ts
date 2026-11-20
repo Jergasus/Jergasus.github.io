@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures';
+import { expect, test, visit } from './fixtures';
 
 test('/ is Spanish', async ({ page }) => {
   await page.goto('/');
@@ -17,27 +17,42 @@ test('/es/ is not generated', async ({ page }) => {
   expect(response!.status()).toBe(404);
 });
 
+// R6: language links now live in [data-tray="language"]; the switcher keeps page test
+// points at the tray so it works with the real client-rendered links.
 test('switcher keeps page', async ({ page }) => {
-  await page.goto('/');
-  await page.locator('a[hreflang="en"]').click();
+  await visit(page, '/');
+  await page.locator('[data-tray="language"] a[hreflang="en"]').click();
   await expect(page).toHaveURL('/en/');
 
-  await page.goto('/work/questday/');
-  await page.locator('a[hreflang="en"]').click();
+  await visit(page, '/work/questday/');
+  await page.locator('[data-tray="language"] a[hreflang="en"]').click();
   await expect(page).toHaveURL('/en/work/questday/');
 });
 
 test('switcher hrefs are path-aware on a case page', async ({ page }) => {
   await page.goto('/en/work/questday/');
-  await expect(page.locator('a[hreflang="es"]')).toHaveAttribute('href', '/work/questday/');
-  await expect(page.locator('a[hreflang="ca"]')).toHaveAttribute('href', '/ca/work/questday/');
-  await expect(page.locator('a[hreflang="en"]')).toHaveAttribute('href', '/en/work/questday/');
+  await expect(page.locator('[data-tray="language"] a[hreflang="es"]')).toHaveAttribute(
+    'href',
+    '/work/questday/',
+  );
+  await expect(page.locator('[data-tray="language"] a[hreflang="ca"]')).toHaveAttribute(
+    'href',
+    '/ca/work/questday/',
+  );
+  await expect(page.locator('[data-tray="language"] a[hreflang="en"]')).toHaveAttribute(
+    'href',
+    '/en/work/questday/',
+  );
 });
 
 test('switcher hrefs are path-aware on /en/', async ({ page }) => {
   await page.goto('/en/');
-  const esHref = await page.locator('a[hreflang="es"]').getAttribute('href');
-  const caHref = await page.locator('a[hreflang="ca"]').getAttribute('href');
+  const esHref = await page
+    .locator('[data-tray="language"] a[hreflang="es"]')
+    .getAttribute('href');
+  const caHref = await page
+    .locator('[data-tray="language"] a[hreflang="ca"]')
+    .getAttribute('href');
   expect(esHref).toBe('/');
   expect(caHref).toBe('/ca/');
 });

@@ -237,6 +237,35 @@
     },
     "yokaido": {
       "engine": "Motor"
+    },
+    "taskbar": {
+      "start": "★ Inicio",
+      "language": "Idioma"
+    },
+    "menu": {
+      "arrange": "Ordenar ventanas",
+      "arrangeIcons": "Ordenar íconos",
+      "settings": "Personalizar...",
+      "changeWallpaper": "Cambiar fondo"
+    },
+    "wallpapers": {
+      "heading": "Fondo de escritorio",
+      "dots": "Puntos",
+      "grid": "Cuadrícula",
+      "sunset": "Atardecer",
+      "cream": "Crema",
+      "barcelona": "Barcelona"
+    },
+    "theme": {
+      "heading": "Tema",
+      "system": "Sistema",
+      "light": "Día",
+      "dark": "Noche",
+      "toggle": "Cambiar tema"
+    },
+    "settings": {
+      "heading": "Personalizar",
+      "language": "Idioma"
     }
   }
 }

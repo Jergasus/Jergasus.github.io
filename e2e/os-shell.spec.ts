@@ -322,10 +322,15 @@ test.describe('without JavaScript', () => {
     await expect(page.locator('html')).not.toHaveAttribute('data-os', /.*/);
     await expect(page.locator('h1')).toBeVisible();
     expect(await visibleWindows(page)).toEqual(CONTENT_WINDOWS);
-    // Stacked as a document: each window starts below the one before.
+    // Stacked as a document: each visible window starts below the one before.
+    // (interactiveOnly windows like settings are display:none and excluded.)
     const tops = await page
       .locator('[data-app]')
-      .evaluateAll((sections) => sections.map((section) => section.getBoundingClientRect().top));
+      .evaluateAll((sections) =>
+        sections
+          .filter((s) => s.getClientRects().length > 0)
+          .map((s) => s.getBoundingClientRect().top),
+      );
     expect(tops).toEqual([...tops].sort((a, b) => a - b));
     for (const selector of ['[data-desktop]', '[data-taskbar]', '[data-win-close]', '[data-win-minimize]', '[data-win-maximize]']) {
       for (const element of await page.locator(selector).all()) await expect(element, selector).toBeHidden();
