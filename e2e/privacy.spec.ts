@@ -25,6 +25,7 @@ const LEAKS: [label: string, pattern: RegExp][] = [
   ['a repo owner field', /\bowner["']?\s*:\s*["'`]Jergasus/],
   ['a private repo path', /Jergasus\/(questday|SakurAI|rally-voley|Yokaido)\b/i],
   ['the GitHub API', /api\.github\.com/],
+  ['a Cloudflare Worker URL (Rally Voley’s)', /\.workers\.dev\b/i],
 ];
 
 test('the build output carries no repo or branch identifiers', () => {
