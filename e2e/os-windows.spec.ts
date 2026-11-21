@@ -72,6 +72,58 @@ test('dragging from the empty part of the titlebar (the move handle) moves the w
   expect(box1.y).toBeGreaterThan(box0.y + 50);
 });
 
+// Real Safari extends a text selection across the page while a window is
+// dragged. A drag or a resize must switch text selection off for its whole
+// gesture and drop any selection that was there, then give selection back.
+for (const [label, grab] of [
+  ['dragging', '[data-win-move]'],
+  ['resizing', '[data-resize="se"]'],
+] as const) {
+  test(`${label} a window selects no text and gives selection back afterwards`, async ({ page }) => {
+    await page.setViewportSize(VP);
+    await visit(page, '/');
+
+    const about = win(page, 'about');
+    // Leave a selection on the bio, as a press on text would.
+    await page.evaluate(() => {
+      const p = document.querySelector('[data-app="about"] p');
+      const range = document.createRange();
+      range.selectNodeContents(p!);
+      const sel = window.getSelection()!;
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+    expect(await page.evaluate(() => window.getSelection()!.toString().length)).toBeGreaterThan(0);
+
+    const box = (await about.locator(grab).boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 30, { steps: 5 });
+
+    const during = await page.evaluate(() => ({
+      selected: window.getSelection()!.toString().length,
+      userSelect: getComputedStyle(document.querySelector('[data-app="about"] p')!).userSelect,
+    }));
+    expect(during.selected).toBe(0);
+    expect(during.userSelect).toBe('none');
+
+    await page.mouse.up();
+    const after = await page.evaluate(
+      () => getComputedStyle(document.querySelector('[data-app="about"] p')!).userSelect,
+    );
+    expect(after).not.toBe('none');
+  });
+}
+
+test('window titles are not selectable text', async ({ page }) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/');
+  const userSelect = await win(page, 'about')
+    .locator('[data-titlebar]')
+    .evaluate((el) => getComputedStyle(el).userSelect);
+  expect(userSelect).toBe('none');
+});
+
 test('double-clicking the empty part of the titlebar maximises the window', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');

@@ -4,6 +4,7 @@ import { useRef, type Dispatch, type PointerEvent, type RefObject } from 'react'
 import type { AppId } from '../apps';
 import type { WmAction } from '../window-manager';
 import { desktopBounds } from './desktopBounds';
+import { beginWindowGesture, endWindowGesture } from './windowGesture';
 
 /**
  * The titlebar buttons that act on their own. A press on one of them never
@@ -64,6 +65,7 @@ export function useWindowDrag({ id, sectionRef, dispatch }: Options) {
       origH: box.height,
     };
     section.setPointerCapture(e.pointerId);
+    beginWindowGesture();
   }
 
   function onPointerMove(e: PointerEvent<HTMLElement>) {
@@ -80,6 +82,7 @@ export function useWindowDrag({ id, sectionRef, dispatch }: Options) {
   function onPointerUp(e: PointerEvent<HTMLElement>) {
     const d = drag.current;
     if (!d || d.pointerId !== e.pointerId) return;
+    endWindowGesture();
     const section = sectionRef.current;
     if (!section) return;
 
@@ -113,6 +116,7 @@ export function useWindowDrag({ id, sectionRef, dispatch }: Options) {
   function onPointerCancel(e: PointerEvent<HTMLElement>) {
     const d = drag.current;
     if (!d || d.pointerId !== e.pointerId) return;
+    endWindowGesture();
     const section = sectionRef.current;
     if (!section) return;
     section.style.transform = '';

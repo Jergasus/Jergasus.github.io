@@ -4,6 +4,7 @@ import { useRef, type Dispatch, type PointerEvent, type RefObject } from 'react'
 import type { AppId } from '../apps';
 import type { WmAction } from '../window-manager';
 import { desktopBounds } from './desktopBounds';
+import { beginWindowGesture, endWindowGesture } from './windowGesture';
 
 export type ResizeDir = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
@@ -91,6 +92,7 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
     };
     // Capture so the section receives move/up even when the pointer leaves.
     section.setPointerCapture(e.pointerId);
+    beginWindowGesture();
   }
 
   function onPointerMove(e: PointerEvent<HTMLElement>) {
@@ -124,6 +126,7 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
   function onPointerUp(e: PointerEvent<HTMLElement>) {
     const rs = resize.current;
     if (!rs || rs.pointerId !== e.pointerId) return;
+    endWindowGesture();
 
     // Cancel any pending rAF before reading the final state.
     if (rafId.current !== null) {
@@ -154,6 +157,7 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
   function onPointerCancel(e: PointerEvent<HTMLElement>) {
     const rs = resize.current;
     if (!rs || rs.pointerId !== e.pointerId) return;
+    endWindowGesture();
 
     if (rafId.current !== null) {
       cancelAnimationFrame(rafId.current);

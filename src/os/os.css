@@ -1077,6 +1077,13 @@
   /* ── The OS on screen ────────────────────────────────────────────────── */
 
   @media screen {
+    /* A window drag or resize selects no text anywhere (windowGesture.ts). */
+    html[data-os-gesture],
+    html[data-os-gesture] * {
+      -webkit-user-select: none !important;
+      user-select: none !important;
+    }
+
     html[data-os] body {
       min-height: 0;
       padding: 0;
