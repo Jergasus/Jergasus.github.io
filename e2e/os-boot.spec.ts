@@ -53,6 +53,27 @@ test('first visit shows the boot screen, then the desktop; content is in the DOM
   expect(booted).toBe('1');
 });
 
+// Carried item (Task 14): the boot screen used an undefined token and fell
+// back to near-black, where the logo's black frame disappeared. It now sits
+// on the desk colour, by day and by night, with the OS ink for its lines.
+for (const [colorScheme, desk, ink] of [
+  ['light', 'rgb(91, 127, 166)', 'rgb(17, 17, 17)'],
+  ['dark', 'rgb(20, 27, 43)', 'rgb(232, 228, 218)'],
+] as const) {
+  test(`the boot screen sits on the desk colour (${colorScheme})`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme });
+    await page.clock.install();
+    await page.goto('/');
+    const bootScreen = page.locator('[data-boot-screen]');
+    await expect(bootScreen).toBeVisible();
+    const look = await bootScreen.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { background: style.backgroundColor, color: style.color };
+    });
+    expect(look).toEqual({ background: desk, color: ink });
+  });
+}
+
 test('a key press skips the boot immediately', async ({ page }) => {
   await page.clock.install();
   await page.goto('/');

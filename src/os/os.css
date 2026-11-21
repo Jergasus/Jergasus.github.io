@@ -2037,16 +2037,21 @@
      accessibility tree; there are no focusable children.
      ----------------------------------------------------------------------- */
 
+  /* The machine starting up on its own desk colour, so the logo's black
+     frame and shadow read (by night as well), the lines are ink on desk
+     (about 4.5:1 by day), and the desktop underneath takes over seamlessly. */
   [data-boot-screen] {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 9999;
-    background: var(--os-desk-bg, #0a0a0a);
-    color: var(--os-text, #e0e0e0);
-    padding: 2.5rem;
-    font-family: var(--os-font-pixel, monospace);
-    font-size: var(--os-step-0, 1rem);
+    background: var(--os-desk);
+    color: var(--os-ink);
+    padding: max(2.5rem, env(safe-area-inset-top, 0px)) max(2.5rem, env(safe-area-inset-right, 0px))
+      max(2.5rem, env(safe-area-inset-bottom, 0px)) max(2.5rem, env(safe-area-inset-left, 0px));
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step-0);
+    font-weight: 600;
     flex-direction: column;
     justify-content: flex-end;
     gap: 0.25em;
@@ -2073,7 +2078,7 @@
 
   .os-boot-name {
     margin: 0;
-    font-size: var(--os-step-3, 2rem);
+    font-size: var(--os-step-3);
     font-weight: 700;
     letter-spacing: 0.04em;
   }
@@ -2091,8 +2096,7 @@
 
   .os-boot-skip {
     margin-top: 1.5em;
-    font-size: var(--os-step--1, 0.875rem);
-    color: var(--os-text-dim, #888);
+    font-size: var(--os-step--1);
   }
 
   @keyframes os-boot-step {
