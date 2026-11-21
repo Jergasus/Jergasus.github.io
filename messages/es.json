@@ -243,7 +243,7 @@
     "menu": {
       "arrange": "Ordenar ventanas",
       "arrangeIcons": "Ordenar íconos",
-      "settings": "Personalizar...",
+      "settings": "Personalizar…",
       "changeWallpaper": "Cambiar fondo"
     },
     "wallpapers": {
@@ -299,18 +299,18 @@
         "proyectos": "proyectos: lista todos los proyectos",
         "abrir": "abrir ‹app›: abre una ventana",
         "contacto": "contacto: abre el contacto",
-        "sobre": "sobre: abre el sobre mí",
+        "sobre": "sobre: abre sobre_mi.txt",
         "idioma": "idioma ‹es|ca|en›: cambia el idioma",
         "tema": "tema ‹dia|noche›: cambia el tema",
         "limpiar": "limpiar: limpia la pantalla",
         "sudo": "sudo contratar: abre el contacto"
       },
       "project": "{name}: {status}",
-      "contact": "Abriendo contacto...",
+      "contact": "Abriendo contacto…",
       "about": "Jesús García, desarrollador full-stack en Barcelona.",
       "badLocale": "Idioma «{locale}» desconocido. Prueba: idioma es, idioma ca, idioma en.",
       "unknownApp": "«{app}» no encontrado. Escribe «ayuda» para ver las apps disponibles.",
-      "sudo": "Contratando...",
+      "sudo": "Contratando…",
       "unknown": "«{cmd}» no reconocido. Escribe «ayuda» para ver los comandos."
     },
     "wizard": {
@@ -357,7 +357,7 @@
       "addressLabel": "Dirección",
       "reload": "Recargar",
       "openInNewTab": "Abrir en una pestaña nueva",
-      "loading": "Cargando...",
+      "loading": "Cargando…",
       "failed": "No se ha podido cargar aquí.",
       "startPrompt": "Visita un proyecto:",
       "iframeTitle": "Vista previa de {url}"

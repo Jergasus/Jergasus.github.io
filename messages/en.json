@@ -243,7 +243,7 @@
     "menu": {
       "arrange": "Arrange windows",
       "arrangeIcons": "Arrange icons",
-      "settings": "Personalise...",
+      "settings": "Personalise…",
       "changeWallpaper": "Change wallpaper"
     },
     "wallpapers": {
@@ -299,18 +299,18 @@
         "proyectos": "projects: list all projects",
         "abrir": "open ‹app›: open a window",
         "contacto": "contact: open contact",
-        "sobre": "about: open about me",
+        "sobre": "about: open about_me.txt",
         "idioma": "lang ‹es|ca|en›: switch language",
         "tema": "theme ‹day|night›: switch theme",
         "limpiar": "clear: clear the screen",
         "sudo": "sudo hire: open contact"
       },
       "project": "{name}: {status}",
-      "contact": "Opening contact...",
+      "contact": "Opening contact…",
       "about": "Jesús García, full-stack developer in Barcelona.",
       "badLocale": "Unknown locale ‘{locale}’. Try: lang es, lang ca, lang en.",
       "unknownApp": "‘{app}’ not found. Type ‘help’ to see available apps.",
-      "sudo": "Hiring...",
+      "sudo": "Hiring…",
       "unknown": "‘{cmd}’ not recognised. Type ‘help’ to see commands."
     },
     "wizard": {

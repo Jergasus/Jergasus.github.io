@@ -62,6 +62,18 @@ for (const { path, open, lang } of [
   });
 }
 
+// ── sobre ─────────────────────────────────────────────────────────────────
+
+test('sobre opens the about window, as its help line says', async ({ page }) => {
+  await visit(page, '/');
+  await win(page, 'about').locator('[data-win-close]').click();
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'closed');
+  await openFromIcon(page, 'terminal');
+
+  await run(page, 'sobre');
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
+});
+
 // ── abrir questday ────────────────────────────────────────────────────────
 
 test('abrir questday navigates to /work/questday/', async ({ page }) => {

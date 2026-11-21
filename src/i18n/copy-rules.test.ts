@@ -30,6 +30,8 @@ const FORMAL_ADDRESS = /\busted\b|\bvosotros\b/i;
 const EM_DASH = /—/;
 // Catalan and English write the curly apostrophe (’): l’idioma, I’d.
 const STRAIGHT_APOSTROPHE = /[A-Za-zÀ-ÿ]'[A-Za-zÀ-ÿ]/;
+// One ellipsis character everywhere (Personalizar…), never three dots.
+const THREE_DOTS = /\.\.\./;
 
 // Projects that must never be mentioned are listed in an untracked local file.
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -91,6 +93,12 @@ describe('copy rules', () => {
   it('catalan and english use the curly apostrophe', () => {
     expect(straightApostrophes(ca), 'ca').toEqual([]);
     expect(straightApostrophes(en), 'en').toEqual([]);
+  });
+
+  it('an ellipsis is one character in every locale', () => {
+    for (const [locale, messages] of Object.entries(LOCALES)) {
+      expect(entries(messages).filter(([, value]) => THREE_DOTS.test(value)), locale).toEqual([]);
+    }
   });
 
   it('yokaido copy never claims co-op', () => {

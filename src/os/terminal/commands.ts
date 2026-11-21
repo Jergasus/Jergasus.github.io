@@ -109,9 +109,12 @@ export function runCommand(input: string): TerminalResult {
     };
   }
 
-  // sobre / about
+  // sobre / about: one line, and the about window opens
   if (verb === 'sobre' || verb === 'about') {
-    return { lines: [{ key: 'os.terminal.about' }] };
+    return {
+      lines: [{ key: 'os.terminal.about' }],
+      effect: { type: 'open', app: 'about' },
+    };
   }
 
   // idioma <es|ca|en> / lang <es|ca|en>

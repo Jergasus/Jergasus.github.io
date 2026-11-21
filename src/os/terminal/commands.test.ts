@@ -186,10 +186,10 @@ describe('runCommand: contacto', () => {
 // ---------------------------------------------------------------------------
 
 describe('runCommand: sobre', () => {
-  it('returns os.terminal.about line with no effect', () => {
+  it('returns the os.terminal.about line and opens the about window, as its help line says', () => {
     const r = runCommand('sobre');
     expect(hasKey(r, 'os.terminal.about')).toBe(true);
-    expect(r.effect).toBeUndefined();
+    expect(r.effect).toEqual({ type: 'open', app: 'about' });
   });
 
   it('"about" alias works', () => {

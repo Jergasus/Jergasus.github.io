@@ -243,7 +243,7 @@
     "menu": {
       "arrange": "Ordena les finestres",
       "arrangeIcons": "Ordena les icones",
-      "settings": "Personalitza...",
+      "settings": "Personalitza…",
       "changeWallpaper": "Canvia el fons"
     },
     "wallpapers": {
@@ -292,30 +292,30 @@
       "region": "Avisos"
     },
     "terminal": {
-      "welcome": "Benvingut a JG-OS. Escriu «ajuda» per veure els comandos.",
+      "welcome": "Benvingut a JG-OS. Escriu «ajuda» per veure les ordres.",
       "inputLabel": "Terminal",
       "help": {
         "ayuda": "ajuda: mostra aquesta ajuda",
         "proyectos": "projectes: llista tots els projectes",
         "abrir": "obre ‹app›: obre una finestra",
         "contacto": "contacte: obre el contacte",
-        "sobre": "sobre: obre el sobre mi",
+        "sobre": "sobre: obre sobre_mi.txt",
         "idioma": "idioma ‹es|ca|en›: canvia l’idioma",
         "tema": "tema ‹dia|nit›: canvia el tema",
         "limpiar": "neteja: neteja la pantalla",
         "sudo": "sudo contractar: obre el contacte"
       },
       "project": "{name}: {status}",
-      "contact": "Obrint el contacte...",
+      "contact": "Obrint el contacte…",
       "about": "Jesús García, desenvolupador full-stack a Barcelona.",
       "badLocale": "Idioma «{locale}» desconegut. Prova: idioma es, idioma ca, idioma en.",
       "unknownApp": "«{app}» no trobat. Escriu «ajuda» per veure les apps disponibles.",
-      "sudo": "Contractant...",
-      "unknown": "«{cmd}» no reconegut. Escriu «ajuda» per veure els comandos."
+      "sudo": "Contractant…",
+      "unknown": "«{cmd}» no reconegut. Escriu «ajuda» per veure les ordres."
     },
     "wizard": {
       "step1": "Quin negoci tens?",
-      "step2": "Que necessites?",
+      "step2": "Què necessites?",
       "step3": "Com et contacto?",
       "nameLabel": "El teu nom (opcional)",
       "detailsLabel": "Explica’m alguna cosa més (opcional)",
@@ -357,7 +357,7 @@
       "addressLabel": "Adreça",
       "reload": "Recarrega",
       "openInNewTab": "Obre en una pestanya nova",
-      "loading": "Carregant...",
+      "loading": "Carregant…",
       "failed": "No s’ha pogut carregar aquí.",
       "startPrompt": "Visita un projecte:",
       "iframeTitle": "Previsualització de {url}"
