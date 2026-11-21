@@ -47,7 +47,7 @@
   },
   "contact": {
     "heading": "Parlem",
-    "whatsappMessage": "Hola Jesús, he vist el teu portfolio i m'agradaria parlar d'una web.",
+    "whatsappMessage": "Hola Jesús, he vist el teu portfolio i m’agradaria parlar d’una web.",
     "whatsappAriaLabel": "WhatsApp: {number}"
   },
   "projects": {
@@ -247,7 +247,7 @@
       "changeWallpaper": "Canvia el fons"
     },
     "wallpapers": {
-      "heading": "Fons d'escriptori",
+      "heading": "Fons d’escriptori",
       "dots": "Punts",
       "grid": "Quadrícula",
       "sunset": "Capvespre",
@@ -288,24 +288,24 @@
     },
     "notifications": {
       "commit": "Nou commit a {project} {when}",
-      "dismiss": "Tancar avis",
+      "dismiss": "Tancar avís",
       "region": "Avisos"
     },
     "terminal": {
       "welcome": "Benvingut a JG-OS. Escriu «ajuda» per veure els comandos.",
       "inputLabel": "Terminal",
       "help": {
-        "ayuda": "ajuda — mostra aquesta ajuda",
-        "proyectos": "projectes — llista tots els projectes",
-        "abrir": "obre ‹app› — obre una finestra",
-        "contacto": "contacte — obre el contacte",
-        "sobre": "sobre — obre el sobre mi",
-        "idioma": "idioma ‹es|ca|en› — canvia l'idioma",
-        "tema": "tema ‹dia|nit› — canvia el tema",
-        "limpiar": "neteja — neteja la pantalla",
-        "sudo": "sudo contractar — obre el contacte"
+        "ayuda": "ajuda: mostra aquesta ajuda",
+        "proyectos": "projectes: llista tots els projectes",
+        "abrir": "obre ‹app›: obre una finestra",
+        "contacto": "contacte: obre el contacte",
+        "sobre": "sobre: obre el sobre mi",
+        "idioma": "idioma ‹es|ca|en›: canvia l’idioma",
+        "tema": "tema ‹dia|nit›: canvia el tema",
+        "limpiar": "neteja: neteja la pantalla",
+        "sudo": "sudo contractar: obre el contacte"
       },
-      "project": "{name} — {status}",
+      "project": "{name}: {status}",
       "contact": "Obrint el contacte...",
       "about": "Jesús García, desenvolupador full-stack a Barcelona.",
       "badLocale": "Idioma «{locale}» desconegut. Prova: idioma es, idioma ca, idioma en.",
@@ -318,8 +318,8 @@
       "step2": "Que necessites?",
       "step3": "Com et contacto?",
       "nameLabel": "El teu nom (opcional)",
-      "detailsLabel": "Explica'm alguna cosa més (opcional)",
-      "channelTitle": "Per on t'arribo?",
+      "detailsLabel": "Explica’m alguna cosa més (opcional)",
+      "channelTitle": "Per on t’arribo?",
       "channelWhatsapp": "WhatsApp",
       "channelEmail": "Correu",
       "back": "Enrere",

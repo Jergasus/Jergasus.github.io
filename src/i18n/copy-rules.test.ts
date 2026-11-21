@@ -26,6 +26,10 @@ const COOP_CLAIM =
   /co-?op|cooperativ|online|en l[ií]ne[a]|en l[ií]nia|multiplayer|multijugador|steam/i;
 // Spain Spanish addresses the reader as tú.
 const FORMAL_ADDRESS = /\busted\b|\bvosotros\b/i;
+// No em dash in any visible copy, in any locale.
+const EM_DASH = /—/;
+// Catalan and English write the curly apostrophe (’): l’idioma, I’d.
+const STRAIGHT_APOSTROPHE = /[A-Za-zÀ-ÿ]'[A-Za-zÀ-ÿ]/;
 
 // Projects that must never be mentioned are listed in an untracked local file.
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -51,6 +55,9 @@ const forbiddenMentions = (messages: unknown, pattern: RegExp | null = FORBIDDEN
   pattern ? entries(messages).filter(([, value]) => pattern.test(value)) : [];
 const formalAddress = (messages: unknown) =>
   entries(messages).filter(([, value]) => FORMAL_ADDRESS.test(value));
+const emDashes = (messages: unknown) => entries(messages).filter(([, value]) => EM_DASH.test(value));
+const straightApostrophes = (messages: unknown) =>
+  entries(messages).filter(([, value]) => STRAIGHT_APOSTROPHE.test(value));
 
 const LOCALES = { es, ca, en };
 const CASE_KEYS = ['questday', 'sakurai', 'rallyVoley'] as const;
@@ -67,6 +74,23 @@ describe('copy rules', () => {
     expect(forbiddenMentions({ work: { title: 'Different Studio' } }, fakePattern)).toHaveLength(0);
     expect(formalAddress({ hero: { lede: 'Si usted quiere una web' } })).toHaveLength(1);
     expect(formalAddress({ hero: { lede: 'Si quieres una web' } })).toHaveLength(0);
+    expect(emDashes({ os: { help: 'ayuda — muestra esta ayuda' } })).toHaveLength(1);
+    expect(emDashes({ os: { help: 'ayuda: muestra esta ayuda' } })).toHaveLength(0);
+    expect(straightApostrophes({ menu: { heading: "Fons d'escriptori" } })).toHaveLength(1);
+    expect(straightApostrophes({ menu: { heading: 'Fons d’escriptori' } })).toHaveLength(0);
+    // Quotes around a word are not apostrophes.
+    expect(straightApostrophes({ terminal: { hint: "Type 'help'" } })).toHaveLength(0);
+  });
+
+  it('no em dash in any locale', () => {
+    for (const [locale, messages] of Object.entries(LOCALES)) {
+      expect(emDashes(messages), locale).toEqual([]);
+    }
+  });
+
+  it('catalan and english use the curly apostrophe', () => {
+    expect(straightApostrophes(ca), 'ca').toEqual([]);
+    expect(straightApostrophes(en), 'en').toEqual([]);
   });
 
   it('yokaido copy never claims co-op', () => {
