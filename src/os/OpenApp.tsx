@@ -21,7 +21,7 @@ export function OpenAppButton({ app, ...rest }: Common & { app: AppId }) {
 /**
  * A project's case page link. Without JavaScript (and for a new tab) it is a
  * plain link; with it, it opens the project window through the shell, which
- * applies the URL rules (push to open, replace to bring an open one forward).
+ * applies the URL rules (a push to open it or to bring an open one forward).
  */
 export function OpenAppLink({ app, ...rest }: Common & { app: CaseAppId }) {
   const { openApp } = useOs();

@@ -103,7 +103,8 @@ test('opening a project from the projects window navigates to /work/<slug>/ and 
   // Focus moves into the window it opened.
   await expect(questday).toBeFocused();
   // Its title bar names it.
-  await expect(page.getByRole('region', { name: 'QuestDay' })).toBeVisible();
+  await expect(questday).toHaveRole('region');
+  await expect(questday).toHaveAccessibleName('QuestDay');
 });
 
 test('project windows keep the language in the URL', async ({ page }) => {
@@ -143,7 +144,9 @@ test('opening a second project keeps the first open behind; the URL names the fr
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('SakurAI');
 });
 
-test('clicking the background project window brings it forward and replaces the URL (history length unchanged)', async ({ page }) => {
+// Ruling R15 (spec §7): bringing an open project forward pushes its URL, so
+// Back brings the previous project to the front.
+test('clicking the background project window brings it forward and pushes the URL; Back brings the previous project to the front', async ({ page }) => {
   await visit(page, '/');
   await openProject(page, 'questday');
   await openProject(page, 'sakurai');
@@ -154,10 +157,64 @@ test('clicking the background project window brings it forward and replaces the 
   await expect(page).toHaveURL('/work/questday/');
   await expect(win(page, 'questday')).toHaveAttribute('data-focused', 'true');
   expect(await zIndex(page, 'questday')).toBeGreaterThan(await zIndex(page, 'sakurai'));
-  expect(await page.evaluate(() => history.length)).toBe(length);
+  expect(await page.evaluate(() => history.length)).toBe(length + 1);
   await expect(win(page, 'sakurai')).toHaveAttribute('data-win-state', 'open');
   await expect(win(page, 'questday')).toHaveCount(1);
   await expect(win(page, 'sakurai')).toHaveCount(1);
+
+  // The window already named by the URL adds nothing.
+  await win(page, 'questday').locator('a').first().focus();
+  await expect(page).toHaveURL('/work/questday/');
+  expect(await page.evaluate(() => history.length)).toBe(length + 1);
+
+  await page.goBack();
+  await expect(page).toHaveURL('/work/sakurai/');
+  await expect(win(page, 'sakurai')).toHaveAttribute('data-focused', 'true');
+  expect(await zIndex(page, 'sakurai')).toBeGreaterThan(await zIndex(page, 'questday'));
+  await expect(win(page, 'questday')).toHaveAttribute('data-win-state', 'open');
+});
+
+test('the taskbar brings a background project forward and pushes its URL; Back undoes it', async ({ page }) => {
+  await visit(page, '/');
+  await openProject(page, 'questday');
+  await openProject(page, 'sakurai');
+  const length = await page.evaluate(() => history.length);
+
+  await page.locator('[data-taskbar] [data-task="questday"]').click();
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(win(page, 'questday')).toHaveAttribute('data-focused', 'true');
+  expect(await page.evaluate(() => history.length)).toBe(length + 1);
+
+  await page.goBack();
+  await expect(page).toHaveURL('/work/sakurai/');
+  await expect(win(page, 'sakurai')).toHaveAttribute('data-focused', 'true');
+});
+
+// What a screen reader sends when it activates a button: a click with no
+// pointer behind it (detail 0), and Enter on the keyboard.
+test('a desktop icon opens on a click with no pointer behind it, and once', async ({ page }) => {
+  await visit(page, '/');
+  await page.locator('[data-icon="contact"]').evaluate((icon: HTMLElement) => icon.click());
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'contact')).toBeFocused();
+
+  // Keyboard: one open, one history entry for a project.
+  const length = await page.evaluate(() => history.length);
+  await page.locator('[data-icon="questday"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(win(page, 'questday')).toHaveAttribute('data-win-state', 'open');
+  expect(await page.evaluate(() => history.length)).toBe(length + 1);
+});
+
+test('a mouse click on a desktop icon selects it, a double click opens it', async ({ page }) => {
+  await visit(page, '/');
+  const icon = page.locator('[data-icon="activity"]');
+  await icon.click();
+  await expect(icon).toHaveClass(/os-icon--selected/);
+  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'closed');
+  await icon.dblclick();
+  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
 });
 
 test('a link inside a background project window works on the first click', async ({ page, context }) => {

@@ -178,10 +178,11 @@ export function OsRoot({
     heading.current = undefined;
   }, [routedSlug]);
 
+  /** Every URL move the shell makes is a new history entry. */
   const navigate = useCallback(
-    (how: 'push' | 'replace', slug: CaseAppId | null) => {
+    (slug: CaseAppId | null) => {
       heading.current = slug;
-      router[how](caseHref(slug), { scroll: false });
+      router.push(caseHref(slug), { scroll: false });
     },
     [router],
   );
@@ -231,7 +232,12 @@ export function OsRoot({
     };
   }, []);
 
-  /** URL rule for a project brought forward: the URL follows it, with no new history entry. */
+  /**
+   * URL rule for an open project brought forward (a click, the taskbar,
+   * focus): the URL follows it with a new history entry, so Back brings the
+   * previous project to the front (spec §7, ruling R15). Nothing is added
+   * when the URL already names it, or is on its way there.
+   */
   const wantedUrl = useRef<CaseAppId | null>(null);
   const followWithUrl = useCallback(
     (id: CaseAppId) => {
@@ -240,7 +246,8 @@ export function OsRoot({
         // Skipped when a later action (another project forward, a close) took over.
         if (wantedUrl.current !== id) return;
         wantedUrl.current = null;
-        if (latest.current.routedSlug !== id) navigate('replace', id);
+        const url = heading.current !== undefined ? heading.current : latest.current.routedSlug;
+        if (url !== id) navigate(id);
       });
     },
     [afterPointer, navigate],
@@ -305,7 +312,7 @@ export function OsRoot({
           if (url === id) {
             dispatch({ type: 'open', id });
             if (now.mode === 'phone') dispatch({ type: 'phoneOpen', id });
-          } else navigate('push', id);
+          } else navigate(id);
           return;
         }
         dispatch({ type: 'focus', id });
@@ -313,7 +320,7 @@ export function OsRoot({
         if (url !== id) {
           // A navigation away from it is under way (Back, a close): push it
           // again so the visitor's last intent lands last.
-          if (heading.current !== undefined) navigate('push', id);
+          if (heading.current !== undefined) navigate(id);
           else followWithUrl(id);
         }
         return;
@@ -371,7 +378,7 @@ export function OsRoot({
       // The URL follows the close, unless the visitor moved it meanwhile.
       const go = ownsUrl
         ? () => {
-            if (urlAt() === routedAt) navigate('push', next);
+            if (urlAt() === routedAt) navigate(next);
           }
         : undefined;
       // Phone: the app closes back into its icon first (the route would
@@ -426,7 +433,7 @@ export function OsRoot({
       // A non-case app stays open (its state is preserved), just not in front.
       const go = isCaseApp(id)
         ? () => {
-            if (urlAt() === routedAt) navigate('push', null);
+            if (urlAt() === routedAt) navigate(null);
           }
         : undefined;
       // Home shows at once; the app closes back into its icon, and a
