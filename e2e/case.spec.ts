@@ -138,6 +138,16 @@ test.describe('without JavaScript', () => {
     await expect(study.getByText(copy.decisions[0].body)).toBeVisible();
     await expect(study).toHaveCSS('opacity', '1');
   });
+
+  // The browser button needs JavaScript: the document keeps only the live link.
+  test('the browser button is left out; the live link stays', async ({ page }) => {
+    await page.goto('/work/questday/');
+    const study = win(page, 'questday');
+    const browserButton = study.locator('.os-case-actions button');
+    await expect(browserButton).toHaveCount(1);
+    await expect(browserButton).toBeHidden();
+    await expect(study.getByRole('link', { name: VISIT })).toBeVisible();
+  });
 });
 
 // R4 replacement: "from a case page every app is reachable"
