@@ -174,18 +174,45 @@ export function OsRoot({
   // before it lands; their last intent must win over it. Any route change
   // settles it.
   const heading = useRef<CaseAppId | null | undefined>(undefined);
+  // Ruling R16: the phone's Back on a project this session pushed right on
+  // top of home's entry is a history Back, so the system Back cannot bring
+  // the app straight back. overHome names that project while its entry is
+  // the current one (null: unknown, so Back pushes home instead).
+  const pushingOverHome = useRef(false);
+  const overHome = useRef<CaseAppId | null>(null);
+  // A history Back under way, and the project asked for meanwhile: Next's
+  // router lets a Back that lands later cancel a push made now, so that
+  // project opens once the Back has landed.
+  const back = useRef<{ queued: { id: CaseAppId; opener?: HTMLElement } | null } | null>(null);
+  const afterBack = useRef<{ id: CaseAppId; opener?: HTMLElement } | null>(null);
   useLayoutEffect(() => {
+    // Only the shell's own push landing tells where its entry sits; Back,
+    // Forward or a reload leave it unknown.
+    overHome.current = heading.current === routedSlug && pushingOverHome.current ? routedSlug : null;
+    pushingOverHome.current = false;
     heading.current = undefined;
+    afterBack.current = back.current?.queued ?? null;
+    back.current = null;
   }, [routedSlug]);
 
   /** Every URL move the shell makes is a new history entry. */
   const navigate = useCallback(
     (slug: CaseAppId | null) => {
+      // Right on top of home: the address bar on / and no navigation under way.
+      pushingOverHome.current = slug !== null && heading.current === undefined && urlAt() === null;
       heading.current = slug;
       router.push(caseHref(slug), { scroll: false });
     },
     [router],
   );
+
+  /** The browser's own Back, to home (the phone's Back, ruling R16). */
+  const goBack = useCallback(() => {
+    pushingOverHome.current = false;
+    heading.current = null;
+    back.current = { queued: null };
+    router.back();
+  }, [router]);
 
   // Bringing a project forward with the pointer changes the URL only once the
   // click is over: the new URL remounts the window (the page renders it), and
@@ -282,6 +309,11 @@ export function OsRoot({
   // ── Apps ────────────────────────────────────────────────────────────────
   const openApp = useCallback(
     (id: AppId, opener?: HTMLElement) => {
+      // A history Back is under way: the project opens once it lands.
+      if (back.current && isCaseApp(id)) {
+        back.current.queued = { id, opener };
+        return;
+      }
       const now = latest.current;
       // Asking for an app again ends whatever it is playing (its final look,
       // now) and drops what was waiting for it, such as its trip home.
@@ -330,6 +362,15 @@ export function OsRoot({
     },
     [navigate, followWithUrl],
   );
+
+  // The project asked for while a history Back was under way: the Back has
+  // landed (home, its project windows closed), so it opens now.
+  useLayoutEffect(() => {
+    const queued = afterBack.current;
+    if (!queued) return;
+    afterBack.current = null;
+    openApp(queued.id, queued.opener);
+  }, [routedSlug, openApp]);
 
   const focusApp = useCallback(
     (id: AppId) => {
@@ -430,10 +471,14 @@ export function OsRoot({
       const frame = windowElement(id);
       const routedAt = now.routedSlug;
       // A project goes home: / → route(null) → closes every project window.
-      // A non-case app stays open (its state is preserved), just not in front.
+      // Opened from home in this session, it goes back to home's own entry
+      // (ruling R16); landed on directly, home is pushed. A non-case app
+      // stays open (its state is preserved), just not in front.
       const go = isCaseApp(id)
         ? () => {
-            if (urlAt() === routedAt) navigate(null);
+            if (urlAt() !== routedAt) return;
+            if (overHome.current === id) goBack();
+            else navigate(null);
           }
         : undefined;
       // Home shows at once; the app closes back into its icon, and a
@@ -444,7 +489,7 @@ export function OsRoot({
       // Focus goes back to what opened it (the icon, once home shows).
       focusPlan.current = { kind: 'back', to: phoneOpener(id, opener) };
     },
-    [navigate],
+    [navigate, goBack],
   );
 
   // ── Session persistence ──────────────────────────────────────────────────

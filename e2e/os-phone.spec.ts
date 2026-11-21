@@ -170,6 +170,112 @@ test('Back then re-tap ends with the app open, even while home is still loading'
   await expect(appWindow(page, 'questday')).toBeVisible();
 });
 
+// ── In-app Back and the browser's history (ruling R16) ───────────────────
+
+/** Where the history stands: its length, and the URL of the entry before this one. */
+const historyNow = (page: Page) =>
+  page.evaluate(() => {
+    const nav = (window as unknown as { navigation: { currentEntry: { index: number }; entries(): { url: string }[] } })
+      .navigation;
+    const before = nav.entries()[nav.currentEntry.index - 1];
+    return { length: history.length, before: before ? new URL(before.url).pathname : null };
+  });
+
+test('Back on a project opened from home goes back: no new entry, so the system Back cannot reopen it', async ({ page }) => {
+  await visit(page, '/');
+  const { length } = await historyNow(page);
+  await phoneIcon(page, 'questday').tap();
+  await expect(page).toHaveURL('/work/questday/');
+  expect((await historyNow(page)).length).toBe(length + 1);
+
+  await phoneBack(page).tap();
+  await expect(page).toHaveURL('/');
+  await expect(phoneHome(page)).toBeVisible();
+  await expect(appWindow(page, 'questday')).toHaveCount(0);
+  // The history went back to home's own entry: nothing behind it is the project.
+  expect(await historyNow(page)).toEqual({ length: length + 1, before: null });
+});
+
+test('Back on a project the visitor landed on goes home with a new entry', async ({ page }) => {
+  await visit(page, '/work/questday/');
+  const { length } = await historyNow(page);
+
+  await phoneBack(page).tap();
+  await expect(page).toHaveURL('/');
+  await expect(phoneHome(page)).toBeVisible();
+  await expect(appWindow(page, 'questday')).toHaveCount(0);
+  expect(await historyNow(page)).toEqual({ length: length + 1, before: '/work/questday/' });
+});
+
+test('Back then re-tap while the history Back is still under way ends with the app open', async ({ page }) => {
+  // Reduced motion: Back goes back at once. The browser's Back is held, so
+  // the re-tap lands before it does (Next's router lets a Back that lands
+  // later cancel a push made meanwhile).
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await visit(page, '/');
+  await phoneIcon(page, 'questday').tap();
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+  await page.evaluate(() => {
+    const back = history.back.bind(history);
+    const w = window as unknown as { heldBack: string };
+    w.heldBack = 'none';
+    history.back = () => {
+      w.heldBack = 'held';
+      window.setTimeout(() => {
+        back();
+        w.heldBack = 'done';
+      }, 400);
+    };
+  });
+
+  await phoneBack(page).tap();
+  await phoneIcon(page, 'questday').tap();
+
+  await expect.poll(() => page.evaluate(() => (window as unknown as { heldBack: string }).heldBack)).toBe('done');
+  expect((await frontOver(page, 'questday', 600)).at(-1)).toBe('true');
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+  await expect(appWindow(page, 'questday')).toBeVisible();
+});
+
+// ── What assistive tech and the keyboard reach (WCAG 2.4.11) ──────────────
+
+test('with an app open, Tab never reaches the home screen under it', async ({ page }) => {
+  await visit(page, '/');
+  await phoneIcon(page, 'contact').tap();
+  await expect(appWindow(page, 'contact')).toHaveAttribute('data-phone-active', 'true');
+
+  let inApp = 0;
+  for (const key of ['Tab', 'Shift+Tab']) {
+    for (let press = 1; press <= 20; press++) {
+      await page.keyboard.press(key);
+      const where = await page.evaluate(() => ({
+        home: document.activeElement?.closest('[data-phone-home]') != null,
+        app: document.activeElement?.closest('[data-app="contact"]') != null,
+      }));
+      expect(where.home, `${key} ${press}`).toBe(false);
+      if (where.app) inApp++;
+    }
+  }
+  // The walk did go through the app's own controls.
+  expect(inApp).toBeGreaterThan(0);
+  // Out of the accessibility tree as well, not only the Tab order.
+  await expect(phoneHome(page)).toHaveAttribute('inert', '');
+
+  // Home again: its controls are back.
+  await phoneBack(page).tap();
+  await expect(phoneHome(page)).not.toHaveAttribute('inert', /.*/);
+  await expect(phoneIcon(page, 'contact')).toBeFocused();
+});
+
+test('the phone home keeps the page title in the accessibility tree', async ({ page }) => {
+  await visit(page, '/');
+  await expect(phoneHome(page)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+  await expect(page.getByRole('main')).toHaveCount(1);
+});
+
 test('loading /work/sakurai/ on a phone shows the sakurai app', async ({ page }) => {
   await visit(page, '/work/sakurai/');
 
