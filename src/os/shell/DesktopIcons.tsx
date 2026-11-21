@@ -25,15 +25,19 @@ export function DesktopIcons() {
     os.openApp(id, btn ?? undefined);
   };
 
-  const handleClick = (id: AppId, e: React.PointerEvent) => {
-    // Touch: single tap opens
+  // The icon a pointer was just released on: the click that follows is that
+  // pointer's, already handled here.
+  const releasedOn = useRef<AppId | null>(null);
+
+  // A pointer: a touch tap opens; a mouse click selects and a double click opens.
+  const handlePointerUp = (id: AppId, e: React.PointerEvent) => {
+    releasedOn.current = id;
     if (e.pointerType === 'touch') {
       setSelected(id);
       openApp(id);
       return;
     }
-    // Mouse: single click selects, double click opens
-    const now = Date.now();
+    const now = e.timeStamp;
     const last = lastClickRef.current;
     if (last && last.id === id && now - last.time < 500) {
       // Double click
@@ -45,12 +49,17 @@ export function DesktopIcons() {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, id: AppId, index: number) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openApp(id);
-      return;
-    }
+  // A click with no pointer behind it opens: Enter or Space on the keyboard
+  // and element.click() (detail 0), and a screen reader activating the button
+  // (a click without a pointerup first). A pointer's own click was already
+  // handled on pointerup, so nothing opens twice.
+  const handleClick = (id: AppId, e: React.MouseEvent) => {
+    const byPointer = e.detail > 0 && releasedOn.current === id;
+    releasedOn.current = null;
+    if (!byPointer) openApp(id);
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     // Arrow key navigation within the column
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
@@ -84,8 +93,9 @@ export function DesktopIcons() {
             data-icon={id}
             className={`os-icon${isSelected ? ' os-icon--selected' : ''}`}
             style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
-            onPointerUp={(e) => handleClick(id, e)}
-            onKeyDown={(e) => handleKeyDown(e, id, index)}
+            onPointerUp={(e) => handlePointerUp(id, e)}
+            onClick={(e) => handleClick(id, e)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
           >
             <span className="os-icon-tile" aria-hidden="true">
               <Icon size={38} />
