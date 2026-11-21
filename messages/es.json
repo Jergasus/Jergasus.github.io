@@ -292,26 +292,26 @@
       "region": "Avisos"
     },
     "terminal": {
-      "welcome": "Bienvenido a JG-OS. Escribe 'ayuda' para ver los comandos.",
+      "welcome": "Bienvenido a JG-OS. Escribe «ayuda» para ver los comandos.",
       "inputLabel": "Terminal",
       "help": {
         "ayuda": "ayuda — muestra esta ayuda",
         "proyectos": "proyectos — lista todos los proyectos",
-        "abrir": "abrir <app> — abre una ventana",
+        "abrir": "abrir ‹app› — abre una ventana",
         "contacto": "contacto — abre el contacto",
         "sobre": "sobre — abre el sobre mí",
-        "idioma": "idioma <es|ca|en> — cambia el idioma",
-        "tema": "tema <dia|noche> — cambia el tema",
+        "idioma": "idioma ‹es|ca|en› — cambia el idioma",
+        "tema": "tema ‹dia|noche› — cambia el tema",
         "limpiar": "limpiar — limpia la pantalla",
         "sudo": "sudo contratar — abre el contacto"
       },
       "project": "{name} — {status}",
       "contact": "Abriendo contacto...",
       "about": "Jesús García, desarrollador full-stack en Barcelona.",
-      "badLocale": "Idioma '{locale}' desconocido. Prueba: idioma es, idioma ca, idioma en.",
-      "unknownApp": "'{app}' no encontrado. Escribe 'ayuda' para ver las apps disponibles.",
+      "badLocale": "Idioma «{locale}» desconocido. Prueba: idioma es, idioma ca, idioma en.",
+      "unknownApp": "«{app}» no encontrado. Escribe «ayuda» para ver las apps disponibles.",
       "sudo": "Contratando...",
-      "unknown": "'{cmd}' no reconocido. Escribe 'ayuda' para ver los comandos."
+      "unknown": "«{cmd}» no reconocido. Escribe «ayuda» para ver los comandos."
     },
     "wizard": {
       "step1": "¿Qué negocio tienes?",
