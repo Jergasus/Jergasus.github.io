@@ -4,9 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { localizedPath } from '@/i18n/localized-path';
 import type { Locale } from '@/i18n/routing';
-import { themeColor, themeColorDark } from '@/design/theme-color';
 import { WALLPAPERS, type Wallpaper } from '../prepaint';
-import { PREF_KEYS, writePref } from '../storage';
 import { useTheme } from '../shell/useTheme';
 import { useWallpaper } from '../shell/useWallpaper';
 
@@ -24,34 +22,12 @@ export function SettingsApp({ locale }: Props) {
   const t = useTranslations('os');
   const pathname = usePathname();
   const { wallpaper, set: setWallpaper } = useWallpaper();
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const handleWallpaper = (w: Wallpaper) => setWallpaper(w);
 
-  // null = system, 'light' = day, 'dark' = night
-  const handleTheme = (value: ThemeOption) => {
-    const html = document.documentElement;
-    if (value === 'dark') {
-      html.setAttribute('data-theme', 'dark');
-      writePref(PREF_KEYS.theme, 'dark');
-      // Sync theme-color meta to dark colour
-      document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-        m.content = themeColorDark;
-      });
-    } else if (value === 'light') {
-      html.setAttribute('data-theme', 'light');
-      writePref(PREF_KEYS.theme, 'light');
-      document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-        m.content = themeColor;
-      });
-    } else {
-      html.removeAttribute('data-theme');
-      writePref(PREF_KEYS.theme, null);
-      document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-        m.content = themeColor;
-      });
-    }
-  };
+  // system = follow prefers-color-scheme, light = day, dark = night
+  const handleTheme = (value: ThemeOption) => setTheme(value === 'system' ? null : value);
 
   const currentThemeValue: ThemeOption = theme ?? 'system';
 

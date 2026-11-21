@@ -23,7 +23,7 @@ type Props = {
 export function Tray({ currentLocale, available, availabilityLabel }: Props) {
   const t = useTranslations('os');
   const pathname = usePathname();
-  const { theme, toggle } = useTheme();
+  const { night, toggle } = useTheme();
   const [time, setTime] = useState('');
 
   // Clock: empty string on server, then real time after mount, refreshed every 30 s.
@@ -58,16 +58,18 @@ export function Tray({ currentLocale, available, availabilityLabel }: Props) {
         ))}
       </nav>
 
-      {/* Theme toggle */}
+      {/* Night mode: on while night shows, from the system or a choice. The
+          label stays the same; the pressed state and the glyph say which. */}
       <span data-tray="theme">
         <button
           type="button"
           className="os-tray-btn"
-          aria-pressed={theme === 'dark'}
+          aria-pressed={night}
+          aria-label={t('theme.toggle')}
           onClick={toggle}
           title={t('theme.toggle')}
         >
-          {theme === 'dark' ? '☾' : '☀'}
+          <span aria-hidden="true">{night ? '☾' : '☀'}</span>
         </button>
       </span>
 

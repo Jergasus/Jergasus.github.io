@@ -259,7 +259,7 @@
       "system": "System",
       "light": "Day",
       "dark": "Night",
-      "toggle": "Change theme"
+      "toggle": "Night mode"
     },
     "settings": {
       "heading": "Personalise",

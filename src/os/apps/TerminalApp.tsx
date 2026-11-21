@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { runCommand, type TerminalLine } from '../terminal/commands';
 import { localizedPath } from '@/i18n/localized-path';
-import { PREF_KEYS, writePref } from '../storage';
 import { useOs } from '../context';
+import { setTheme } from '../shell/useTheme';
 
 const PROMPT = 'jesus@jg-os:~$';
 
@@ -14,13 +14,6 @@ type OutputEntry = { id: number; text: string; isInput: boolean };
 
 let nextId = 0;
 const makeId = () => ++nextId;
-
-/** Set data-theme and persist to storage, without importing useTheme. */
-function applyTheme(theme: 'light' | 'dark') {
-  const html = document.documentElement;
-  html.setAttribute('data-theme', theme);
-  writePref(PREF_KEYS.theme, theme);
-}
 
 /**
  * Terminal app: a prompt, a history-aware input, and a translated output log.
@@ -112,7 +105,7 @@ export function TerminalApp() {
           window.location.href = localizedPath(pathname, effect.locale);
           break;
         case 'theme':
-          applyTheme(effect.theme);
+          setTheme(effect.theme);
           break;
       }
     }
