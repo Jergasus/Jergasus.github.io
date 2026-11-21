@@ -199,12 +199,6 @@ export function ContextMenu() {
     closeMenu(true);
   };
 
-  /** Reset icon selection in DesktopIcons (not window arrangement). */
-  const arrangeIcons = () => {
-    document.dispatchEvent(new CustomEvent('os:arrange-icons'));
-    closeMenu(true);
-  };
-
   /** Arrange open windows using the desktop element's bounds (excludes taskbar). */
   const arrange = () => {
     os.dispatch({ type: 'arrange', bounds: desktopBounds(), left: iconsEdge() });
@@ -267,16 +261,6 @@ export function ContextMenu() {
       </div>
 
       <div role="separator" className="os-context-sep" />
-
-      <button
-        type="button"
-        role="menuitem"
-        data-main-item
-        className="os-context-btn"
-        onClick={arrangeIcons}
-      >
-        {t('menu.arrangeIcons')}
-      </button>
 
       <button
         type="button"
