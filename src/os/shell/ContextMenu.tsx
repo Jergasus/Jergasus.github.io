@@ -221,7 +221,7 @@ export function ContextMenu() {
       className="os-context-menu"
       style={{ position: 'fixed', left: pos.x, top: pos.y, zIndex: 1000 }}
       role="menu"
-      aria-label="Escritorio"
+      aria-label={t('menu.desktop')}
       onKeyDown={handleKeyDown}
     >
       {/* Wallpaper submenu trigger */}

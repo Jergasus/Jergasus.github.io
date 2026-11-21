@@ -241,6 +241,7 @@
       "clockLabel": "Hora en Barcelona: {time}"
     },
     "menu": {
+      "desktop": "Escritorio",
       "arrange": "Ordenar ventanas",
       "settings": "Personalizar…",
       "changeWallpaper": "Cambiar fondo"

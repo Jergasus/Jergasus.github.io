@@ -241,6 +241,7 @@
       "clockLabel": "Hora a Barcelona: {time}"
     },
     "menu": {
+      "desktop": "Escriptori",
       "arrange": "Ordena les finestres",
       "settings": "Personalitza…",
       "changeWallpaper": "Canvia el fons"

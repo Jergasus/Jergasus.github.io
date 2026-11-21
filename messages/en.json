@@ -241,6 +241,7 @@
       "clockLabel": "Time in Barcelona: {time}"
     },
     "menu": {
+      "desktop": "Desktop",
       "arrange": "Arrange windows",
       "settings": "Personalise…",
       "changeWallpaper": "Change wallpaper"

@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useMotionSafe } from '@/components/motion/useMotionSafe';
 import { useRouter } from '@/i18n/navigation';
 import type { Locale } from '@/i18n/routing';
@@ -140,6 +141,7 @@ export function OsRoot({
   notifRepos = [],
 }: Props) {
   const router = useRouter();
+  const t = useTranslations('os');
   // Derived in this render, so CaseHost and the page always agree on which
   // project window the page renders: the same window never renders twice.
   const routedSlug = routedSlugOf(usePathname());
@@ -617,9 +619,9 @@ export function OsRoot({
 
       {/* R5: Document-mode language links. Hidden via CSS once data-os is set.
           They render in the SSR HTML so a no-JS visitor can switch language. */}
-      <nav aria-label="Language" className="os-nojs-only os-doc-lang">
+      <nav aria-label={t('taskbar.language')} className="os-nojs-only os-doc-lang">
         {LOCALES_NOJS.map(({ code, label }) => (
-          <a key={code} href={localizedPath(pathname, code)} className="os-doc-lang-link">
+          <a key={code} href={localizedPath(pathname, code)} hrefLang={code} className="os-doc-lang-link">
             {label}
           </a>
         ))}
