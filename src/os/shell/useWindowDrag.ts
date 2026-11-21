@@ -39,8 +39,8 @@ export function useWindowDrag({ id, sectionRef, dispatch }: Options) {
     if (document.documentElement.getAttribute('data-os') !== 'desktop') return;
     // Buttons handle their own events; don't start a drag on them.
     if ((e.target as Element).closest('button')) return;
-    // A double-click's second pointerdown must reach the dblclick handler.
-    if (e.detail >= 2) return;
+    // (A double click never gets here: WindowFrame maximises on the second
+    // press, timed itself, and starts no drag.)
 
     const section = sectionRef.current;
     if (!section) return;

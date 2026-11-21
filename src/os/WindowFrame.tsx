@@ -24,7 +24,7 @@ import { finishMotion, playOpen, playPhoneOpen, takeOpen } from './shell/motion'
 
 export type WindowLabels = { close: string; minimize: string; maximize: string; restore: string };
 
-type Props = { id: AppId; title: string; children: ReactNode; labels: WindowLabels; phoneBackLabel?: string };
+type Props = { id: AppId; title: string; children: ReactNode; labels: WindowLabels };
 
 /** Each project window sits this far below and right of the one before it. */
 const CASCADE_PX = 28;
@@ -40,7 +40,7 @@ const RESIZE_DIRS: ResizeDir[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
  * and from --x/--y/--w/--h. With no saved rect those are the app's default
  * rect as percentages of the desktop, so the server HTML is already placed.
  */
-export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Props) {
+export function WindowFrame({ id, title, children, labels }: Props) {
   const { state, dispatch, mode, focusApp, closeApp, minimizeApp, phoneBack } = useOsInternal();
   const t = useTranslations('os.window');
   const tPhone = useTranslations('os.phone');

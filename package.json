@@ -14,7 +14,6 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
-    "@gsap/react": "2.1.2",
     "gsap": "3.15.1",
     "next": "16.3.6",
     "next-intl": "^4.14.6",

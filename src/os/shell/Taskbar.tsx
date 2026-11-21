@@ -6,7 +6,6 @@ import { getApp, type AppId } from '../apps';
 import { useOsInternal } from '../context';
 import { APP_ICONS, JgOsLogo } from '../icons';
 import type { Locale } from '@/i18n/routing';
-import { visibleOrder } from '../window-manager';
 import { Tray } from './Tray';
 import { StartMenu } from './StartMenu';
 
@@ -23,10 +22,8 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
   const startRef = useRef<HTMLButtonElement>(null);
   const [startOpen, setStartOpen] = useState(false);
 
-  // Open windows in stable (z-independent) order: alphabetical by id.
-  // This prevents task buttons from jumping when z-order changes.
-  const openIds: AppId[] = [...visibleOrder(state)].sort();
-  // Also include minimized open windows.
+  // Every open window, minimised ones included, in a stable (z-independent)
+  // order: alphabetical by id, so task buttons never jump when z-order changes.
   const taskIds: AppId[] = (Object.entries(state.windows) as [AppId, { open: boolean }][])
     .filter(([, w]) => w.open)
     .map(([id]) => id)
