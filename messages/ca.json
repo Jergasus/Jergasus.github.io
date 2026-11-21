@@ -278,8 +278,8 @@
       },
       "activity": {
         "commits": "{total, number} commits",
-        "lastServer": "últim {date}",
-        "lastLive": "últim fa {time}"
+        "lastServer": "últim: {date}",
+        "lastLive": "últim: {time}"
       }
     },
     "boot": {
