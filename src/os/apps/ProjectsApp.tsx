@@ -4,21 +4,22 @@ import { projects, type Project } from '@/content/projects';
 import type { Locale } from '@/i18n/routing';
 import { projectMessageKey } from '@/i18n/project-message-key';
 import { getApp, type CaseAppId } from '../apps';
+import { APP_ICONS } from '../icons';
 import { OpenAppButton, OpenAppLink } from '../OpenApp';
 import { StatusMark } from './StatusMark';
 
 type Item = { project: Project; oneLiner: string; statusLabel: string };
 
 function ItemContent({ project, oneLiner, statusLabel, ids }: Item & { ids?: { summary: string; status: string } }) {
+  const Icon = APP_ICONS[project.slug];
   return (
     <>
-      {/* Placeholder tile until the project icons are drawn. */}
       <span
         className="os-project-icon"
         aria-hidden="true"
         style={{ '--tile': `var(--os-c-${getApp(project.slug)!.colour})` } as CSSProperties}
       >
-        {project.name[0]}
+        <Icon size={30} />
       </span>
       <span className="os-project-name">{project.name}</span>
       <span id={ids?.summary} className="os-project-summary">

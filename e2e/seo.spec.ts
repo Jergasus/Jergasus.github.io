@@ -159,6 +159,27 @@ test('out/404.html exists and contains Spanish text', () => {
   expect(content).toMatch(/<html[^>]*\slang="es"/);
 });
 
+test('the 404 page is a JG-OS error dialog with a way home, and loads nothing from third parties', async ({
+  page,
+  baseURL,
+}) => {
+  const urls: string[] = [];
+  page.on('request', (request) => urls.push(request.url()));
+  const response = await page.goto('/no-existe/', { waitUntil: 'networkidle' });
+  expect(response!.status()).toBe(404);
+
+  const dialog = page.getByRole('region', { name: 'No se encuentra el archivo' });
+  await expect(dialog.getByRole('heading', { level: 1 })).toHaveText('No se encuentra el archivo');
+  await expect(dialog.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/');
+  // The artwork is decorative: every graphic in the dialog is hidden from assistive tech.
+  for (const svg of await dialog.locator('svg').all()) {
+    await expect(svg).toHaveAttribute('aria-hidden', 'true');
+  }
+
+  const origin = new URL(baseURL!).origin;
+  expect(urls.filter((url) => new URL(url).origin !== origin)).toEqual([]);
+});
+
 // ── Open Graph ────────────────────────────────────────────────────────────────
 
 async function openGraph(page: import('@playwright/test').Page) {

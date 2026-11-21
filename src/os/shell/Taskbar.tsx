@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { getApp, type AppId } from '../apps';
 import { useOsInternal } from '../context';
+import { APP_ICONS, JgOsLogo } from '../icons';
 import type { Locale } from '@/i18n/routing';
 import { visibleOrder } from '../window-manager';
 import { Tray } from './Tray';
@@ -61,6 +62,7 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
         aria-expanded={startOpen}
         onClick={toggleStart}
       >
+        <JgOsLogo size={22} />
         {t('taskbar.start')}
       </button>
 
@@ -78,6 +80,7 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
           if (!app) return null;
           const win = state.windows[id];
           const isFocused = state.focused === id && !win.minimized;
+          const Icon = APP_ICONS[id];
           return (
             <button
               key={id}
@@ -88,6 +91,7 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
               onClick={() => handleTaskClick(id)}
               style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
             >
+              <Icon size={18} />
               <span className="os-task-label">{t(`apps.${app.messageKey}.label`)}</span>
             </button>
           );

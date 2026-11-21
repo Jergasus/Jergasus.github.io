@@ -112,6 +112,20 @@
     background-color: var(--app, var(--os-c-cream));
   }
 
+  /* The app's icon, on the same solid patch as the title (one patch: the
+     titlebar gap is taken back), so the stripes never run through it. */
+  .os-title-icon {
+    display: flex;
+    flex-shrink: 0;
+    margin-inline-end: -8px;
+    padding: 1.5px 0 1.5px 4px;
+    background-color: var(--app, var(--os-c-cream));
+  }
+
+  .os-title-icon > svg {
+    display: block;
+  }
+
   .os-grip {
     flex: 1 1 0;
   }
@@ -361,15 +375,16 @@
     align-self: start;
     display: grid;
     place-items: center;
-    inline-size: 36px;
-    block-size: 36px;
-    font-family: var(--os-font-pixel);
-    font-size: 20px;
-    font-weight: 700;
-    color: #111111;
+    inline-size: 38px;
+    block-size: 38px;
     background: var(--tile, var(--os-c-cream));
     border: var(--os-border-w) solid var(--os-border);
+    border-radius: 8px;
     box-shadow: 2px 2px 0 var(--os-shadow);
+  }
+
+  .os-project-icon > svg {
+    display: block;
   }
 
   .os-project-name {
@@ -776,7 +791,8 @@
     font-family: var(--os-font-pixel);
     font-size: var(--os-step-0);
     font-weight: 600;
-    color: var(--os-ink);
+    /* App colours are light by day and by night: always black on them. */
+    color: #111111;
     background: var(--app, var(--os-c-cream));
     border: var(--os-border-w) solid var(--os-border);
     box-shadow: 2px 2px 0 var(--os-shadow);
@@ -896,17 +912,61 @@
     gap: 14px;
   }
 
-  /* 404 */
+  /* The machine's own mark beside "about this system", as old OSes did. */
+  .os-system-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .os-system-head > svg {
+    flex-shrink: 0;
+  }
+
+  /* 404: an error dialog. Peach titlebar, striped like the window in front
+     (a dialog always is), the missing-file glyph beside the message, the way
+     out at the bottom right. */
   .os-notice {
-    max-width: 34rem;
-    margin: 12vh auto 0;
+    --app: var(--os-c-peach);
+    max-width: 32rem;
+    margin: 14vh auto 0;
+  }
+
+  .os-notice > .os-titlebar {
+    background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
   }
 
   .os-notice-body {
     display: grid;
-    gap: 12px;
-    justify-items: start;
-    padding: var(--os-pad);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    padding: 20px var(--os-pad) var(--os-pad);
+  }
+
+  .os-notice-body > svg {
+    display: block;
+  }
+
+  .os-notice-text {
+    display: grid;
+    gap: 8px;
+  }
+
+  .os-notice-text .os-heading {
+    font-size: var(--os-step-1);
+    line-height: 1.25;
+  }
+
+  .os-notice-actions {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  @media (max-width: 26rem) {
+    .os-notice-body {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   /* Single-column content grids: the column may shrink below its content's
@@ -925,8 +985,7 @@
       .os-contact,
       .os-contact-main,
       .os-system,
-      .os-about-head,
-      .os-notice-body
+      .os-about-head
     ) {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1252,8 +1311,11 @@
   /* ── Taskbar: start button ───────────────────────────────────────────── */
 
   .os-start-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     flex-shrink: 0;
-    padding: 2px 10px;
+    padding: 2px 10px 2px 6px;
     font-family: var(--os-font-pixel);
     font-size: var(--os-step-0);
     font-weight: 700;
@@ -1289,20 +1351,33 @@
   }
 
   .os-task-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     min-width: 60px;
-    max-width: 160px;
+    max-width: 170px;
     height: calc(var(--os-taskbar-h) - 8px);
-    padding: 0 8px;
+    padding: 0 8px 0 5px;
     font-family: var(--os-font-pixel);
     font-size: var(--os-step--1);
     font-weight: 600;
-    color: var(--os-ink);
+    /* The app colour is light in both themes. */
+    color: #111111;
     background: var(--app, var(--os-window));
     border: var(--os-border-w) solid var(--os-border);
     cursor: pointer;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .os-task-btn > svg {
+    flex-shrink: 0;
+  }
+
+  .os-task-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .os-task-btn[aria-pressed="true"] {
@@ -1338,9 +1413,12 @@
   }
 
   .os-start-item {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     width: 100%;
-    padding: 5px 16px;
+    min-height: 34px;
+    padding: 4px 16px 4px 10px;
     font-family: var(--os-font-pixel);
     font-size: var(--os-step-0);
     font-weight: 600;
@@ -1362,6 +1440,27 @@
   .os-start-item:active {
     background: var(--os-ink);
     color: var(--os-window);
+  }
+
+  /* A small tile in the app's colour, like the desktop's. */
+  .os-start-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    background: var(--app, var(--os-c-cream));
+    border: var(--os-border-w) solid var(--os-border);
+    border-radius: 6px;
+  }
+
+  .os-start-icon > svg {
+    display: block;
+  }
+
+  /* Items without an icon line their text up with the app names. */
+  .os-start-item:not([data-open-app]) {
+    padding-inline-start: 46px;
   }
 
   .os-start-divider {
@@ -1614,9 +1713,8 @@
       flex-shrink: 0;
     }
 
-    html[data-os="desktop"] .os-icon-glyph {
-      font-size: 22px;
-      line-height: 1;
+    html[data-os="desktop"] .os-icon-tile > svg {
+      display: block;
     }
 
     html[data-os="desktop"] .os-icon-label {
@@ -1678,7 +1776,8 @@
     min-height: 24px;
     padding: 1px 8px;
     background: #111111;
-    color: var(--os-window);
+    /* The bar is black in both themes, so its text is the day beige. */
+    color: #ede7d9;
     font-family: var(--os-font-pixel);
     font-size: var(--os-step--1);
     font-weight: 600;
@@ -1818,14 +1917,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
+    width: 48px;
+    height: 48px;
     background: var(--app, var(--os-c-cream));
     border: var(--os-border-w) solid var(--os-border);
     border-radius: var(--os-radius-icon);
     box-shadow: 2px 2px 0 var(--os-shadow);
     flex-shrink: 0;
+  }
+
+  .os-phone-icon-tile > svg {
+    display: block;
   }
 
   .os-phone-icon-label {
@@ -1835,7 +1937,7 @@
     text-align: center;
     line-height: 1.1;
     word-break: break-word;
-    max-width: 56px;
+    max-width: 72px;
     background: var(--os-label-bg);
     color: var(--os-label-ink);
     padding: 1px 2px;
@@ -1857,12 +1959,13 @@
     flex-shrink: 0;
   }
 
+  /* Icon tile and label side by side: the dock keeps its ~70 px height
+     (toasts sit above it, see .os-toasts-region). */
   .os-phone-dock-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    padding: 6px 16px;
+    gap: 8px;
+    padding: 6px 10px;
     color: var(--os-ink);
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
@@ -1873,8 +1976,18 @@
   }
 
   .os-phone-dock-icon {
-    font-size: 26px;
-    line-height: 1;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    background: var(--app, var(--os-c-cream));
+    border: var(--os-border-w) solid var(--os-border);
+    border-radius: var(--os-radius-icon);
+    box-shadow: 2px 2px 0 var(--os-shadow);
+  }
+
+  .os-phone-dock-icon > svg {
+    display: block;
   }
 
   .os-phone-dock-label {
@@ -1917,6 +2030,27 @@
 
   html[data-boot="1"] [data-boot-screen] {
     display: flex;
+  }
+
+  /* The mark and the name, centred in the space above the start-up lines.
+     Shown from the first paint: the lines are what arrives. */
+  .os-boot-brand {
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+    margin-block: auto;
+    align-self: center;
+  }
+
+  .os-boot-brand > svg {
+    display: block;
+  }
+
+  .os-boot-name {
+    margin: 0;
+    font-size: var(--os-step-3, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.04em;
   }
 
   /* Each line appears whole, one step after the one before, like an old
@@ -1968,7 +2102,7 @@
   }
 
   /* On phone mode the dock (not the taskbar) is the bottom chrome.
-     Dock height: icon 26px + label ~12px + gap 4px + btn padding 12px + dock padding 16px = ~70px.
+     Dock height: icon tile 40px + btn padding 12px + dock padding 16px + border 2px = ~70px.
      Add safe-area-inset-bottom so it clears the home indicator on iOS too. */
   html[data-os="phone"] .os-toasts-region {
     bottom: calc(70px + env(safe-area-inset-bottom, 0px) + 10px);

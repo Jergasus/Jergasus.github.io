@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { SITE_NAME } from '@/content/site';
 import { STACK } from '@/content/stack';
 import type { Locale } from '@/i18n/routing';
+import { JgOsLogo } from '@/os/icons/JgOsLogo';
 
 /** Propiedades del sistema: the stack, as the machine's specifications. */
 export async function SystemApp({ locale }: { locale: Locale }) {
@@ -9,7 +10,10 @@ export async function SystemApp({ locale }: { locale: Locale }) {
 
   return (
     <div className="os-system">
-      <h2 className="os-heading">{t('system.heading')}</h2>
+      <div className="os-system-head">
+        <JgOsLogo size={52} />
+        <h2 className="os-heading">{t('system.heading')}</h2>
+      </div>
       <dl className="os-specs">
         <div>
           <dt>{t('system.os')}</dt>

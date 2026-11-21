@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { DESKTOP_ICON_ORDER, getApp, type AppId } from '../apps';
 import { useOsInternal } from '../context';
+import { APP_ICONS } from '../icons';
 
 export function DesktopIcons() {
   const t = useTranslations('os.apps');
@@ -69,6 +70,7 @@ export function DesktopIcons() {
         const app = getApp(id);
         if (!app) return null;
         const isSelected = selected === id;
+        const Icon = APP_ICONS[id];
         return (
           <button
             key={id}
@@ -80,7 +82,7 @@ export function DesktopIcons() {
             onKeyDown={(e) => handleKeyDown(e, id, index)}
           >
             <span className="os-icon-tile" aria-hidden="true">
-              <span className="os-icon-glyph">{getIconGlyph(id)}</span>
+              <Icon size={38} />
             </span>
             <span className="os-icon-label">{t(`${app.messageKey}.label`)}</span>
           </button>
@@ -88,22 +90,4 @@ export function DesktopIcons() {
       })}
     </div>
   );
-}
-
-/** Simple text glyphs for icons until real artwork is added in a later task. */
-function getIconGlyph(id: AppId): string {
-  const glyphs: Partial<Record<AppId, string>> = {
-    about: '👤',
-    projects: '📁',
-    questday: '🧩',
-    sakurai: '🌸',
-    'rally-voley': '🏐',
-    yokaido: '🏮',
-    activity: '📊',
-    business: '📋',
-    contact: '✉',
-    terminal: '⌨',
-    browser: '🌐',
-  };
-  return glyphs[id] ?? '📄';
 }

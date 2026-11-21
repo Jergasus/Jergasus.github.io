@@ -239,7 +239,7 @@
       "engine": "Motor"
     },
     "taskbar": {
-      "start": "★ Inicio",
+      "start": "Inicio",
       "language": "Idioma",
       "clockLabel": "Hora en Barcelona: {time}"
     },

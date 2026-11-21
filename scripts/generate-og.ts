@@ -1,12 +1,18 @@
 /**
- * One-time script to generate OG images (1200×630) for each locale.
- * Uses Playwright (already a devDependency) to screenshot an HTML template
- * built from the site's design tokens (JG-OS day colours).
+ * One-time script to generate the OG images (1200×630) for each locale, in
+ * the JG-OS look: the desk with its dots, the four project icons, the
+ * taskbar, and one window titled with the localised about filename
+ * (sobre_mi.txt, about_me.txt) holding the name and the lede.
  *
- * Colour values are parsed from the day :root block of
- * src/design/os-tokens.css: if the tokens change, re-running this script keeps
- * the OG art in sync. (The card itself is redrawn in the OS style later.) The host printed
- * on the card is SITE_URL's, so re-run it after adding public/CNAME.
+ * Playwright (already a devDependency) screenshots an HTML page drawn at the
+ * OS's own sizes (600×315 CSS px) at device scale 2, so every 2 px border and
+ * 4 px shadow lands on whole pixels, as on a retina screen.
+ *
+ * Everything is the site's own: the colours are the --os-* tokens of the day
+ * :root block of src/design/os-tokens.css (passed through as CSS variables),
+ * the words come from messages/{es,ca,en}.json, the icons and the logo are
+ * the React components in src/os/icons, and the fonts are the self-hosted
+ * files in src/design/fonts. Change any of them and re-run.
  *
  * Run from the project root:  npx tsx scripts/generate-og.ts
  *
@@ -18,22 +24,25 @@ import { chromium } from '@playwright/test';
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SITE_URL } from '../src/content/site';
+import { createElement, type ComponentType } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { SITE_NAME } from '../src/content/site';
+import type { AppId } from '../src/os/apps';
+import { getApp } from '../src/os/apps';
+import { APP_ICONS, JgOsLogo } from '../src/os/icons';
+import { WINDOW_GLYPHS } from '../src/os/window-glyphs';
 
 const root = new URL('..', import.meta.url).pathname;
 
-// ── Token parser ─────────────────────────────────────────────────────────────
+// ── Tokens ───────────────────────────────────────────────────────────────────
 
 /**
- * Parse `--os-*: <value>;` declarations from the first (day) :root block of
- * a CSS file, ignoring comments. Returns a map of token name → raw value.
+ * Every `--os-*: <value>;` declaration of the first (day) :root block of
+ * os-tokens.css, comments stripped. Returns token name → raw value.
  */
-function parseColorTokens(cssPath: string): Record<string, string> {
-  const css = readFileSync(cssPath, 'utf8');
-  // Strip comments (/* … */) before matching to avoid picking up values
-  // that appear only in comments.
-  const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const day = stripped.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '';
+function parseTokens(cssPath: string): Record<string, string> {
+  const css = readFileSync(cssPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const day = css.match(/:root\s*\{([^}]*)\}/)?.[1] ?? '';
   const tokens: Record<string, string> = {};
   for (const match of day.matchAll(/--os-([\w-]+)\s*:\s*([^;]+);/g)) {
     tokens[match[1]] = match[2].trim();
@@ -41,138 +50,229 @@ function parseColorTokens(cssPath: string): Record<string, string> {
   return tokens;
 }
 
-const tokenCss = join(root, 'src/design/os-tokens.css');
-const colors = parseColorTokens(tokenCss);
+const tokens = parseTokens(join(root, 'src/design/os-tokens.css'));
 
-/**
- * The card is drawn from these tokens and nothing else. A token that is
- * missing or not a hex colour (a new token file might use oklch() or var())
- * stops the script, rather than quietly drawing the card in old colours.
- */
-function hexToken(name: string): string {
-  const value = colors[name];
-  if (!value || !/^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)) {
-    throw new Error(
-      `src/design/os-tokens.css: --os-${name} must be a hex colour for the OG image, found ${value ? `"${value}"` : 'nothing'}`,
-    );
-  }
-  return value;
+/** The card uses these; a missing one stops the script rather than drawing a guess. */
+const REQUIRED = ['desk', 'window', 'ink', 'border', 'shadow', 'label-bg', 'label-ink', 'wp-dots', 'c-lilac', 'border-w', 'shadow-offset', 'radius-icon'];
+for (const name of REQUIRED) {
+  if (!tokens[name]) throw new Error(`src/design/os-tokens.css: --os-${name} is missing from the day :root block`);
 }
+const tokenCss = Object.entries(tokens)
+  // The font tokens point at next/font variables that do not exist here.
+  .filter(([name]) => !name.startsWith('font-'))
+  .map(([name, value]) => `--os-${name}: ${value};`)
+  .join('\n    ');
 
-const COLOR_PAPER = hexToken('window');
-const COLOR_INK = hexToken('ink');
-const COLOR_INK_MUTED = hexToken('ink');
-const COLOR_ACCENT = hexToken('desk');
+// ── Fonts ────────────────────────────────────────────────────────────────────
 
-// The handle printed on the card: the site's own host, which follows
-// public/CNAME (src/content/site.ts).
-const SITE_HOST = new URL(SITE_URL).host;
+const font = (file: string) =>
+  `data:font/woff2;base64,${readFileSync(join(root, 'src/design/fonts', file)).toString('base64')}`;
+const PIXEL = font('pixelify-sans-wght-latin.woff2');
+const SANS = font('ibm-plex-sans-wght-latin.woff2');
 
-// ── Fonts ─────────────────────────────────────────────────────────────────────
+// ── Words ────────────────────────────────────────────────────────────────────
 
-function fontDataUrl(path: string) {
-  const data = readFileSync(path);
-  return `data:font/woff2;base64,${data.toString('base64')}`;
-}
-
-const FONTS = {
-  display: join(root, 'src/design/fonts/pixelify-sans-wght-latin.woff2'),
-  text: join(root, 'src/design/fonts/ibm-plex-sans-wght-latin.woff2'),
+type Messages = {
+  hero: { lede: string };
+  os: {
+    taskbar: { start: string };
+    apps: Record<string, { title: string; label: string }>;
+  };
 };
 
-const displayFontUrl = fontDataUrl(FONTS.display);
-const textFontUrl = fontDataUrl(FONTS.text);
+const messages = (locale: string): Messages =>
+  JSON.parse(readFileSync(join(root, `messages/${locale}.json`), 'utf8'));
 
-// ── Locales ───────────────────────────────────────────────────────────────────
+const escape = (text: string) =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-const LOCALES = [
-  { locale: 'es', role: 'Desarrollador web full-stack · Barcelona' },
-  { locale: 'ca', role: 'Desenvolupador web full-stack · Barcelona' },
-  { locale: 'en', role: 'Full-stack web developer · Barcelona' },
-];
+const svg = (component: ComponentType<{ size?: number }>, size: number) =>
+  renderToStaticMarkup(createElement(component, { size }));
 
-// ── Template ──────────────────────────────────────────────────────────────────
+const colour = (id: AppId) => `var(--os-c-${getApp(id)!.colour})`;
 
-function buildHtml(role: string): string {
+// ── Template ─────────────────────────────────────────────────────────────────
+
+const LOCALES = ['es', 'ca', 'en'] as const;
+const DESK_ICONS: AppId[] = ['questday', 'sakurai', 'rally-voley', 'yokaido'];
+
+function buildHtml(locale: (typeof LOCALES)[number]): string {
+  const m = messages(locale);
+  const about = m.os.apps.about;
+  const label = (id: AppId) => escape(m.os.apps[getApp(id)!.messageKey].label);
+
+  const icons = DESK_ICONS.map(
+    (id) => `
+      <div class="icon">
+        <span class="tile" style="--app: ${colour(id)}">${svg(APP_ICONS[id], 34)}</span>
+        <span class="chip">${label(id)}</span>
+      </div>`,
+  ).join('');
+
+  const glyph = (d: string) =>
+    `<span class="btn"><svg viewBox="0 0 12 12" width="12" height="12" shape-rendering="crispEdges"><path d="${d}" fill="currentColor" fill-rule="evenodd"/></svg></span>`;
+
+  const languages = LOCALES.map(
+    (code) => `<span class="lang${code === locale ? ' current' : ''}">${code.toUpperCase()}</span>`,
+  ).join('');
+
   return `<!DOCTYPE html>
-<html>
+<html lang="${locale}">
 <head>
 <meta charset="utf-8">
 <style>
-  @font-face {
-    font-family: 'Pixelify Sans';
-    src: url('${displayFontUrl}') format('woff2');
-    font-weight: 400 700;
-    font-style: normal;
-  }
-  @font-face {
-    font-family: 'IBM Plex Sans';
-    src: url('${textFontUrl}') format('woff2');
-    font-weight: 400 600;
-    font-style: normal;
+  @font-face { font-family: 'Pixelify Sans'; src: url('${PIXEL}') format('woff2'); font-weight: 400 700; }
+  @font-face { font-family: 'IBM Plex Sans'; src: url('${SANS}') format('woff2'); font-weight: 400 600; }
+  :root {
+    ${tokenCss}
+    --pixel: 'Pixelify Sans', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    width: 1200px;
-    height: 630px;
-    background: ${COLOR_PAPER};
-    color: ${COLOR_INK};
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 64px 72px;
-    overflow: hidden;
     position: relative;
+    width: 600px;
+    height: 315px;
+    overflow: hidden;
+    color: var(--os-ink);
+    background: var(--os-wp-dots);
+    font-family: var(--sans);
   }
-  .grid-line {
+  svg { display: block; }
+
+  /* Desktop icons: the four projects, top left. */
+  .icons {
     position: absolute;
-    top: 0;
-    left: 72px;
-    width: 1px;
-    height: 100%;
-    background: rgba(17,17,17,0.08);
+    top: 8px;
+    left: 8px;
+    display: grid;
+    gap: 4px;
+    justify-items: center;
+    width: 88px;
   }
-  .accent-bar {
-    width: 48px;
-    height: 5px;
-    background: ${COLOR_ACCENT};
-    margin-bottom: 28px;
+  .icon { display: grid; gap: 3px; justify-items: center; }
+  .tile {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    background: var(--app);
+    border: var(--os-border-w) solid var(--os-border);
+    border-radius: var(--os-radius-icon);
+    box-shadow: 2px 2px 0 var(--os-shadow);
   }
+  .chip {
+    padding: 1px 4px;
+    font: 600 11px/1.2 var(--pixel);
+    color: var(--os-label-ink);
+    background: var(--os-label-bg);
+  }
+
+  /* The window. */
+  .win {
+    position: absolute;
+    top: 40px;
+    left: 122px;
+    width: 446px;
+    background: var(--os-window);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: var(--os-shadow-offset) var(--os-shadow-offset) 0 var(--os-shadow);
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 30px;
+    padding: 1px 3px 1px 8px;
+    color: #111111;
+    background-color: var(--os-c-lilac);
+    background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
+    border-bottom: var(--os-border-w) solid var(--os-border);
+    font: 600 15px/1 var(--pixel);
+  }
+  .patch { display: flex; align-items: center; gap: 6px; padding: 3px 6px 3px 4px; background: var(--os-c-lilac); }
+  .grow { flex: 1; }
+  .btns { display: flex; gap: 3px; }
+  .btn {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    color: #111111;
+    background: var(--os-c-cream);
+    border: var(--os-border-w) solid #111111;
+  }
+  .body { padding: 20px 22px 24px; }
   .name {
-    font-family: 'Pixelify Sans', monospace;
-    font-weight: 700;
-    font-size: 116px;
-    line-height: 1.0;
-    letter-spacing: -0.015em;
-    text-transform: uppercase;
-    color: ${COLOR_INK};
+    font: 700 42px/1.05 var(--pixel);
+    letter-spacing: 0.01em;
   }
-  .role {
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-weight: 400;
-    font-size: 26px;
-    line-height: 1.4;
-    color: ${COLOR_INK_MUTED};
-    margin-top: 20px;
+  .lede {
+    max-width: 30em;
+    margin-top: 12px;
+    font: 400 15.5px/1.45 var(--sans);
   }
-  .handle {
+
+  /* The taskbar. */
+  .taskbar {
     position: absolute;
-    top: 56px;
-    right: 72px;
-    font-family: 'IBM Plex Sans', sans-serif;
-    font-weight: 400;
-    font-size: 18px;
-    color: ${COLOR_ACCENT};
-    letter-spacing: 0.02em;
+    inset: auto 0 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 40px;
+    padding-inline: 4px 10px;
+    background: var(--os-window);
+    border-top: var(--os-border-w) solid var(--os-border);
+    font-family: var(--pixel);
   }
+  .start {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 2px 10px 2px 6px;
+    font: 700 15px/1 var(--pixel);
+    border: var(--os-border-w) solid var(--os-border);
+  }
+  .task {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 10px 0 5px;
+    font: 600 13px/1 var(--pixel);
+    color: #111111;
+    background: var(--os-c-lilac);
+    border: var(--os-border-w) solid var(--os-border);
+    box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.5), inset -1px -1px 0 rgb(0 0 0 / 0.25);
+  }
+  .tray { margin-left: auto; display: flex; gap: 4px; }
+  .lang { padding: 2px 6px; font: 600 12px/1 var(--pixel); border: var(--os-border-w) solid transparent; }
+  .lang.current { border-color: currentColor; }
 </style>
 </head>
 <body>
-  <div class="grid-line"></div>
-  <span class="handle">${SITE_HOST}</span>
-  <div class="accent-bar"></div>
-  <div class="name">Jesús García</div>
-  <div class="role">${role}</div>
+  <div class="icons">${icons}
+  </div>
+
+  <div class="win">
+    <div class="bar">
+      <span class="patch">${svg(APP_ICONS.about, 18)}<span>${escape(about.title)}</span></span>
+      <span class="grow"></span>
+      <span class="btns">${glyph(WINDOW_GLYPHS.minimize)}${glyph(WINDOW_GLYPHS.maximize)}${glyph(WINDOW_GLYPHS.close)}</span>
+    </div>
+    <div class="body">
+      <div class="name">${escape(SITE_NAME)}</div>
+      <p class="lede">${escape(m.hero.lede)}</p>
+    </div>
+  </div>
+
+  <div class="taskbar">
+    <span class="start">${svg(JgOsLogo, 22)}${escape(m.os.taskbar.start)}</span>
+    <span class="task">${svg(APP_ICONS.about, 18)}${escape(about.label)}</span>
+    <span class="tray">${languages}</span>
+  </div>
 </body>
 </html>`;
 }
@@ -183,34 +283,26 @@ function sha256(data: Buffer): string {
   return createHash('sha256').update(data).digest('hex');
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
+// ── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
   mkdirSync(join(root, 'public/og'), { recursive: true });
 
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
-    viewport: { width: 1200, height: 630 },
-    deviceScaleFactor: 1,
+    viewport: { width: 600, height: 315 },
+    deviceScaleFactor: 2,
   });
   const page = await context.newPage();
 
-  for (const { locale, role } of LOCALES) {
-    const html = buildHtml(role);
-    await page.setContent(html, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(200);
+  for (const locale of LOCALES) {
+    await page.setContent(buildHtml(locale), { waitUntil: 'networkidle' });
+    await page.evaluate(() => document.fonts.ready);
 
-    // Render to a buffer first
-    const buffer = await page.screenshot({
-      type: 'png',
-      clip: { x: 0, y: 0, width: 1200, height: 630 },
-    });
+    const buffer = await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: 600, height: 315 } });
 
     const outPath = join(root, `public/og/${locale}.png`);
-    const newHash = sha256(buffer);
-    const changed =
-      !existsSync(outPath) || sha256(readFileSync(outPath)) !== newHash;
-
+    const changed = !existsSync(outPath) || sha256(readFileSync(outPath)) !== sha256(buffer);
     if (changed) {
       writeFileSync(outPath, buffer);
       console.log(`Updated public/og/${locale}.png (${Math.round(buffer.length / 1024)} KB)`);
@@ -220,7 +312,6 @@ async function main() {
   }
 
   await browser.close();
-  console.log(`\nTokens used: paper=${COLOR_PAPER} ink=${COLOR_INK} ink-muted=${COLOR_INK_MUTED} accent=${COLOR_ACCENT}`);
   console.log('Done.');
 }
 

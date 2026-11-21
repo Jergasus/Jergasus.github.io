@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { localizedPath } from '@/i18n/localized-path';
 import type { Locale } from '@/i18n/routing';
-import { PHONE_ICON_ORDER, getApp, type AppId } from '../apps';
+import { PHONE_ICON_ORDER, getApp } from '../apps';
+import { APP_ICONS, ChatIcon, MailIcon } from '../icons';
 import { barcelonaTime } from '../clock';
 import { mailtoHref, whatsappHref } from '@/content/contact';
 import { useOsInternal } from '../context';
@@ -17,22 +18,6 @@ const LOCALES: { code: Locale; label: string }[] = [
   { code: 'ca', label: 'CA' },
   { code: 'en', label: 'EN' },
 ];
-
-/** App tile glyphs — mirrors the DesktopIcons set. */
-const GLYPHS: Partial<Record<AppId, string>> = {
-  questday: '🧩',
-  sakurai: '🌸',
-  'rally-voley': '🏐',
-  yokaido: '🏮',
-  about: '📄',
-  activity: '📊',
-  business: '💼',
-  contact: '✉',
-  terminal: '⌨',
-  browser: '🌐',
-  system: '⚙',
-  settings: '🎨',
-};
 
 type Props = {
   locale: Locale;
@@ -118,6 +103,7 @@ export function PhoneHome({
           const app = getApp(id);
           if (!app) return null;
           const label = t(`apps.${app.messageKey}.label`);
+          const Icon = APP_ICONS[id];
           return (
             <li key={id} className="os-phone-icon-li">
             <button
@@ -132,7 +118,7 @@ export function PhoneHome({
               onClick={(event) => openApp(id, event.currentTarget)}
             >
               <span className="os-phone-icon-tile" aria-hidden="true">
-                {GLYPHS[id] ?? '□'}
+                <Icon size={38} />
               </span>
               <span className="os-phone-icon-label">{label}</span>
             </button>
@@ -148,7 +134,9 @@ export function PhoneHome({
           className="os-phone-dock-btn"
           aria-label={tPhone('dock.mailLabel')}
         >
-          <span className="os-phone-dock-icon" aria-hidden="true">✉</span>
+          <span className="os-phone-dock-icon" style={{ '--app': 'var(--os-c-cream)' } as React.CSSProperties} aria-hidden="true">
+            <MailIcon size={30} />
+          </span>
           <span className="os-phone-dock-label">{tPhone('dock.mailLabel')}</span>
         </a>
         <a
@@ -157,7 +145,9 @@ export function PhoneHome({
           aria-label={tPhone('dock.whatsappLabel')}
           rel="noopener noreferrer"
         >
-          <span className="os-phone-dock-icon" aria-hidden="true">💬</span>
+          <span className="os-phone-dock-icon" style={{ '--app': 'var(--os-c-mint)' } as React.CSSProperties} aria-hidden="true">
+            <ChatIcon size={30} />
+          </span>
           <span className="os-phone-dock-label">{tPhone('dock.whatsappLabel')}</span>
         </a>
       </div>

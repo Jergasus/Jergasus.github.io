@@ -63,14 +63,16 @@
   /* ── Wallpapers (background shorthand values) ────────────────────────── */
   /* Dots: tiny repeating dot grid over the desk colour. */
   --os-wp-dots: radial-gradient(circle, rgba(0 0 0 / 0.25) 1.5px, transparent 1.5px) 0 0 / 24px 24px var(--os-desk);
-  /* Grid: thin-line crosshatch over the desk colour. */
-  --os-wp-grid: linear-gradient(rgba(0 0 0 / 0.15) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgba(0 0 0 / 0.15) 1px, transparent 1px) 0 0 / 24px 24px var(--os-desk);
-  /* Sunset: warm dusk-to-horizon gradient. */
-  --os-wp-sunset: linear-gradient(to bottom, #2a1b4e 0%, #c05c3f 50%, #f0a05a 100%);
+  /* Grid: green graph paper, thin light lines. */
+  --os-wp-grid: linear-gradient(rgba(255 255 255 / 0.14) 1px, transparent 1px) 0 0 / 24px 24px, linear-gradient(90deg, rgba(255 255 255 / 0.14) 1px, transparent 1px) 0 0 / 24px 24px #4e7a6b;
+  /* Sunset: a pixel sunset, hard colour bands from night to the horizon. */
+  --os-wp-sunset: linear-gradient(to bottom, #2b2d5b 0 22%, #5b3f7a 22% 40%, #a8547e 40% 58%, #e0806a 58% 76%, #f2b36b 76% 100%);
   /* Cream: warm solid surface. */
   --os-wp-cream: #f4ecd2;
-  /* Barcelona: placeholder flat colour until Task 13 ships the SVG. */
-  --os-wp-barcelona: #23305a;
+  /* Barcelona: an original pixel-art night skyline (public/wallpapers,
+     about 14 KB), anchored to the bottom so the city never crops away. The
+     colour behind it is its sky, for the moment before it loads. */
+  --os-wp-barcelona: url(/wallpapers/barcelona.svg) center bottom / cover no-repeat #23305a;
 }
 
 /* ── Night mode overrides ────────────────────────────────────────────────── */

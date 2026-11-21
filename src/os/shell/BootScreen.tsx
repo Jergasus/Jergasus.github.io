@@ -29,6 +29,7 @@ import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from '@/design/motion';
 import { PREF_KEYS, writePref } from '@/os/storage';
+import { JgOsLogo } from '@/os/icons/JgOsLogo';
 
 /** Four loading lines and the skip hint, one step each. */
 const BEATS = 5;
@@ -90,6 +91,10 @@ export function BootScreen({ projectCount, totalCommits }: BootScreenProps) {
       onClick={handleClick}
       style={{ '--os-boot-step': `${motion.os.bootLine}s` } as CSSProperties}
     >
+      <div className="os-boot-brand">
+        <JgOsLogo size={104} />
+        <p className="os-boot-name">JG-OS</p>
+      </div>
       <p className="os-boot-line" style={step(0)}>{t('line1')}</p>
       <p className="os-boot-line" style={step(1)}>{t('line2', { count: projectCount })}</p>
       <p className="os-boot-line" style={step(2)}>{t('line3', { total: totalCommits })}</p>

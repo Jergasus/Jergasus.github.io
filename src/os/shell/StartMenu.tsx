@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { apps, type AppId } from '../apps';
 import { useOsInternal } from '../context';
+import { APP_ICONS } from '../icons';
 import { localizedPath } from '@/i18n/localized-path';
 import type { Locale } from '@/i18n/routing';
 
@@ -132,21 +133,27 @@ export function StartMenu({ open, onClose, startRef }: Props) {
     >
       {/* App list — includes settings ("Personalizar") since it has inStartMenu:true */}
       <ul className="os-start-list" role="presentation">
-        {startMenuApps.map((app) => (
-          <li key={app.id} role="none">
-            <button
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              className="os-start-item"
-              data-open-app={app.id}
-              onClick={() => openApp(app.id)}
-              style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
-            >
-              {t(`apps.${app.messageKey}.label`)}
-            </button>
-          </li>
-        ))}
+        {startMenuApps.map((app) => {
+          const Icon = APP_ICONS[app.id];
+          return (
+            <li key={app.id} role="none">
+              <button
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className="os-start-item"
+                data-open-app={app.id}
+                onClick={() => openApp(app.id)}
+                style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
+              >
+                <span className="os-start-icon" aria-hidden="true">
+                  <Icon size={20} />
+                </span>
+                {t(`apps.${app.messageKey}.label`)}
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="os-start-divider" role="separator" />

@@ -14,6 +14,8 @@ import { useMotionSafe } from '@/components/motion/useMotionSafe';
 import { caseStudySlugs } from '@/content/projects';
 import { getApp, isCaseApp, type AppId } from './apps';
 import { useOsInternal } from './context';
+import { APP_ICONS } from './icons';
+import { WINDOW_GLYPHS } from './window-glyphs';
 import { recallWindow, rememberWindow, windowReopened } from './window-memory';
 import { useWindowDrag } from './shell/useWindowDrag';
 import { useWindowResize, type ResizeDir } from './shell/useWindowResize';
@@ -44,6 +46,7 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
   const tPhone = useTranslations('os.phone');
   const win = state.windows[id];
   const app = getApp(id)!;
+  const Icon = APP_ICONS[id];
   const section = useRef<HTMLElement>(null);
   const body = useRef<HTMLDivElement>(null);
   // A press on close or minimise must not first bring the window forward.
@@ -266,6 +269,9 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
           {tPhone('back')}
         </button>
 
+        <span className="os-title-icon" aria-hidden="true">
+          <Icon size={18} />
+        </span>
         <span id={`${id}-title`} className="os-title">
           {title}
         </span>
@@ -335,18 +341,10 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
   );
 }
 
-// 12 × 12 pixel glyphs, drawn on whole pixels so they stay crisp.
-const GLYPHS = {
-  minimize: 'M2 8h8v2H2z',
-  maximize: 'M2 2h8v8H2zM4 5v3h4V5z',
-  restore: 'M4 1h7v7H9V3H4zM1 4h7v7H1zM3 6v3h3V6z',
-  close: 'M2 2h2v1h1v1h2V3h1V2h2v2H9v1H8v2h1v1h1v2H8V9H7V8H5v1H4v1H2V8h1V7h1V5H3V4H2z',
-} as const;
-
-function Glyph({ kind }: { kind: keyof typeof GLYPHS }) {
+function Glyph({ kind }: { kind: keyof typeof WINDOW_GLYPHS }) {
   return (
     <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
-      <path d={GLYPHS[kind]} fill="currentColor" fillRule="evenodd" />
+      <path d={WINDOW_GLYPHS[kind]} fill="currentColor" fillRule="evenodd" />
     </svg>
   );
 }
