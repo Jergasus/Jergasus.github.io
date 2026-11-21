@@ -332,7 +332,9 @@ test.describe('without JavaScript', () => {
           .map((s) => s.getBoundingClientRect().top),
       );
     expect(tops).toEqual([...tops].sort((a, b) => a - b));
-    for (const selector of ['[data-desktop]', '[data-taskbar]', '[data-win-close]', '[data-win-minimize]', '[data-win-maximize]']) {
+    // The phone home screen is OS chrome too: its icons are buttons that need
+    // JavaScript, and the document already carries everything it shows.
+    for (const selector of ['[data-desktop]', '[data-taskbar]', '[data-phone-home]', '[data-dock]', '[data-win-close]', '[data-win-minimize]', '[data-win-maximize]']) {
       for (const element of await page.locator(selector).all()) await expect(element, selector).toBeHidden();
     }
 
@@ -348,6 +350,7 @@ test('print media shows the document layout with every content window', async ({
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('[data-taskbar]')).toBeHidden();
   await expect(page.locator('[data-desktop]')).toBeHidden();
+  await expect(page.locator('[data-phone-home]')).toBeHidden();
 });
 
 // Carried item (Task 14): on a laptop screen the eleven desktop icons flow

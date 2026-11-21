@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { themeColor, themeColorDark } from '@/design/theme-color';
 import { PREF_KEYS, writePref } from '../storage';
 
@@ -26,16 +26,26 @@ function subscribeTheme(onChange: () => void): () => void {
   return () => observer.disconnect();
 }
 
-/** Update every meta[name="theme-color"] to reflect the forced theme. */
+/**
+ * Points every meta[name="theme-color"] at the desk colour the visitor sees:
+ * a forced theme paints both, and back on the system theme each meta returns
+ * to its own colour scheme's value.
+ */
 function syncThemeMeta(theme: Theme): void {
-  const color = theme === 'dark' ? themeColorDark : themeColor;
   document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]').forEach((m) => {
-    m.content = color;
+    const night = theme ? theme === 'dark' : m.media.includes('dark');
+    m.content = night ? themeColorDark : themeColor;
   });
 }
 
 export function useTheme(): { theme: Theme; toggle(): void } {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, readServerTheme);
+
+  // A theme remembered from an earlier visit (set before paint) reaches the
+  // browser chrome too, not only a toggle in this visit.
+  useEffect(() => {
+    syncThemeMeta(theme);
+  }, [theme]);
 
   const toggle = useCallback(() => {
     const html = document.documentElement;

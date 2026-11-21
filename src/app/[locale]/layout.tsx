@@ -22,7 +22,13 @@ import '../globals.css';
 export const dynamicParams = false;
 
 // The browser chrome (Android toolbar, Safari tab bar) takes the desk colour.
+// The OS draws edge to edge like an installed app and pads itself away from
+// the notch and the home indicator (env(safe-area-inset-*) in os.css); the
+// on-screen keyboard shrinks the layout, so the terminal and wizard inputs
+// stay in view.
 export const viewport: Viewport = {
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: themeColor },
     { media: '(prefers-color-scheme: dark)', color: themeColorDark },

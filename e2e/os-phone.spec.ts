@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { PHONE_ICON_ORDER } from '@/os/apps';
+import { themeColorDark } from '@/design/theme-color';
 import { expect, test, visit } from './fixtures';
 
 // Phone OS: 390 × 844, touch, mobile user-agent (iPhone 12 footprint).
@@ -261,6 +262,126 @@ test('toasts do not overlap the phone dock', async ({ page }) => {
     // The bottom edge of the toast must be at or above the top edge of the dock.
     expect(toastBox.y + toastBox.height).toBeLessThanOrEqual(dockBox.y);
   }
+});
+
+// ── Feels installed, not embedded (mobile-native, Task 14) ─────────────────
+// What a desktop browser can check. Safe areas, sticky hover, the keyboard
+// and rubber-banding need a real phone; the CSS for them is pinned here.
+
+test('the viewport draws edge to edge, keeps pinch zoom and lets the keyboard resize the layout', async ({ page }) => {
+  await visit(page, '/');
+  const content = await page.locator('meta[name="viewport"]').getAttribute('content');
+  expect(content).toContain('width=device-width');
+  expect(content).toContain('viewport-fit=cover');
+  expect(content).toContain('interactive-widget=resizes-content');
+  expect(content).not.toMatch(/user-scalable\s*=\s*no|maximum-scale/);
+});
+
+test('the phone shell has no tap flash and no pull-to-refresh behind it', async ({ page }) => {
+  await visit(page, '/');
+  const look = await page.evaluate(() => {
+    const html = getComputedStyle(document.documentElement);
+    return {
+      tap: html.getPropertyValue('-webkit-tap-highlight-color'),
+      overscroll: html.overscrollBehaviorY,
+      body: getComputedStyle(document.body).overscrollBehaviorY,
+    };
+  });
+  expect(look).toEqual({ tap: 'rgba(0, 0, 0, 0)', overscroll: 'none', body: 'none' });
+});
+
+test('home icons and the dock are controls: a long press selects no label', async ({ page }) => {
+  await visit(page, '/');
+  for (const control of [phoneIcon(page, 'about'), dock(page).locator('a').first()]) {
+    const select = await control.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return style.userSelect || style.webkitUserSelect;
+    });
+    expect(select).toBe('none');
+  }
+});
+
+test('an app bar is thumb sized: Back on the left, close on the far right', async ({ page }) => {
+  // Measured at rest, not while the app grows from its icon.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await visit(page, '/');
+  await phoneIcon(page, 'about').tap();
+  await expect(appWindow(page, 'about')).toHaveAttribute('data-phone-active', 'true');
+  const back = (await phoneBack(page).boundingBox())!;
+  const close = (await page.locator('[data-phone-active="true"] [data-win-close]').boundingBox())!;
+  expect(back.x).toBeLessThanOrEqual(2);
+  expect(back.height).toBeGreaterThanOrEqual(44);
+  expect(close.width).toBeGreaterThanOrEqual(32);
+  expect(close.height).toBeGreaterThanOrEqual(32);
+  expect(390 - (close.x + close.width)).toBeLessThanOrEqual(8);
+});
+
+// iOS zooms into a field whose text is under 16 px, and never zooms back.
+test('no text field zooms the page: the terminal and the wizard type at 16 px or more', async ({ page }) => {
+  await visit(page, '/');
+  await phoneIcon(page, 'terminal').tap();
+  const fontSize = (selector: string) =>
+    page.locator(selector).evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  expect(await fontSize('#os-terminal-input')).toBeGreaterThanOrEqual(16);
+  await phoneBack(page).tap();
+
+  await phoneIcon(page, 'business').tap();
+  const wizard = appWindow(page, 'business');
+  await wizard.locator('.os-wizard-radio-label').first().tap();
+  await wizard.locator('.os-wizard-btn--primary').tap();
+  await wizard.locator('.os-wizard-check-label').first().tap();
+  await wizard.locator('.os-wizard-btn--primary').tap();
+  for (const field of await wizard.locator('input[type="text"], textarea').all()) {
+    expect(await field.evaluate((element) => parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(16);
+  }
+  expect(await wizard.locator('input[type="text"], textarea').count()).toBeGreaterThan(0);
+});
+
+// A finger gets an answer the moment it lands (hover never fires on touch).
+const PHONE_PRESSES = [
+  { name: 'home icon', open: null, press: '[data-phone-icon="about"] .os-phone-icon-tile', property: 'translate' },
+  { name: 'dock link', open: null, press: '[data-dock] a', property: 'opacity' },
+  { name: 'Back', open: 'about', press: '[data-phone-active="true"] [data-phone-back]', property: 'background-color' },
+  { name: 'close', open: 'about', press: '[data-phone-active="true"] [data-win-close]', property: 'background-color' },
+  { name: 'wizard option', open: 'business', press: '[data-app="business"] .os-wizard-radio-label', property: 'background-color' },
+] as const;
+
+for (const { name, open, press, property } of PHONE_PRESSES) {
+  test(`pressing a ${name} shows a cue at once`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await visit(page, '/');
+    if (open) {
+      await phoneIcon(page, open).tap();
+      await expect(appWindow(page, open)).toHaveAttribute('data-phone-active', 'true');
+    }
+    const target = page.locator(press).first();
+    const look = () => target.evaluate((element, prop) => getComputedStyle(element).getPropertyValue(prop), property);
+    const rest = await look();
+    const box = (await target.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    const pressed = await look();
+    // Release away from the control: a press, not a tap, so nothing opens.
+    await page.mouse.move(1, 1);
+    await page.mouse.up();
+    expect(pressed, `${name} looks the same while pressed`).not.toBe(rest);
+  });
+}
+
+// mobile-native §10: the status bar follows the theme the visitor chose,
+// not only the system one.
+test('a remembered night theme reaches the browser chrome', async ({ page }) => {
+  await page.addInitScript(() => {
+    try {
+      window.localStorage.setItem('jgos-theme', 'dark');
+    } catch {
+      // The OS works without storage.
+    }
+  });
+  await visit(page, '/');
+  await expect
+    .poll(() => page.locator('meta[name="theme-color"]').evaluateAll((metas) => metas.map((meta) => meta.getAttribute('content'))))
+    .toEqual([themeColorDark, themeColorDark]);
 });
 
 test('phone home has no axe violations', async ({ page }) => {

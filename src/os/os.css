@@ -34,8 +34,10 @@
 
   body {
     margin: 0;
-    min-height: 100vh;
-    padding: 24px var(--os-pad) 48px;
+    min-height: 100svh;
+    /* viewport-fit=cover: the text keeps clear of a landscape notch. */
+    padding: 24px max(var(--os-pad), env(safe-area-inset-right, 0px)) max(48px, env(safe-area-inset-bottom, 0px))
+      max(var(--os-pad), env(safe-area-inset-left, 0px));
     background: var(--os-wp);
   }
 
@@ -1084,7 +1086,7 @@
     html[data-os="desktop"] [data-desktop] {
       display: block;
       position: fixed;
-      inset: 0 0 var(--os-taskbar-h);
+      inset: 0 0 var(--os-taskbar-space);
       background: var(--os-wp);
     }
 
@@ -1120,6 +1122,13 @@
       background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
     }
 
+    /* The taskbar plus the home-indicator strip of a tablet (viewport-fit=
+       cover): the desk, the windows, the start menu and the toasts all stop
+       above it. */
+    html[data-os="desktop"] {
+      --os-taskbar-space: calc(var(--os-taskbar-h) + env(safe-area-inset-bottom, 0px));
+    }
+
     html[data-os="desktop"] [data-taskbar] {
       display: flex;
       align-items: center;
@@ -1128,8 +1137,9 @@
       position: fixed;
       inset: auto 0 0;
       z-index: 2;
-      height: var(--os-taskbar-h);
-      padding-inline: 4px;
+      height: var(--os-taskbar-space);
+      padding-inline: max(4px, env(safe-area-inset-left, 0px)) max(4px, env(safe-area-inset-right, 0px));
+      padding-bottom: env(safe-area-inset-bottom, 0px);
       background: var(--os-window);
       color: var(--os-ink);
       border-top: var(--os-border-w) solid var(--os-border);
@@ -1149,7 +1159,7 @@
 
     html[data-os="desktop"] [data-windows] {
       position: fixed;
-      inset: 0 0 var(--os-taskbar-h);
+      inset: 0 0 var(--os-taskbar-space);
       z-index: 1;
       isolation: isolate;
       pointer-events: none;
@@ -1276,13 +1286,37 @@
 
     /* The app in use, and an app on its way back into its icon
        (data-motion="out", src/os/shell/motion.ts). */
+    /* Edge to edge like an installed app (viewport-fit=cover): the titlebar
+       runs up under the status bar and the content stops short of the
+       notch and the home indicator. */
     html[data-os="phone"] .os-win:is([data-phone-active="true"]:not([data-win-state="closed"]), [data-motion="out"]) {
       display: flex;
       position: fixed;
-      inset: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
+      inset: 0;
       z-index: 10;
+      padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
       border: 0;
       box-shadow: none;
+    }
+
+    /* A thumb-sized app bar (a 44 px Back above the 2 px rule): Back on the
+       left, close on the far right. */
+    html[data-os="phone"] .os-win > .os-titlebar {
+      min-height: calc(46px + env(safe-area-inset-top, 0px));
+      padding: env(safe-area-inset-top, 0px) 6px 0 0;
+    }
+
+    html[data-os="phone"] .os-win-buttons {
+      margin-inline-start: auto;
+    }
+
+    html[data-os="phone"] .os-win-button {
+      inline-size: 32px;
+      block-size: 32px;
+    }
+
+    html[data-os="phone"] .os-win-body {
+      padding-bottom: calc(var(--os-pad) + env(safe-area-inset-bottom, 0px));
     }
 
     html[data-os="phone"] :is([data-win-minimize], [data-win-maximize], [data-win-move], [data-resize]) {
@@ -1295,8 +1329,8 @@
       align-items: center;
       gap: 4px;
       flex-shrink: 0;
-      height: 100%;
-      padding: 0 10px 0 6px;
+      align-self: stretch;
+      padding: 0 12px 0 6px;
       font-family: var(--os-font-pixel);
       font-size: var(--os-step-0);
       font-weight: 600;
@@ -1320,10 +1354,16 @@
       flex-direction: column;
       position: fixed;
       inset: 0;
-      padding-bottom: env(safe-area-inset-bottom);
       background: var(--os-wp);
       overflow: hidden;
       z-index: 0;
+    }
+
+    /* An app shell, not a page: no pull-to-refresh or rubber band behind
+       it. The scrolling parts (apps, the icon grid) contain their own. */
+    html[data-os="phone"],
+    html[data-os="phone"] body {
+      overscroll-behavior: none;
     }
   }
 
@@ -1440,10 +1480,10 @@
 
   .os-start-menu {
     position: fixed;
-    bottom: var(--os-taskbar-h);
+    bottom: var(--os-taskbar-space, var(--os-taskbar-h));
     left: 0;
     min-width: 200px;
-    max-height: calc(100vh - var(--os-taskbar-h) - 16px);
+    max-height: calc(100dvh - var(--os-taskbar-space, var(--os-taskbar-h)) - 16px);
     overflow-y: auto;
     background: var(--os-window);
     color: var(--os-ink);
@@ -1747,6 +1787,9 @@
       gap: 3px;
       padding: 4px;
       width: calc(var(--os-icon-col) - 16px);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
       background: transparent;
       border: 2px solid transparent;
       border-radius: 4px;
@@ -1805,11 +1848,14 @@
 
   /* ── Phone home screen components ───────────────────────────────────── */
 
+  /* Laid out only on the phone (html[data-os="phone"] [data-phone-home]
+     shows it): the document and print never get the home screen. */
+  /* Edge to edge (viewport-fit=cover): the status bar runs up under the
+     phone's own and the dock down to the home indicator; the sides keep
+     clear of a landscape notch. */
   .os-phone-home {
-    display: flex;
     flex-direction: column;
-    height: 100dvh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
     overflow: hidden;
     touch-action: pan-y;
   }
@@ -1819,7 +1865,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 6px 12px;
+    padding: calc(6px + env(safe-area-inset-top, 0px)) 12px 6px;
     background: var(--os-window);
     border-bottom: var(--os-border-w) solid var(--os-border);
     flex-shrink: 0;
@@ -1977,6 +2023,11 @@
     cursor: pointer;
     color: var(--os-label-ink);
     -webkit-tap-highlight-color: transparent;
+    /* A control, not content: a long press neither selects the label nor
+       pops the callout. */
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .os-phone-icon:active .os-phone-icon-tile {
@@ -2020,11 +2071,10 @@
   }
 
   .os-phone-dock {
-    display: flex;
     align-items: center;
     justify-content: center;
     gap: 24px;
-    padding: 8px 12px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
     background: var(--os-window);
     border-top: var(--os-border-w) solid var(--os-border);
     flex-shrink: 0;
@@ -2040,6 +2090,9 @@
     color: var(--os-ink);
     text-decoration: none;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .os-phone-dock-btn:active {
@@ -2166,7 +2219,7 @@
 
   .os-toasts-region {
     position: fixed;
-    bottom: calc(var(--os-taskbar-h, 40px) + 10px);
+    bottom: calc(var(--os-taskbar-space, var(--os-taskbar-h)) + 10px);
     right: 16px;
     z-index: 9000;
     display: flex;
