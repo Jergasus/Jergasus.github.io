@@ -61,7 +61,8 @@ export function StartMenu({ open, onClose, startRef }: Props) {
     };
   }, [open, onClose, startRef]);
 
-  // Keyboard: Escape closes + returns focus; Arrow keys move between items; Home/End jump.
+  // Keyboard: Escape closes + returns focus; Tab closes as focus moves on;
+  // Arrow keys move between items; Home/End jump.
   useEffect(() => {
     if (!open || !menuRef.current) return;
     const menu = menuRef.current;
@@ -70,6 +71,11 @@ export function StartMenu({ open, onClose, startRef }: Props) {
         e.preventDefault();
         onClose();
         startRef.current?.focus();
+        return;
+      }
+      if (e.key === 'Tab') {
+        // Focus leaves for the next (or previous) control as usual.
+        onClose();
         return;
       }
       const items = getItems(menu);

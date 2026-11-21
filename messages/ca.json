@@ -236,7 +236,7 @@
       "engine": "Motor"
     },
     "taskbar": {
-      "start": "Inici",
+      "start": "Menú JG-OS",
       "language": "Idioma",
       "clockLabel": "Hora a Barcelona: {time}"
     },

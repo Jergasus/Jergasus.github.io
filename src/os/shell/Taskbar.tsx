@@ -53,17 +53,20 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
 
   return (
     <div data-taskbar className="os-taskbar">
-      {/* Start button */}
+      {/* Start button: the OS's own name and logo (spec §9.1), named as the
+          menu it opens ("Menú JG-OS", which contains the visible name). */}
       <button
         ref={startRef}
         type="button"
         data-start
         className="os-start-btn"
+        aria-label={t('taskbar.start')}
+        aria-haspopup="menu"
         aria-expanded={startOpen}
         onClick={toggleStart}
       >
         <JgOsLogo size={22} />
-        {t('taskbar.start')}
+        {t('name')}
       </button>
 
       {/* Start menu (above the taskbar) */}
