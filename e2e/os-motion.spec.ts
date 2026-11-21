@@ -17,6 +17,14 @@ const ANIMATABLE = ['x', 'y', 'xPercent', 'yPercent', 'scale', 'scaleX', 'scaleY
 
 /** Slow enough that every check below lands mid-animation (0.28 s becomes 14 s). */
 const SLOW = 0.02;
+/**
+ * Slow enough to read where a sequence starts (0.28 s becomes 47 minutes):
+ * at SLOW the ease-out's first frames still travel several pixels for every
+ * tick a busy machine takes before the read, and that read flaked under load.
+ * (A time scale of 0 drew the sequences at their end, so the clock is
+ * slowed, not stopped.)
+ */
+const FROZEN = 0.0001;
 
 async function ready(page: Page, path = '/') {
   await visit(page, path);
@@ -101,7 +109,7 @@ test('opening a window plays os-open and tweens only transform/opacity', async (
 
 test('the open outline grows from the icon while the window waits for it', async ({ page }) => {
   await ready(page);
-  await timeScale(page, SLOW);
+  await timeScale(page, FROZEN);
   const icon = page.locator('[data-icon="activity"]');
   const iconBox = await box(icon);
 
@@ -211,6 +219,7 @@ test('acting mid-animation jumps to the final state', async ({ page }) => {
   // Restore from the taskbar during the minimise: the open grows from the button.
   const button = taskbar(page).locator('[data-task="activity"]');
   const buttonBox = await box(button);
+  await timeScale(page, FROZEN);
   await button.click();
   expect(await looksNow(page, 'activity')).toMatchObject({ state: 'open', motion: 'in', outlines: ['open'] });
   const start = await drawn(page, 'open');
@@ -362,7 +371,7 @@ test.describe('phone', () => {
     await ready(page);
     const icon = page.locator('[data-phone-icon="about"]');
     const iconBox = await box(icon);
-    await timeScale(page, SLOW);
+    await timeScale(page, FROZEN);
 
     await icon.tap();
     const start = await box(win(page, 'about'));
