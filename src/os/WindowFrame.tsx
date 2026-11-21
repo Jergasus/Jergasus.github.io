@@ -15,7 +15,7 @@ import { caseStudySlugs } from '@/content/projects';
 import { getApp, isCaseApp, type AppId } from './apps';
 import { useOsInternal } from './context';
 import { APP_ICONS } from './icons';
-import { WINDOW_GLYPHS } from './window-glyphs';
+import { WindowGlyph as Glyph } from './WindowGlyph';
 import { recallWindow, rememberWindow, windowReopened } from './window-memory';
 import { useWindowDrag } from './shell/useWindowDrag';
 import { useWindowResize, type ResizeDir } from './shell/useWindowResize';
@@ -339,13 +339,5 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
         />
       ))}
     </section>
-  );
-}
-
-function Glyph({ kind }: { kind: keyof typeof WINDOW_GLYPHS }) {
-  return (
-    <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
-      <path d={WINDOW_GLYPHS[kind]} fill="currentColor" fillRule="evenodd" />
-    </svg>
   );
 }

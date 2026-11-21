@@ -32,6 +32,7 @@ import type { Locale } from '@/i18n/routing';
 import { formatRelative } from '@/lib/dates';
 import { commitNotifications } from '@/os/notifications';
 import { SESSION_KEY_TOASTS, readSession, writeSession } from '@/os/storage';
+import { WindowGlyph } from '@/os/WindowGlyph';
 import { playToastIn, playToastOut } from './motion';
 
 /** Delay before showing toasts when no boot ran (ms). */
@@ -162,11 +163,11 @@ export function Toasts({ repos, locale }: Props) {
             <span className="os-toast-text">{t('commit', { project: name, when })}</span>
             <button
               type="button"
-              className="os-toast-close"
+              className="os-win-button os-toast-close"
               aria-label={t('dismiss')}
               onClick={() => dismiss(toast.id)}
             >
-              ×
+              <WindowGlyph kind="close" />
             </button>
           </div>
         );
