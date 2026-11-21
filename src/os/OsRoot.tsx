@@ -34,6 +34,7 @@ import { ContextMenu } from './shell/ContextMenu';
 import { PhoneHome } from './phone/PhoneHome';
 import {
   boxOf,
+  cancelMotion,
   closeTarget,
   expectOpen,
   finishAllMotion,
@@ -41,6 +42,7 @@ import {
   openOrigin,
   playClose,
   playMinimize,
+  playPhoneClose,
 } from './shell/motion';
 
 export { useOs } from './context';
@@ -71,6 +73,18 @@ function isShown(element: Element | null | undefined): element is HTMLElement {
 }
 
 const windowElement = (id: AppId) => document.querySelector<HTMLElement>(`[data-app="${id}"]`);
+const phoneIcon = (id: AppId) => document.querySelector<HTMLElement>(`[data-phone-icon="${id}"]`);
+/** The project the address bar shows right now (history moves update it before React does). */
+const urlAt = () => routedSlugOf(window.location.pathname);
+
+/**
+ * Phone: where focus returns when an app closes. Its opener if that still
+ * shows (an icon on the home screen), else the app's own icon: an opener
+ * inside another app is hidden once home shows.
+ */
+function phoneOpener(id: AppId, opener: HTMLElement | null): HTMLElement | null {
+  return opener && isShown(opener) ? opener : phoneIcon(id);
+}
 
 /** Whether the app's window shows in this mode (os.css draws it from the same state). */
 function showing(state: WmState, id: AppId, mode: OsMode): boolean {
@@ -155,8 +169,18 @@ export function OsRoot({
   });
 
   // ── URL ─────────────────────────────────────────────────────────────────
+  // Where the URL is heading: the project of the last navigation that has not
+  // landed yet (undefined when none is under way). A visitor can act again
+  // before it lands; their last intent must win over it. Any route change
+  // settles it.
+  const heading = useRef<CaseAppId | null | undefined>(undefined);
+  useLayoutEffect(() => {
+    heading.current = undefined;
+  }, [routedSlug]);
+
   const navigate = useCallback(
     (how: 'push' | 'replace', slug: CaseAppId | null) => {
+      heading.current = slug;
       router[how](caseHref(slug), { scroll: false });
     },
     [router],
@@ -252,8 +276,11 @@ export function OsRoot({
   const openApp = useCallback(
     (id: AppId, opener?: HTMLElement) => {
       const now = latest.current;
-      // Acting on an app again ends whatever it is playing: its final look, now.
-      finishMotion(id);
+      // Asking for an app again ends whatever it is playing (its final look,
+      // now) and drops what was waiting for it, such as its trip home.
+      cancelMotion(id);
+      // On the phone, another app still closing goes at once.
+      if (now.mode === 'phone') finishAllMotion();
       if (opener) openers.current.set(id, opener);
       const win = now.state.windows[id];
       const section = windowElement(id);
@@ -270,16 +297,25 @@ export function OsRoot({
       }
       focusPlan.current = { kind: 'into', id };
       if (isCaseApp(id)) {
+        // Where the URL is, or where a navigation not landed yet takes it.
+        const url = heading.current !== undefined ? heading.current : now.routedSlug;
         if (!now.state.windows[id].open) {
           // The route opens it: the page renders its window. Already routed
           // (closed a moment ago, URL not moved yet): open it in place.
-          if (now.routedSlug === id) dispatch({ type: 'open', id });
-          else navigate('push', id);
+          if (url === id) {
+            dispatch({ type: 'open', id });
+            if (now.mode === 'phone') dispatch({ type: 'phoneOpen', id });
+          } else navigate('push', id);
           return;
         }
         dispatch({ type: 'focus', id });
         if (now.mode === 'phone') dispatch({ type: 'phoneOpen', id });
-        if (now.routedSlug !== id) followWithUrl(id);
+        if (url !== id) {
+          // A navigation away from it is under way (Back, a close): push it
+          // again so the visitor's last intent lands last.
+          if (heading.current !== undefined) navigate('push', id);
+          else followWithUrl(id);
+        }
         return;
       }
       dispatch({ type: 'open', id });
@@ -319,8 +355,9 @@ export function OsRoot({
       if (!now.state.windows[id].open) return;
       finishMotion(id);
       const opener = openers.current.get(id) ?? null;
-      // Measured while the window still shows: its outline shrinks back from here.
-      const from = now.animate && now.mode !== 'document' ? boxOf(windowElement(id)) : null;
+      const frame = windowElement(id);
+      // Desktop: measured while the window still shows; its outline shrinks back from here.
+      const from = now.animate && now.mode === 'desktop' ? boxOf(frame) : null;
       openers.current.delete(id);
       forgetWindow(id);
       const ownsUrl = isCaseApp(id) && (now.state.activeCase === id || now.routedSlug === id);
@@ -330,13 +367,24 @@ export function OsRoot({
       // Closing the browser clears the URL so the next open shows the start page.
       if (id === 'browser') setBrowserUrl(null);
 
+      const routedAt = now.routedSlug;
+      // The URL follows the close, unless the visitor moved it meanwhile.
+      const go = ownsUrl
+        ? () => {
+            if (urlAt() === routedAt) navigate('push', next);
+          }
+        : undefined;
+      // Phone: the app closes back into its icon first (the route would
+      // unmount a project's frame mid-way); its state changes at once.
+      const held = now.animate && now.mode === 'phone' && frame !== null;
+      if (held) playPhoneClose(id, frame, closeTarget(id, 'phone', opener), go);
+
       dispatch({ type: 'close', id });
       if (now.mode === 'phone') dispatch({ type: 'phoneHome' });
-      if (from && now.mode !== 'document') {
-        playClose(id, from, closeTarget(id, now.mode, opener), now.mode === 'phone' ? 'os-phone-close' : 'os-close');
-      }
-      focusPlan.current = ownsUrl ? { kind: 'back', to: opener, afterRoute: next } : { kind: 'back', to: opener };
-      if (ownsUrl) navigate('push', next);
+      if (from) playClose(id, from, closeTarget(id, 'desktop', opener));
+      const back = now.mode === 'phone' ? phoneOpener(id, opener) : opener;
+      focusPlan.current = ownsUrl ? { kind: 'back', to: back, afterRoute: next } : { kind: 'back', to: back };
+      if (!held) go?.();
     },
     [navigate],
   );
@@ -371,17 +419,23 @@ export function OsRoot({
     (id: AppId) => {
       const now = latest.current;
       finishMotion(id);
-      const from = now.animate ? boxOf(windowElement(id)) : null;
-      // Home shows at once, while the app's outline shrinks back into its icon.
+      const opener = openers.current.get(id) ?? null;
+      const frame = windowElement(id);
+      const routedAt = now.routedSlug;
+      // A project goes home: / → route(null) → closes every project window.
+      // A non-case app stays open (its state is preserved), just not in front.
+      const go = isCaseApp(id)
+        ? () => {
+            if (urlAt() === routedAt) navigate('push', null);
+          }
+        : undefined;
+      // Home shows at once; the app closes back into its icon, and a
+      // project's trip home waits for it (the route unmounts its frame).
+      if (now.animate && frame) playPhoneClose(id, frame, closeTarget(id, 'phone', opener), go);
+      else go?.();
       dispatch({ type: 'phoneHome' });
-      if (isCaseApp(id)) {
-        // Navigate to / → triggers route(null) → closes cases.
-        navigate('push', null);
-      } else {
-        // The window stays open (its state is preserved), just not in front.
-        focusPlan.current = { kind: 'back', to: null };
-      }
-      if (from) playClose(id, from, closeTarget(id, 'phone', openers.current.get(id)), 'os-phone-close');
+      // Focus goes back to what opened it (the icon, once home shows).
+      focusPlan.current = { kind: 'back', to: phoneOpener(id, opener) };
     },
     [navigate],
   );

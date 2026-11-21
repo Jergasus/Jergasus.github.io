@@ -303,6 +303,61 @@ test.describe('phone', () => {
     expect(await notAnimatable(page)).toEqual([]);
   });
 
+  test('closing a phone app shrinks the app itself back into its icon (no outline)', async ({ page }) => {
+    await ready(page);
+    const about = win(page, 'about');
+    const icon = page.locator('[data-phone-icon="about"]');
+    const iconBox = await box(icon);
+    await icon.tap();
+    await expect(about).toHaveAttribute('data-phone-active', 'true');
+    await settled(page);
+    const full = await box(about);
+    const centre = (b: { x: number; y: number; width: number; height: number }) => ({
+      x: b.x + b.width / 2,
+      y: b.y + b.height / 2,
+    });
+    const distance = (a: { x: number; y: number }, b: { x: number; y: number }) => Math.hypot(a.x - b.x, a.y - b.y);
+    await timeScale(page, SLOW);
+
+    await page.locator('[data-phone-active="true"] [data-phone-back]').tap();
+    // The state is final at once, with home showing underneath; the app is
+    // only drawn (and unusable) on its way back into the icon.
+    await expect(about).toHaveAttribute('data-phone-active', 'false');
+    await expect(page.locator('[data-phone-home]')).toBeVisible();
+    expect(await looksNow(page, 'about')).toMatchObject({ display: 'flex', motion: 'out', outlines: [] });
+    expect(await leftovers(about)).toMatchObject({ inert: true, motion: 'out' });
+    await expect.poll(async () => (await box(about)).width, { timeout: 10_000 }).toBeLessThan(full.width - 2);
+    expect(distance(centre(await box(about)), centre(iconBox))).toBeLessThan(distance(centre(full), centre(iconBox)));
+
+    await timeScale(page, 1);
+    await settled(page);
+    await expect(about).toBeHidden();
+    expect(await leftovers(about)).toEqual(CLEAN);
+    expect(await played(page)).toContain('os-phone-close');
+    expect(await notAnimatable(page)).toEqual([]);
+  });
+
+  test('a project app closes into its icon before the URL goes home', async ({ page }) => {
+    await ready(page);
+    const questday = win(page, 'questday');
+    await page.locator('[data-phone-icon="questday"]').tap();
+    await expect(page).toHaveURL('/work/questday/');
+    await settled(page);
+    await timeScale(page, SLOW);
+
+    await page.locator('[data-phone-active="true"] [data-phone-back]').tap();
+    await expect(questday).toHaveAttribute('data-phone-active', 'false');
+    // Still on the page (the route would unmount it): held on its way out.
+    expect(await leftovers(questday)).toMatchObject({ inert: true, motion: 'out' });
+    expect(await looksNow(page, 'questday')).toMatchObject({ display: 'flex', outlines: [] });
+
+    await timeScale(page, 1);
+    await expect(page).toHaveURL('/');
+    await settled(page);
+    await expect(questday).toHaveCount(0);
+    expect(await played(page)).toContain('os-phone-close');
+  });
+
   test('the app grows out of the icon that was tapped', async ({ page }) => {
     await ready(page);
     const icon = page.locator('[data-phone-icon="about"]');

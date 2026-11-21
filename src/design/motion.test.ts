@@ -4,17 +4,22 @@ import * as presets from './motion';
 import { motion, prefersReducedMotion } from './motion';
 
 describe('JG-OS motion presets', () => {
-  const { open, close, minimize, phoneApp, toast, bootLine } = motion.os;
-  const sequences = { open, close, minimize, phoneApp, toast };
+  const { open, close, minimize, phoneApp, phoneClose, toast, bootLine } = motion.os;
+  const sequences = { open, close, minimize, phoneApp, phoneClose, toast };
 
-  it('durations ascend from the quickest exit to the springy phone app, and stay snappy', () => {
-    // Leaving is quicker than arriving; the phone app, which travels the
-    // furthest (icon to full screen) and overshoots, gets the longest beat.
-    const ascending = [close, minimize, open, toast, phoneApp].map(({ duration }) => duration);
-    expect(ascending[0]).toBeGreaterThan(0);
-    for (let i = 1; i < ascending.length; i++) expect(ascending[i]).toBeGreaterThan(ascending[i - 1]);
+  it('durations climb from the quickest exit to the springy phone app, and stay snappy', () => {
+    // The phone app, which travels the furthest (icon to full screen) and
+    // overshoots, gets the longest beat.
+    const climbing = [close, minimize, phoneClose, open, toast, phoneApp].map(({ duration }) => duration);
+    expect(climbing[0]).toBeGreaterThan(0);
+    for (let i = 1; i < climbing.length; i++) expect(climbing[i]).toBeGreaterThanOrEqual(climbing[i - 1]);
     // Snappy and retro, never slow or floaty.
-    expect(ascending.at(-1)).toBeLessThanOrEqual(0.35);
+    expect(climbing.at(-1)).toBeLessThanOrEqual(0.35);
+  });
+
+  it('each exit is quicker than the entrance it mirrors', () => {
+    expect(close.duration).toBeLessThan(open.duration);
+    expect(phoneClose.duration).toBeLessThan(phoneApp.duration);
   });
 
   it('eases are GSAP ease names', () => {
@@ -28,9 +33,12 @@ describe('JG-OS motion presets', () => {
     }
   });
 
-  it('arrivals ease out, the exit eases in, the trip to the taskbar eases both ways', () => {
+  it('arrivals ease out, exits ease in with no overshoot, the trip to the taskbar eases both ways', () => {
     for (const { ease } of [open, phoneApp, toast]) expect(ease).toMatch(/\.out\b/);
-    expect(close.ease).toMatch(/\.in$/);
+    for (const { ease } of [close, phoneClose]) {
+      expect(ease).toMatch(/\.in$/);
+      expect(ease).not.toMatch(/^(back|elastic|bounce)/);
+    }
     expect(minimize.ease).toMatch(/\.inOut$/);
   });
 

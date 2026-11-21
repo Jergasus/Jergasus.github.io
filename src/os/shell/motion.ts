@@ -76,35 +76,48 @@ function middleOf(box: Box): Box {
 
 // ── Running sequences ───────────────────────────────────────────────────────
 
-type Sequence = { target: HTMLElement | null; finish: () => void };
+type Sequence = { target: HTMLElement | null; finish: (andThen: boolean) => void };
 const running = new Map<AppId, Sequence>();
 
 /**
- * Jumps the app's running sequence to its final look. With `target`, only a
+ * Jumps the app's running sequence to its final look, then runs what was
+ * waiting for it (a phone project's trip home). With `target`, only a
  * sequence that holds that element (a window leaving the page keeps its
  * close outline running).
  */
 export function finishMotion(id: AppId, target?: HTMLElement) {
   const sequence = running.get(id);
-  if (sequence && (!target || sequence.target === target)) sequence.finish();
+  if (sequence && (!target || sequence.target === target)) sequence.finish(true);
+}
+
+/**
+ * Like finishMotion, but drops what was waiting for the sequence: the visitor
+ * asked for the app again, and their last intent wins.
+ */
+export function cancelMotion(id: AppId) {
+  running.get(id)?.finish(false);
 }
 
 /** Finishes every running sequence (the OS switches between desktop and phone). */
 export function finishAllMotion() {
-  for (const sequence of [...running.values()]) sequence.finish();
+  for (const sequence of [...running.values()]) sequence.finish(true);
 }
 
-/** A timeline for `id` whose end (played out or finished early) runs `settle`. */
-function sequence(id: AppId, target: HTMLElement | null, settle: () => void) {
+/**
+ * A timeline for `id` whose end (played out or finished early) runs `settle`,
+ * then `then` unless the sequence was cancelled.
+ */
+function sequence(id: AppId, target: HTMLElement | null, settle: () => void, then?: () => void) {
   let done = false;
-  const finish = () => {
+  const finish = (andThen: boolean) => {
     if (done) return;
     done = true;
     timeline.kill();
     settle();
     if (running.get(id)?.finish === finish) running.delete(id);
+    if (andThen) then?.();
   };
-  const timeline = gsap.timeline({ onComplete: finish });
+  const timeline = gsap.timeline({ onComplete: () => finish(true) });
   running.set(id, { target, finish });
   return timeline;
 }
@@ -222,15 +235,35 @@ export function playPhoneOpen(id: AppId, frame: HTMLElement, from: Box | null) {
 
 // ── Closing and minimising ──────────────────────────────────────────────────
 
-/**
- * The window is already gone: an outline of it shrinks back to `to`
- * (desktop: its opener or icon; phone: its icon).
- */
-export function playClose(id: AppId, from: Box, to: Box | null, name: 'os-close' | 'os-phone-close') {
+/** Desktop: the window is already gone; an outline of it shrinks back to its opener or icon. */
+export function playClose(id: AppId, from: Box, to: Box | null) {
   finishMotion(id);
   const line = outline(from, 'close');
   trace(sequence(id, null, () => line.element.remove()), line, from, from, to ?? middleOf(from), motion.os.close);
-  recordPlayed(name);
+  recordPlayed('os-close');
+}
+
+/**
+ * Phone: the app closes back into its icon. Its state has already left the
+ * front (home shows underneath); data-motion="out" keeps it drawn, inert,
+ * until it lands. `then` runs when it ends, or at once when nothing can play:
+ * a project app's trip home waits for it, since the route unmounts the frame.
+ */
+export function playPhoneClose(id: AppId, frame: HTMLElement, to: Box | null, then?: () => void) {
+  finishMotion(id);
+  const from = boxOf(frame);
+  if (!from) {
+    then?.();
+    return;
+  }
+  frame.setAttribute('data-motion', 'out');
+  frame.inert = true;
+  sequence(id, frame, () => release(frame), then).fromTo(
+    frame,
+    { ...IDENTITY, opacity: 1 },
+    { ...fit(from, to ?? middleOf(from)), opacity: 0, ...motion.os.phoneClose, immediateRender: true },
+  );
+  recordPlayed('os-phone-close');
 }
 
 /**

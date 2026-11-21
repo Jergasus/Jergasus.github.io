@@ -14,8 +14,10 @@ export const motion = {
     close: { duration: 0.18, ease: 'power2.in' },
     /** The window scales toward its taskbar button. */
     minimize: { duration: 0.24, ease: 'power3.inOut' },
-    /** A phone app grows from its icon (and closes back into it). */
+    /** A phone app grows from its icon. */
     phoneApp: { duration: 0.32, ease: 'back.out(1.4)' },
+    /** A phone app closes back into its icon (no overshoot on the way out). */
+    phoneClose: { duration: 0.24, ease: 'power3.in' },
     /** A notification slides in from the edge of the screen. */
     toast: { duration: 0.3, ease: 'power3.out' },
     /** Seconds between boot lines. */

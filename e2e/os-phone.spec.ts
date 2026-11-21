@@ -81,6 +81,94 @@ test('tapping QuestDay navigates to /work/questday/ and shows its app', async ({
   await expect(phoneBack(page)).toBeVisible();
 });
 
+// ── Focus back to the opener, and the visitor's last intent ──────────────
+
+const phoneClose = (page: Page) => page.locator('[data-phone-active="true"] [data-win-close]');
+
+for (const id of ['about', 'questday'] as const) {
+  for (const [how, press] of [
+    ['×', phoneClose],
+    ['Back', phoneBack],
+  ] as const) {
+    test(`${how} on ${id} returns focus to the icon that opened it`, async ({ page }) => {
+      await visit(page, '/');
+      await phoneIcon(page, id).tap();
+      await expect(appWindow(page, id)).toHaveAttribute('data-phone-active', 'true');
+      await expect(appWindow(page, id)).toBeFocused();
+
+      await press(page).tap();
+      await expect(phoneHome(page)).toBeVisible();
+      if (id === 'questday') await expect(page).toHaveURL('/');
+      await expect(phoneIcon(page, id)).toBeFocused();
+    });
+  }
+}
+
+/** Watches whether the app is in front, every frame for `ms`: the values it went through, in order. */
+const frontOver = (page: Page, id: string, ms: number) =>
+  page.evaluate(
+    ([app, duration]) =>
+      new Promise<string[]>((resolve) => {
+        const seen: string[] = [];
+        const start = performance.now();
+        const look = () => {
+          const value = document.querySelector(`[data-app="${app}"]`)?.getAttribute('data-phone-active') ?? 'gone';
+          if (seen.at(-1) !== value) seen.push(value);
+          if (performance.now() - start < duration) requestAnimationFrame(look);
+          else resolve(seen);
+        };
+        look();
+      }),
+    [id, ms] as const,
+  );
+
+test('Back then re-tap ends with the app open', async ({ page }) => {
+  await visit(page, '/');
+  await phoneIcon(page, 'questday').tap();
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+
+  // Back, and straight back in without waiting for the URL.
+  await phoneBack(page).tap();
+  await phoneIcon(page, 'questday').tap();
+
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+  // It stays in front: nothing the Back started (its close, its trip home)
+  // takes it away afterwards.
+  expect(await frontOver(page, 'questday', 1000)).toEqual(['true']);
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(appWindow(page, 'questday')).toBeVisible();
+});
+
+test('Back then re-tap ends with the app open, even while home is still loading', async ({ page }) => {
+  // Reduced motion: Back moves the URL at once. Home's payload is held back,
+  // so the re-tap lands while that navigation is still in flight.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  let held = 0;
+  let released = 0;
+  await page.route(/^http:\/\/localhost:4173\/(index\.txt|__next\.[^/]*\.txt)/, async (route) => {
+    held++;
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.continue().catch(() => undefined);
+    released++;
+  });
+  await visit(page, '/work/questday/');
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+
+  await phoneBack(page).tap();
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'false');
+  await phoneIcon(page, 'questday').tap();
+
+  // Home's payload was asked for (the race is real); once it has arrived and
+  // had time to land, the last intent (the re-tap) still holds.
+  await expect.poll(() => held).toBeGreaterThan(0);
+  await expect.poll(() => released, { timeout: 10_000 }).toBe(held);
+  expect((await frontOver(page, 'questday', 600)).at(-1)).toBe('true');
+  await expect(page).toHaveURL('/work/questday/');
+  await expect(appWindow(page, 'questday')).toHaveAttribute('data-phone-active', 'true');
+  await expect(appWindow(page, 'questday')).toBeVisible();
+});
+
 test('loading /work/sakurai/ on a phone shows the sakurai app', async ({ page }) => {
   await visit(page, '/work/sakurai/');
 

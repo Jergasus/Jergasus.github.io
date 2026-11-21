@@ -1169,7 +1169,9 @@
       display: none;
     }
 
-    html[data-os="phone"] .os-win[data-phone-active="true"]:not([data-win-state="closed"]) {
+    /* The app in use, and an app on its way back into its icon
+       (data-motion="out", src/os/shell/motion.ts). */
+    html[data-os="phone"] .os-win:is([data-phone-active="true"]:not([data-win-state="closed"]), [data-motion="out"]) {
       display: flex;
       position: fixed;
       inset: env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0;
@@ -2057,10 +2059,14 @@
     transform-origin: 0 0;
   }
 
-  /* A minimising window is minimised already; it stays drawn, unusable,
-     until it reaches its taskbar button. */
+  /* A minimising window (desktop) or a closing app (phone) has left already;
+     it stays drawn, unusable, until it reaches its taskbar button or icon.
+     (The phone hold is laid out with the active app, above.) */
   html[data-os="desktop"] .os-win[data-motion="out"][data-win-state] {
     display: flex;
+  }
+
+  html[data-os] .os-win[data-motion="out"] {
     pointer-events: none;
   }
 
