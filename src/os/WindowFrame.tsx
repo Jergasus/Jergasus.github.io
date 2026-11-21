@@ -56,7 +56,8 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
   const step = isCaseApp(id) ? caseStudySlugs.indexOf(id) * CASCADE_PX : 0;
   const { x, y, w, h } = app.defaultRect;
   const style = {
-    '--x': win.rect ? `${win.rect.x}px` : `calc(${percent(x)} + ${step}px)`,
+    // A window that has not moved yet starts clear of the desktop icons.
+    '--x': win.rect ? `${win.rect.x}px` : `max(var(--os-win-min-x, 0px), calc(${percent(x)} + ${step}px))`,
     '--y': win.rect ? `${win.rect.y}px` : `calc(${percent(y)} + ${step}px)`,
     '--w': win.rect ? `${win.rect.w}px` : percent(w),
     '--h': win.rect ? `${win.rect.h}px` : percent(h),

@@ -64,8 +64,14 @@ export function DesktopIcons() {
     }
   };
 
+  // One column when the screen is tall enough, two on a laptop (os.css).
+  const rows = {
+    '--icon-rows': DESKTOP_ICON_ORDER.length,
+    '--icon-rows-half': Math.ceil(DESKTOP_ICON_ORDER.length / 2),
+  } as React.CSSProperties;
+
   return (
-    <div ref={columnRef} className="os-icon-col">
+    <div ref={columnRef} className="os-icon-col" style={rows}>
       {DESKTOP_ICON_ORDER.map((id, index) => {
         const app = getApp(id);
         if (!app) return null;

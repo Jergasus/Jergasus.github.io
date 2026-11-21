@@ -1657,16 +1657,41 @@
   /* ── Desktop icon column (desktop mode) ──────────────────────────────── */
 
   @media screen {
+    /* One column of icons, top to bottom, when the screen is tall enough for
+       all of them; on a laptop screen they flow into a second column, so no
+       icon hides below the fold. --icon-rows / --icon-rows-half come from
+       DesktopIcons (the icon count). Windows that have not moved yet start
+       clear of the icons (--os-win-min-x, WindowFrame). */
+    html[data-os="desktop"] {
+      --os-win-min-x: calc(var(--os-icon-col) + 8px);
+    }
+
     html[data-os="desktop"] .os-icon-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 8px 4px;
-      width: var(--os-icon-col);
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-rows: repeat(var(--icon-rows, 11), auto);
+      grid-auto-columns: calc(var(--os-icon-col) - 16px);
+      justify-items: center;
+      align-content: start;
+      gap: 4px 8px;
+      padding: 8px;
+      width: max-content;
+      max-width: 100%;
       height: 100%;
       overflow-y: auto;
       overscroll-behavior: contain;
+    }
+
+    @media (max-height: 66rem) {
+      html[data-os="desktop"] {
+        /* Two 88 px columns with 8 px around and between them (200 px), and
+           the same 8 px gap before a window. */
+        --os-win-min-x: calc(2 * var(--os-icon-col));
+      }
+
+      html[data-os="desktop"] .os-icon-col {
+        grid-template-rows: repeat(var(--icon-rows-half, 6), auto);
+      }
     }
 
     html[data-os="desktop"] .os-icon {

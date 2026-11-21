@@ -349,3 +349,37 @@ test('print media shows the document layout with every content window', async ({
   await expect(page.locator('[data-taskbar]')).toBeHidden();
   await expect(page.locator('[data-desktop]')).toBeHidden();
 });
+
+// Carried item (Task 14): on a laptop screen the eleven desktop icons flow
+// into a second column instead of hiding below the fold, and the windows
+// open on load start clear of them.
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 1280, height: 720 },
+]) {
+  test(`every desktop icon is fully on screen and uncovered at ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await visit(page, '/');
+    await page.evaluate(() => document.fonts.ready);
+    const desk = (await page.locator('[data-desktop]').boundingBox())!;
+    const icons = page.locator('[data-icon]');
+    await expect(icons).toHaveCount(11);
+    const windows = await Promise.all(['about', 'projects'].map(async (id) => (await win(page, id as AppId).boundingBox())!));
+    for (const icon of await icons.all()) {
+      const name = (await icon.getAttribute('data-icon'))!;
+      const box = (await icon.boundingBox())!;
+      expect(box.y, name).toBeGreaterThanOrEqual(desk.y);
+      expect(box.x, name).toBeGreaterThanOrEqual(0);
+      expect(box.y + box.height, name).toBeLessThanOrEqual(desk.y + desk.height);
+      expect(box.x + box.width, name).toBeLessThanOrEqual(viewport.width);
+      for (const frame of windows) {
+        const apart =
+          box.x + box.width <= frame.x || frame.x + frame.width <= box.x || box.y + box.height <= frame.y || frame.y + frame.height <= box.y;
+        expect(apart, `${name} is under a window`).toBe(true);
+      }
+    }
+    // Nothing to scroll in the icon area.
+    const column = page.locator('.os-icon-col');
+    expect(await column.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0);
+  });
+}

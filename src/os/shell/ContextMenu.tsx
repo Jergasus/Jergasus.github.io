@@ -5,22 +5,9 @@ import { useTranslations } from 'next-intl';
 import { WALLPAPERS, type Wallpaper } from '../prepaint';
 import { useOsInternal } from '../context';
 import { useWallpaper } from './useWallpaper';
+import { desktopBounds, iconsEdge } from './desktopBounds';
 
 type Position = { x: number; y: number };
-
-/** Returns desktop element bounds (taskbar excluded). */
-function getDesktopBounds() {
-  const el = document.querySelector('[data-desktop]');
-  if (el) {
-    const r = el.getBoundingClientRect();
-    return { w: r.width, h: r.height };
-  }
-  const taskbarH = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--os-taskbar-h') || '40',
-    10,
-  );
-  return { w: window.innerWidth, h: window.innerHeight - taskbarH };
-}
 
 /** Top-level (main menu) items — marked with data-main-item. */
 function getMainItems(container: HTMLElement): HTMLElement[] {
@@ -220,7 +207,7 @@ export function ContextMenu() {
 
   /** Arrange open windows using the desktop element's bounds (excludes taskbar). */
   const arrange = () => {
-    os.dispatch({ type: 'arrange', bounds: getDesktopBounds() });
+    os.dispatch({ type: 'arrange', bounds: desktopBounds(), left: iconsEdge() });
     closeMenu(true);
   };
 

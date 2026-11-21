@@ -238,6 +238,13 @@ test('arrange cascades open windows from (112,24) in z order, skipping the 104px
   expect(s.windows.projects.rect).toEqual({ x: 144, y: 56, w: pw, h: ph });
 });
 
+test('arrange starts at the edge it is given, when the icons take two columns', () => {
+  let s = initialState(null);
+  s = reduce(s, { type: 'arrange', bounds: { w: 1280, h: 680 }, left: 208 });
+  expect(s.windows.about.rect).toMatchObject({ x: 208, y: 24 });
+  expect(s.windows.projects.rect).toMatchObject({ x: 240, y: 56 });
+});
+
 // ---------------------------------------------------------------------------
 // phone
 // ---------------------------------------------------------------------------

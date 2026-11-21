@@ -13,3 +13,17 @@ export function desktopBounds(): { w: number; h: number } {
   );
   return { w: window.innerWidth, h: window.innerHeight - taskbarH };
 }
+
+/**
+ * Where windows start so they clear the desktop icons: the right edge of the
+ * last icon column (one or two, os.css), plus the column's 8 px padding and
+ * an 8 px gap. That is 112 for one column (R8) and 208 for two, the same as
+ * --os-win-min-x for windows that have not moved yet.
+ */
+export function iconsEdge(): number {
+  let right = 0;
+  document.querySelectorAll<HTMLElement>('[data-icon]').forEach((icon) => {
+    right = Math.max(right, icon.getBoundingClientRect().right);
+  });
+  return right > 0 ? Math.round(right) + 8 + 8 : 112;
+}

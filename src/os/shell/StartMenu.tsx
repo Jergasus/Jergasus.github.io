@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { apps, type AppId } from '../apps';
 import { useOsInternal } from '../context';
 import { APP_ICONS } from '../icons';
+import { desktopBounds, iconsEdge } from './desktopBounds';
 import { localizedPath } from '@/i18n/localized-path';
 import type { Locale } from '@/i18n/routing';
 
@@ -21,19 +22,6 @@ const LOCALES: { code: Locale; label: string }[] = [
   { code: 'en', label: 'EN' },
 ];
 
-/** Returns the desktop element's client rect size (excludes the taskbar). */
-function desktopBounds() {
-  const el = document.querySelector('[data-desktop]');
-  if (el) {
-    const r = el.getBoundingClientRect();
-    return { w: r.width, h: r.height };
-  }
-  const taskbarH = parseInt(
-    getComputedStyle(document.documentElement).getPropertyValue('--os-taskbar-h') || '40',
-    10,
-  );
-  return { w: window.innerWidth, h: window.innerHeight - taskbarH };
-}
 
 /** All menuitems within the menu element (buttons and links with the role). */
 function getItems(el: HTMLElement): HTMLElement[] {
@@ -115,7 +103,7 @@ export function StartMenu({ open, onClose, startRef }: Props) {
   };
 
   const arrange = () => {
-    os.dispatch({ type: 'arrange', bounds: desktopBounds() });
+    os.dispatch({ type: 'arrange', bounds: desktopBounds(), left: iconsEdge() });
     onClose();
   };
 
