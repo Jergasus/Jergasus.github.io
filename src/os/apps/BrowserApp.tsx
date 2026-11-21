@@ -101,11 +101,10 @@ export function BrowserApp() {
     <div className="os-browser">
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
       <div className="os-browser-toolbar" role="toolbar" aria-label={t('toolbarLabel')}>
-        <span
-          data-browser-address
-          className="os-browser-address"
-          aria-label={t('addressLabel')}
-        >
+        {/* Read-only: the label is text for assistive technology, since a
+            plain span cannot carry aria-label. */}
+        <span data-browser-address className="os-browser-address">
+          <span className="sr-only">{t('addressLabel')}: </span>
           {browserUrl ?? ''}
         </span>
 

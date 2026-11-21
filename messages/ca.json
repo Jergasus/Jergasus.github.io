@@ -219,9 +219,6 @@
       "move": "Mou {title}",
       "resize": "Canvia la mida de {title}"
     },
-    "projects": {
-      "open": "Obre {name}"
-    },
     "activity": {
       "project": "Projecte",
       "total": "Commits",

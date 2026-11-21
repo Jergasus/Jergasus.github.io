@@ -219,9 +219,6 @@
       "move": "Move {title}",
       "resize": "Resize {title}"
     },
-    "projects": {
-      "open": "Open {name}"
-    },
     "activity": {
       "project": "Project",
       "total": "Commits",

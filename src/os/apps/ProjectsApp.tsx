@@ -10,7 +10,7 @@ import { StatusMark } from './StatusMark';
 
 type Item = { project: Project; oneLiner: string; statusLabel: string };
 
-function ItemContent({ project, oneLiner, statusLabel, ids }: Item & { ids?: { summary: string; status: string } }) {
+function ItemContent({ project, oneLiner, statusLabel }: Item) {
   const Icon = APP_ICONS[project.slug];
   return (
     <>
@@ -22,10 +22,8 @@ function ItemContent({ project, oneLiner, statusLabel, ids }: Item & { ids?: { s
         <Icon size={30} />
       </span>
       <span className="os-project-name">{project.name}</span>
-      <span id={ids?.summary} className="os-project-summary">
-        {oneLiner}
-      </span>
-      <span id={ids?.status} className="os-project-status">
+      <span className="os-project-summary">{oneLiner}</span>
+      <span className="os-project-status">
         <StatusMark status={project.status} />
         {statusLabel}
       </span>
@@ -35,8 +33,7 @@ function ItemContent({ project, oneLiner, statusLabel, ids }: Item & { ids?: { s
 
 /** proyectos: the four projects. A case study opens its window (and URL); Yokaido opens its card. */
 export async function ProjectsApp({ locale }: { locale: Locale }) {
-  const [t, tProjects, tWork] = await Promise.all([
-    getTranslations({ locale, namespace: 'os' }),
+  const [tProjects, tWork] = await Promise.all([
     getTranslations({ locale, namespace: 'projects' }),
     getTranslations({ locale, namespace: 'work' }),
   ]);
@@ -49,24 +46,20 @@ export async function ProjectsApp({ locale }: { locale: Locale }) {
           oneLiner: tProjects(`${projectMessageKey[project.slug]}.oneLiner`),
           statusLabel: tWork(`status.${project.status}`),
         };
-        const ids = { summary: `projects-${project.slug}-summary`, status: `projects-${project.slug}-status` };
-        const control = {
-          className: 'os-project',
-          'aria-label': t('projects.open', { name: project.name }),
-          'aria-describedby': `${ids.summary} ${ids.status}`,
-        };
+        // The visible text is the control's name (WCAG 2.5.3, label in
+        // name): the project, its one-liner and its status, in that order.
         return (
           <li key={project.slug}>
             {project.hasCaseStudy ? (
-              <OpenAppLink app={project.slug as CaseAppId} {...control}>
-                <ItemContent {...item} ids={ids} />
+              <OpenAppLink app={project.slug as CaseAppId} className="os-project">
+                <ItemContent {...item} />
               </OpenAppLink>
             ) : (
               <>
                 {/* No case page: it opens its card. A document (no JavaScript)
                     links to the card further down instead. */}
-                <OpenAppButton app="yokaido" {...control} className="os-project os-js-only">
-                  <ItemContent {...item} ids={ids} />
+                <OpenAppButton app="yokaido" className="os-project os-js-only">
+                  <ItemContent {...item} />
                 </OpenAppButton>
                 <a href="#yokaido" className="os-project os-nojs-only">
                   <ItemContent {...item} />
