@@ -1193,6 +1193,15 @@
       z-index: 10;
     }
 
+    /* A touch screen big enough for the desktop (a tablet in landscape): a
+       finger on the titlebar or an edge drags the window; the browser must
+       not take it for a pan and cancel the drag. The window body still
+       scrolls by touch. */
+    html[data-os="desktop"] .os-win > .os-titlebar,
+    html[data-os="desktop"] [data-resize] {
+      touch-action: none;
+    }
+
     /* Over the frame, not the titlebar: the move handle below keeps its
        full height as a target (WCAG 2.5.8). */
     html[data-os="desktop"] [data-resize="n"] {
