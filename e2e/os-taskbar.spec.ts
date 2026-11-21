@@ -1,4 +1,6 @@
+import type { Page } from '@playwright/test';
 import { DESKTOP_ICON_ORDER } from '@/os/apps';
+import { themeColor, themeColorDark } from '@/design/theme-color';
 import { expect, test, visit, win, openFromIcon, taskbar } from './fixtures';
 
 // ── Taskbar ───────────────────────────────────────────────────────────────
@@ -36,6 +38,40 @@ test('start menu opens with Enter, lists apps, Escape closes and focus returns t
   await expect(startBtn).toBeFocused();
 });
 
+// Spec §9.1: the OS name is on the start button, which says it opens a menu.
+for (const [path, name] of [
+  ['/', 'Menú JG-OS'],
+  ['/ca/', 'Menú JG-OS'],
+  ['/en/', 'JG-OS menu'],
+] as const) {
+  test(`the start button carries the JG-OS name and opens a menu (${path})`, async ({ page }) => {
+    await visit(page, path);
+    const startBtn = page.locator('[data-start]');
+    await expect(startBtn).toHaveText('JG-OS');
+    await expect(startBtn).toHaveAccessibleName(name);
+    await expect(startBtn).toHaveAttribute('aria-haspopup', 'menu');
+    await startBtn.focus();
+    await startBtn.press('Enter');
+    await expect(page.getByRole('menu', { name })).toBeVisible();
+  });
+}
+
+test('tabbing out of the start menu closes it', async ({ page }) => {
+  await visit(page, '/');
+  const startBtn = page.locator('[data-start]');
+  const startMenu = page.locator('[data-start-menu]');
+  for (const key of ['Tab', 'Shift+Tab']) {
+    await startBtn.focus();
+    await startBtn.press('Enter');
+    await expect(startMenu).toBeVisible();
+    await page.keyboard.press(key);
+    await expect(startMenu, key).toBeHidden();
+    await expect(startBtn).toHaveAttribute('aria-expanded', 'false');
+    // Focus moved on, to a control, not lost to the page.
+    expect(await page.evaluate(() => document.activeElement !== document.body), key).toBe(true);
+  }
+});
+
 // ── Keyboard access ───────────────────────────────────────────────────────
 
 test('keyboard reaches every app from the desktop icons and from the start menu', async ({
@@ -66,6 +102,9 @@ test('right-click → Cambiar fondo → Atardecer sets data-wallpaper=sunset and
   await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
   const contextMenu = page.locator('[data-context-menu]');
   await expect(contextMenu).toBeVisible();
+  await expect(contextMenu).toHaveAccessibleName('Escritorio');
+  // The icons cannot move, so there is nothing to arrange: no such item.
+  await expect(contextMenu.getByRole('menuitem')).toHaveText([/^Cambiar fondo/, 'Ordenar ventanas', 'Personalizar…']);
   // Open the wallpaper submenu
   await contextMenu.getByRole('menuitem', { name: /Cambiar fondo/i }).click();
   await contextMenu.getByRole('menuitem', { name: /Atardecer/i }).click();
@@ -73,6 +112,18 @@ test('right-click → Cambiar fondo → Atardecer sets data-wallpaper=sunset and
   // Reload — the prepaint script restores it from storage
   await visit(page, '/');
   await expect(page.locator('html')).toHaveAttribute('data-wallpaper', 'sunset');
+});
+
+test('the context menu is named in the page’s language', async ({ page }) => {
+  for (const [path, name] of [
+    ['/ca/', 'Escriptori'],
+    ['/en/', 'Desktop'],
+  ] as const) {
+    await visit(page, path);
+    await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
+    await expect(page.locator('[data-context-menu]')).toHaveAccessibleName(name);
+    await page.keyboard.press('Escape');
+  }
 });
 
 // ── Context menu viewport clamping ────────────────────────────────────────
@@ -121,6 +172,9 @@ test('settings sets the wallpaper and theme without a pointer', async ({ page })
   await page.locator('[data-start-menu] [data-open-app="settings"]').click();
   const settings = win(page, 'settings');
   await expect(settings).toHaveAttribute('data-win-state', 'open');
+  // Its sections are h2s under the page's one h1: no level skipped.
+  await expect(settings.getByRole('heading', { level: 2 })).toHaveCount(3);
+  await expect(settings.locator('h1, h3, h4, h5, h6')).toHaveCount(0);
   // Change wallpaper via radio
   const grid = settings.getByRole('radio', { name: /cuadrícula|grid/i });
   await grid.focus();
@@ -139,7 +193,11 @@ test('theme toggle sets data-theme=dark and theme-color follows', async ({ page 
   await visit(page, '/');
   const toggle = page.locator('[data-tray="theme"] button');
   await expect(toggle).toBeVisible();
+  // Named by its label, not its glyph; off while day shows.
+  await expect(toggle).toHaveAccessibleName('Modo noche');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   // theme-color meta must reflect dark colour
   const hasDarkMeta = await page.evaluate(() => {
@@ -150,6 +208,40 @@ test('theme toggle sets data-theme=dark and theme-color follows', async ({ page 
     return false;
   });
   expect(hasDarkMeta).toBe(true);
+});
+
+// The toggle switches what shows (day ⇄ night), whatever the system theme.
+test.describe('on a device whose system theme is dark', () => {
+  test.use({ colorScheme: 'dark' });
+
+  /** The desk colour on screen: day or night. */
+  const desk = (page: Page) =>
+    page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--os-desk').trim().toLowerCase());
+
+  test('the night toggle reaches day and back, and says which shows', async ({ page }) => {
+    await visit(page, '/');
+    const html = page.locator('html');
+    const toggle = page.locator('[data-tray="theme"] button');
+    // Night shows from the system: the toggle is on.
+    expect(await desk(page)).toBe(themeColorDark);
+    await expect(toggle).toHaveAccessibleName('Modo noche');
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveText('☾');
+
+    await toggle.click();
+    await expect(html).toHaveAttribute('data-theme', 'light');
+    expect(await desk(page)).toBe(themeColor);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await expect(toggle).toHaveText('☀');
+    await expect(toggle).toHaveAccessibleName('Modo noche');
+    await expect(page.locator('meta[name="theme-color"]').first()).toHaveAttribute('content', themeColor);
+
+    await toggle.click();
+    await expect(html).toHaveAttribute('data-theme', 'dark');
+    expect(await desk(page)).toBe(themeColorDark);
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveText('☾');
+  });
 });
 
 // ── Language link ─────────────────────────────────────────────────────────
@@ -227,5 +319,17 @@ test.describe('document-mode language links', () => {
     await expect(noJsNav.getByRole('link', { name: 'ES' })).toBeVisible();
     await expect(noJsNav.getByRole('link', { name: 'CA' })).toBeVisible();
     await expect(noJsNav.getByRole('link', { name: 'EN' })).toBeVisible();
+  });
+
+  test('the language links are named in the page’s language and say which language they lead to', async ({ page }) => {
+    for (const [path, name] of [
+      ['/work/questday/', 'Idioma'],
+      ['/en/work/questday/', 'Language'],
+    ] as const) {
+      await page.goto(path);
+      const noJsNav = page.locator('.os-doc-lang');
+      await expect(noJsNav).toHaveAccessibleName(name);
+      await expect(noJsNav.getByRole('link', { name: 'CA' })).toHaveAttribute('hreflang', 'ca');
+    }
   });
 });

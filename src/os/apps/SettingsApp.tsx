@@ -35,7 +35,7 @@ export function SettingsApp({ locale }: Props) {
     <div className="os-settings">
       {/* Wallpaper */}
       <section className="os-settings-section">
-        <h3 className="os-settings-heading">{t('wallpapers.heading')}</h3>
+        <h2 className="os-settings-heading">{t('wallpapers.heading')}</h2>
         <div className="os-settings-radios" role="radiogroup" aria-label={t('wallpapers.heading')}>
           {WALLPAPERS.map((w) => (
             <label key={w} className="os-settings-radio-label">
@@ -54,7 +54,7 @@ export function SettingsApp({ locale }: Props) {
 
       {/* Theme */}
       <section className="os-settings-section">
-        <h3 className="os-settings-heading">{t('theme.heading')}</h3>
+        <h2 className="os-settings-heading">{t('theme.heading')}</h2>
         <div className="os-settings-radios" role="radiogroup" aria-label={t('theme.heading')}>
           {((['system', 'light', 'dark'] as ThemeOption[])).map((value) => {
             const labelKey =
@@ -77,7 +77,7 @@ export function SettingsApp({ locale }: Props) {
 
       {/* Language */}
       <section className="os-settings-section">
-        <h3 className="os-settings-heading">{t('settings.language')}</h3>
+        <h2 className="os-settings-heading">{t('settings.language')}</h2>
         <nav className="os-lang" aria-label={t('settings.language')}>
           {LOCALE_ENTRIES.map(({ code, label }) => (
             <a
