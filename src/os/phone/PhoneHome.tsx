@@ -48,7 +48,7 @@ export function PhoneHome({
 }: Props) {
   const t = useTranslations('os');
   const tPhone = useTranslations('os.phone');
-  const { openApp } = useOsInternal();
+  const { openApp, state } = useOsInternal();
   const pathname = usePathname();
 
   // Status bar clock — empty on server to avoid hydration mismatch.
@@ -62,7 +62,15 @@ export function PhoneHome({
 
   return (
     // role="region" + aria-label makes this a named landmark so axe is satisfied.
-    <div data-phone-home role="region" aria-label={tPhone('homeLabel')} className="os-phone-home">
+    // While an app covers it (full screen), it is out of the Tab order and the
+    // accessibility tree (inert): nothing reaches controls the app hides.
+    <div
+      data-phone-home
+      role="region"
+      aria-label={tPhone('homeLabel')}
+      className="os-phone-home"
+      inert={state.phoneActive !== null}
+    >
       {/* Status bar: language links left, clock right */}
       <div className="os-phone-statusbar">
         <nav aria-label={t('taskbar.language')} className="os-lang">

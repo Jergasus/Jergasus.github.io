@@ -591,9 +591,9 @@ export function OsRoot({
         <DesktopIcons />
       </div>
 
-      {/* All windows — hidden from AT in phone mode when no app is active.
-          When an app IS phoneActive it is focused and must remain visible to AT. */}
-      <main data-windows aria-hidden={mode === 'phone' && !state.phoneActive ? 'true' : undefined}>
+      {/* All windows. On the phone only the app in use shows (os.css hides
+          the rest), so the page's h1 stays in reach on the home screen. */}
+      <main data-windows>
         {children}
         <CaseHost />
       </main>
