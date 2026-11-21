@@ -6,7 +6,25 @@
  * data/activity.json's generatedAt (2026-11-19T21:27:31Z) to keep commit
  * freshness deterministic regardless of when the test suite runs.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+/**
+ * Holds the boot screen's CSS failsafe (it hides the screen about 1.3 s after
+ * the first paint, src/os/os.css), so a test of the JavaScript path (the
+ * timer, a key, a click) is not raced by the wall clock. page.clock fakes the
+ * timers, not CSS animations.
+ */
+async function holdFailsafe(page: Page) {
+  await page.route('**/*', async (route) => {
+    if (route.request().resourceType() !== 'document') return route.fallback();
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      '</head>',
+      '<style>[data-boot-screen]{animation-play-state:paused!important}</style></head>',
+    );
+    await route.fulfill({ response, body });
+  });
+}
 
 // Clock anchor: close to the most recent commit (rally-voley 2026-11-19T20:50:52Z)
 // so rally-voley and sakurai commits are within maxAgeDays=14 of FRESH_NOW.
@@ -20,6 +38,7 @@ const STALE_NOW = new Date('2027-01-10T00:00:00Z');
 test('first visit shows the boot screen, then the desktop; content is in the DOM underneath from the start', async ({
   page,
 }) => {
+  await holdFailsafe(page);
   // Install a fake clock so we control the 1100 ms auto-dismiss timer.
   await page.clock.install();
   await page.goto('/');
@@ -61,6 +80,7 @@ for (const [colorScheme, desk, ink] of [
   ['dark', 'rgb(20, 27, 43)', 'rgb(232, 228, 218)'],
 ] as const) {
   test(`the boot screen sits on the desk colour (${colorScheme})`, async ({ page }) => {
+    await holdFailsafe(page);
     await page.emulateMedia({ colorScheme });
     await page.clock.install();
     await page.goto('/');
@@ -75,6 +95,7 @@ for (const [colorScheme, desk, ink] of [
 }
 
 test('a key press skips the boot immediately', async ({ page }) => {
+  await holdFailsafe(page);
   await page.clock.install();
   await page.goto('/');
 
@@ -87,6 +108,30 @@ test('a key press skips the boot immediately', async ({ page }) => {
   await page.keyboard.press('Enter');
 
   await expect(bootScreen).not.toBeVisible();
+});
+
+// The boot is bounded from the first paint, not by hydration: a slow or failed
+// script can never hold the content back (spec §6.2, anti-goal §4).
+test('the boot screen clears on its own when no script runs after the pre-paint', async ({ page }) => {
+  // Every script chunk fails; only the inline pre-paint script runs.
+  await page.route(/\/_next\/static\/.+\.js(\?.*)?$/, (route) => route.abort());
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  const html = page.locator('html');
+  const bootScreen = page.locator('[data-boot-screen]');
+  await expect(html).toHaveAttribute('data-boot', '1');
+
+  // About 1.3 s after the first paint (the default expect timeout would hide
+  // a screen that never clears behind a slow check).
+  await expect(bootScreen).toBeHidden({ timeout: 2_000 });
+  // CSS did it: nothing hydrated and data-boot is still set.
+  await expect(html).not.toHaveAttribute('data-os-ready', /.*/);
+  await expect(html).toHaveAttribute('data-boot', '1');
+  expect(await bootScreen.evaluate((element) => getComputedStyle(element).display)).toBe('flex');
+  // It no longer takes the pointer: the page underneath does.
+  const covered = await page.evaluate(
+    () => document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.closest('[data-boot-screen]') != null,
+  );
+  expect(covered).toBe(false);
 });
 
 test('second visit has no boot', async ({ page }) => {
@@ -173,6 +218,7 @@ test('no toast when every commit is older than 14 days', async ({ page }) => {
 test('desktop: clicking the boot screen dismisses it without opening the app underneath', async ({
   page,
 }) => {
+  await holdFailsafe(page);
   await page.clock.install();
   await page.goto('/');
 
@@ -185,18 +231,9 @@ test('desktop: clicking the boot screen dismisses it without opening the app und
   // is captured by the boot overlay and does NOT reach the icon below.
   const icon = page.locator('[data-icon="questday"]');
   const iconBox = await icon.boundingBox();
-
-  if (iconBox) {
-    // Click the boot screen at the icon's center.
-    await page.mouse.click(
-      iconBox.x + iconBox.width / 2,
-      iconBox.y + iconBox.height / 2,
-    );
-  } else {
-    // Icon not visible at this viewport — click anywhere on the boot screen.
-    const box = await bootScreen.boundingBox();
-    if (box) await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  }
+  // Without the icon's box the click would land anywhere and prove nothing.
+  expect(iconBox).not.toBeNull();
+  await page.mouse.click(iconBox!.x + iconBox!.width / 2, iconBox!.y + iconBox!.height / 2);
 
   // Boot is gone.
   await expect(bootScreen).not.toBeVisible();
@@ -208,6 +245,7 @@ test('desktop: clicking the boot screen dismisses it without opening the app und
 test('phone: tapping the boot screen dismisses it without opening the app underneath', async ({
   page,
 }) => {
+  await holdFailsafe(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.install();
   await page.goto('/');
@@ -219,16 +257,8 @@ test('phone: tapping the boot screen dismisses it without opening the app undern
   // Find where the first phone icon sits so we can click exactly there.
   const icon = page.locator('[data-phone-icon="about"]');
   const iconBox = await icon.boundingBox();
-
-  if (iconBox) {
-    await page.mouse.click(
-      iconBox.x + iconBox.width / 2,
-      iconBox.y + iconBox.height / 2,
-    );
-  } else {
-    const box = await bootScreen.boundingBox();
-    if (box) await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-  }
+  expect(iconBox).not.toBeNull();
+  await page.mouse.click(iconBox!.x + iconBox!.width / 2, iconBox!.y + iconBox!.height / 2);
 
   // Boot is gone.
   await expect(bootScreen).not.toBeVisible();

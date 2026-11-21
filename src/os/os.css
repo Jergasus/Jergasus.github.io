@@ -2157,8 +2157,21 @@
     cursor: default;
   }
 
+  /* Bounded from the first paint, not by hydration: one step after the boot's
+     own end (six steps, about 1.3 s) the screen hides and lets the pointer
+     through on its own, so a slow or failed script never holds the content
+     back. The JS path (its timer, a key, a click) still removes data-boot and
+     remembers the visit, whichever comes first. */
   html[data-boot="1"] [data-boot-screen] {
     display: flex;
+    animation: os-boot-out 0s calc(6 * var(--os-boot-step, 0.22s)) forwards;
+  }
+
+  @keyframes os-boot-out {
+    to {
+      visibility: hidden;
+      pointer-events: none;
+    }
   }
 
   /* The mark and the name, centred in the space above the start-up lines.

@@ -20,6 +20,11 @@
  *  - aria-hidden="true" keeps it out of the accessibility tree.  There are no
  *    focusable children so a focus trap is not possible.
  *
+ * Lifetime: CSS hides it about 1.3 s after the first paint whatever the
+ * scripts do (os-boot-out in os.css), so a slow or failed hydration never
+ * holds the content back; this component ends it sooner on input and
+ * remembers the visit.
+ *
  * Motion: the lines appear one by one, a step (motion.os.bootLine) apart, like
  * an old machine printing its start-up checks. It is CSS (os.css), so it runs
  * from the first paint, before and during hydration; the step reaches it as
