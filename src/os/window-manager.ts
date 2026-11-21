@@ -317,7 +317,8 @@ export function reduce(state: WmState, action: WmAction): WmState {
       if (slug === null) {
         // Home means no project windows (ruling R7), on the desktop and the phone.
         const openCases = CASE_IDS.filter((id) => state.windows[id].open);
-        if (openCases.length === 0 && state.activeCase === null && state.phoneActive === null) {
+        const casePhoneApp = state.phoneActive !== null && isCaseApp(state.phoneActive);
+        if (openCases.length === 0 && state.activeCase === null && !casePhoneApp) {
           return state; // no-op
         }
         const windows = { ...state.windows };
@@ -326,7 +327,10 @@ export function reduce(state: WmState, action: WmAction): WmState {
           state.focused !== null && isCaseApp(state.focused)
             ? topVisibleExcluding({ ...state, windows }, state.focused)
             : state.focused;
-        return { ...state, windows, focused, activeCase: null, phoneActive: null };
+        // A non-case phone app opened while the URL was on its way home is the
+        // visitor's last intent: it stays in front.
+        const phoneActive = casePhoneApp ? null : state.phoneActive;
+        return { ...state, windows, focused, activeCase: null, phoneActive };
       }
 
       // Open (or bring to front) the case window

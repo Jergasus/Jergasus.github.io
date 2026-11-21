@@ -74,6 +74,18 @@ test('route null keeps a non-case window that has focus', () => {
   expect(s1.focused).toBe('about');
 });
 
+test('route null keeps a non-case phone app the visitor opened since (their last intent wins)', () => {
+  let s = initialState('questday');
+  s = reduce(s, { type: 'phoneOpen', id: 'questday' });
+  // Back from the project, then "about" before the URL reaches home.
+  s = reduce(s, { type: 'phoneHome' });
+  s = reduce(s, { type: 'open', id: 'about' });
+  s = reduce(s, { type: 'phoneOpen', id: 'about' });
+  const s1 = reduce(s, { type: 'route', slug: null });
+  expect(s1.windows.questday.open).toBe(false);
+  expect(s1.phoneActive).toBe('about');
+});
+
 test('route null at home with no case window open is a no-op', () => {
   const s0 = initialState(null);
   expect(reduce(s0, { type: 'route', slug: null })).toBe(s0);
