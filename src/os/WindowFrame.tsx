@@ -17,7 +17,7 @@ import { useOsInternal } from './context';
 import { APP_ICONS } from './icons';
 import { WindowGlyph as Glyph } from './WindowGlyph';
 import { recallWindow, rememberWindow, windowReopened } from './window-memory';
-import { useWindowDrag } from './shell/useWindowDrag';
+import { useWindowDrag, WINDOW_CONTROLS } from './shell/useWindowDrag';
 import { useWindowResize, type ResizeDir } from './shell/useWindowResize';
 import { desktopBounds } from './shell/desktopBounds';
 import { finishMotion, playOpen, playPhoneOpen, takeOpen } from './shell/motion';
@@ -186,7 +186,7 @@ export function WindowFrame({ id, title, children, labels }: Props) {
   // always send detail=0. Track inter-click time manually instead.
   const lastTitlePdTime = useRef(0);
   const handleTitlebarPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if ((e.target as Element).closest('button')) return;
+    if ((e.target as Element).closest(WINDOW_CONTROLS)) return;
     const now = Date.now();
     if (now - lastTitlePdTime.current < 500) {
       // Double-click: toggle maximise, do not start a drag.

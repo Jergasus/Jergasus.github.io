@@ -45,6 +45,42 @@ test('dragging the titlebar moves the window and it stays put after a reload in 
 // Bounds clamping
 // ---------------------------------------------------------------------------
 
+// The empty, striped part of the titlebar is the move-handle button (keyboard
+// move). It is where people grab a window, so a press there must start a drag
+// and a double press there must maximise, like on the title text.
+test('dragging from the empty part of the titlebar (the move handle) moves the window', async ({
+  page,
+}) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/');
+
+  const about = win(page, 'about');
+  const grip = about.locator('[data-win-move]');
+
+  const box0 = (await about.boundingBox())!;
+  const gripBox = (await grip.boundingBox())!;
+
+  const startX = gripBox.x + gripBox.width / 2;
+  const startY = gripBox.y + gripBox.height / 2;
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX + 100, startY + 60, { steps: 10 });
+  await page.mouse.up();
+
+  const box1 = (await about.boundingBox())!;
+  expect(box1.x).toBeGreaterThan(box0.x + 90);
+  expect(box1.y).toBeGreaterThan(box0.y + 50);
+});
+
+test('double-clicking the empty part of the titlebar maximises the window', async ({ page }) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/');
+
+  const about = win(page, 'about');
+  await about.locator('[data-win-move]').dblclick();
+  await expect(about).toHaveAttribute('data-maximized', 'true');
+});
+
 test('a window cannot be dragged so its titlebar leaves the desktop', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');

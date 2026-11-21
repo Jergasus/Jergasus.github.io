@@ -5,6 +5,14 @@ import type { AppId } from '../apps';
 import type { WmAction } from '../window-manager';
 import { desktopBounds } from './desktopBounds';
 
+/**
+ * The titlebar buttons that act on their own. A press on one of them never
+ * drags or maximises. The move handle (`[data-win-move]`) is a button too, but
+ * it fills the empty part of the titlebar, where people grab a window, so it
+ * is deliberately not in this list.
+ */
+export const WINDOW_CONTROLS = '[data-win-close], [data-win-minimize], [data-win-maximize], [data-phone-back]';
+
 type DragState = {
   pointerId: number;
   startX: number;
@@ -37,8 +45,8 @@ export function useWindowDrag({ id, sectionRef, dispatch }: Options) {
   function onTitlebarPointerDown(e: PointerEvent<HTMLElement>) {
     // Skip when not in desktop OS mode.
     if (document.documentElement.getAttribute('data-os') !== 'desktop') return;
-    // Buttons handle their own events; don't start a drag on them.
-    if ((e.target as Element).closest('button')) return;
+    // Window controls handle their own events; don't start a drag on them.
+    if ((e.target as Element).closest(WINDOW_CONTROLS)) return;
     // (A double click never gets here: WindowFrame maximises on the second
     // press, timed itself, and starts no drag.)
 
