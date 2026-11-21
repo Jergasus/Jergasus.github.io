@@ -79,7 +79,7 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
 
   // ── Body scrollability — fix WCAG tab stop (carried item 3) ──────────────
   // The body is focusable in OS mode only when it overflows (so keyboard
-  // scrolling works) and has an accessible name via aria-labelledby.
+  // scrolling works), and is then a region named by the title.
   const [scrollable, setScrollable] = useState(false);
   useLayoutEffect(() => {
     const b = body.current;
@@ -315,11 +315,14 @@ export function WindowFrame({ id, title, children, labels, phoneBackLabel }: Pro
         </span>
       </div>
 
-      {/* Body: focusable only when it overflows, with an accessible name. */}
+      {/* Body: when it overflows, a focusable region (keyboard scrolling)
+          named by the title; otherwise a plain container, with no name (a
+          generic element cannot carry one). */}
       <div
         ref={body}
         className="os-win-body"
-        aria-labelledby={`${id}-title`}
+        role={scrollable ? 'region' : undefined}
+        aria-labelledby={scrollable ? `${id}-title` : undefined}
         tabIndex={scrollable ? 0 : -1}
       >
         {children}

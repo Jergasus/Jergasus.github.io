@@ -285,3 +285,48 @@ test('close returns focus to the opener', async ({ page }) => {
   // Focus must have returned to the icon that opened the window.
   await expect(page.locator('[data-icon="activity"]')).toBeFocused();
 });
+
+// ---------------------------------------------------------------------------
+// Touch and assistive tech
+// ---------------------------------------------------------------------------
+
+// A tablet in landscape gets the desktop: a finger on a titlebar or an edge
+// drags the window instead of panning the page (which would cancel the drag).
+test('the titlebar and the resize handles keep a touch drag for themselves', async ({ page }) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/');
+  const about = win(page, 'about');
+  const touchAction = (selector: string) =>
+    about.locator(selector).evaluateAll((elements) => elements.map((element) => getComputedStyle(element).touchAction));
+  expect(await touchAction('[data-titlebar]')).toEqual(['none']);
+  expect(await touchAction('[data-resize]')).toEqual(new Array(8).fill('none'));
+  // The window's content still scrolls by touch.
+  expect(await touchAction('.os-win-body')).not.toEqual(['none']);
+});
+
+// A body that scrolls takes focus (for keyboard scrolling) and is a region
+// named by its window's title; one that does not scroll is neither.
+test('a window body that scrolls is a named region; one that does not is plain', async ({ page }) => {
+  await page.setViewportSize(VP);
+  await visit(page, '/work/questday/');
+  await page.evaluate(() => document.fonts.ready);
+  const bodies = await page.locator('[data-app] .os-win-body').evaluateAll((elements) =>
+    elements
+      .filter((element) => element.getClientRects().length > 0)
+      .map((element) => ({
+        app: element.closest('[data-app]')!.getAttribute('data-app'),
+        scrolls: element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth,
+        tabIndex: element.getAttribute('tabindex'),
+        role: element.getAttribute('role'),
+        name: element.getAttribute('aria-labelledby'),
+      })),
+  );
+  expect(bodies.some((body) => body.scrolls)).toBe(true);
+  for (const body of bodies) {
+    const expected = body.scrolls
+      ? { tabIndex: '0', role: 'region', name: `${body.app}-title` }
+      : { tabIndex: '-1', role: null, name: null };
+    expect({ tabIndex: body.tabIndex, role: body.role, name: body.name }, body.app!).toEqual(expected);
+  }
+  await expect(page.getByRole('region', { name: 'QuestDay' })).toHaveCount(2);
+});
