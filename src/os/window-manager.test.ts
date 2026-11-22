@@ -223,26 +223,26 @@ test('reclamp moves every window back into a smaller desktop', () => {
 // arrange / cascade
 // ---------------------------------------------------------------------------
 
-test('arrange cascades open windows from (112,24) in z order, skipping the 104px icon column', () => {
+test('arrange cascades open windows from (128,24) in z order, skipping the 120px icon column', () => {
   let s = initialState(null); // about z=1, projects z=2
   const bounds = { w: 1280, h: 720 };
   s = reduce(s, { type: 'arrange', bounds });
 
   const aboutApp = getApp('about')!;
   const { w: aw, h: ah } = fracToRect(aboutApp.defaultRect, bounds);
-  // R8: icon column is 104px + 8px gap = 112px x offset
-  expect(s.windows.about.rect).toEqual({ x: 112, y: 24, w: aw, h: ah });
+  // R8: icon column is 120px + 8px gap = 128px x offset
+  expect(s.windows.about.rect).toEqual({ x: 128, y: 24, w: aw, h: ah });
 
   const projectsApp = getApp('projects')!;
   const { w: pw, h: ph } = fracToRect(projectsApp.defaultRect, bounds);
-  expect(s.windows.projects.rect).toEqual({ x: 144, y: 56, w: pw, h: ph });
+  expect(s.windows.projects.rect).toEqual({ x: 160, y: 56, w: pw, h: ph });
 });
 
 test('arrange starts at the edge it is given, when the icons take two columns', () => {
   let s = initialState(null);
-  s = reduce(s, { type: 'arrange', bounds: { w: 1280, h: 680 }, left: 208 });
-  expect(s.windows.about.rect).toMatchObject({ x: 208, y: 24 });
-  expect(s.windows.projects.rect).toMatchObject({ x: 240, y: 56 });
+  s = reduce(s, { type: 'arrange', bounds: { w: 1280, h: 680 }, left: 240 });
+  expect(s.windows.about.rect).toMatchObject({ x: 240, y: 24 });
+  expect(s.windows.projects.rect).toMatchObject({ x: 272, y: 56 });
 });
 
 // ---------------------------------------------------------------------------

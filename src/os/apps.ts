@@ -73,7 +73,7 @@ export const apps: readonly AppDef[] = [
     messageKey: 'projects',
     colour: 'sky',
     route: null,
-    defaultRect: { x: 0.5, y: 0.08, w: 0.4, h: 0.56 },
+    defaultRect: { x: 0.54, y: 0.08, w: 0.4, h: 0.56 },
     minSize: { w: 320, h: 240 },
     desktopIcon: true,
     phoneIcon: false,
@@ -159,7 +159,7 @@ export const apps: readonly AppDef[] = [
     route: null,
     defaultRect: { x: 0.38, y: 0.22, w: 0.3, h: 0.46 },
     minSize: { w: 280, h: 260 },
-    desktopIcon: false,
+    desktopIcon: true,
     phoneIcon: true,
     inStartMenu: true,
     interactiveOnly: true,
@@ -237,6 +237,7 @@ export const DESKTOP_ICON_ORDER: readonly AppId[] = [
   'contact',
   'terminal',
   'browser',
+  'settings',
 ];
 
 /** Bottom-to-top order of icons in the phone home-screen grid. */

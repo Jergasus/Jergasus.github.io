@@ -97,7 +97,7 @@ test('right-click → Cambiar fondo → Atardecer sets data-wallpaper=sunset and
   page,
 }) => {
   await visit(page, '/');
-  // Right-click below the about window (y>500) and right of the icon column (x>104),
+  // Right-click below the about window (y>500) and right of the icons (x>240),
   // with room for the submenu to expand rightward. No windows in this area.
   await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
   const contextMenu = page.locator('[data-context-menu]');

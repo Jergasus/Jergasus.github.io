@@ -1784,9 +1784,9 @@
       overscroll-behavior: contain;
     }
 
-    @media (max-height: 66rem) {
+    @media (max-height: 72rem) {
       html[data-os="desktop"] {
-        /* Two 88 px columns with 8 px around and between them (200 px), and
+        /* Two 104 px columns with 8 px around and between them (232 px), and
            the same 8 px gap before a window. */
         --os-win-min-x: calc(2 * var(--os-icon-col));
       }
@@ -1801,7 +1801,9 @@
       flex-direction: column;
       align-items: center;
       gap: 3px;
-      padding: 4px;
+      /* No side padding, so the longest one-word label ("Personalitzar")
+         fits on one line. */
+      padding: 4px 0;
       width: calc(var(--os-icon-col) - 16px);
       user-select: none;
       -webkit-user-select: none;
@@ -1857,7 +1859,7 @@
       background: var(--os-label-bg);
       color: var(--os-label-ink);
       padding: 1px 3px;
-      max-width: 88px;
+      max-width: 100%;
       line-height: 1.2;
     }
   }

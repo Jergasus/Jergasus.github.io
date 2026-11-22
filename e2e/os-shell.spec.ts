@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
-import type { AppId, CaseAppId } from '@/os/apps';
+import { DESKTOP_ICON_ORDER, type AppId, type CaseAppId } from '@/os/apps';
 import { bringToFront, expect, test, visit, win } from './fixtures';
 
 // The OS shell on a desktop (Desktop Chrome, 1280 x 720): windows open,
@@ -410,12 +410,25 @@ test('print media shows the document layout with every content window', async ({
   await expect(page.locator('[data-phone-home]')).toBeHidden();
 });
 
-// Carried item (Task 14): on a laptop screen the eleven desktop icons flow
-// into a second column instead of hiding below the fold, and the windows
-// open on load start clear of them.
+// Visitors don't discover the right-click menu, so wallpaper, theme and
+// language are one click away from a desktop icon too.
+test('a Personalizar icon on the desktop opens the settings window', async ({ page }) => {
+  await visit(page, '/');
+  const icon = page.locator('[data-icon="settings"]');
+  await expect(icon).toBeVisible();
+  await expect(icon).toContainText('Personalizar');
+  await icon.dblclick();
+  await expect(win(page, 'settings')).toHaveAttribute('data-win-state', 'open');
+});
+
+// Carried item (Task 14): on a laptop screen the desktop icons flow into a
+// second column instead of hiding below the fold, and the windows open on
+// load start clear of them.
 for (const viewport of [
   { width: 1440, height: 900 },
   { width: 1280, height: 720 },
+  { width: 1920, height: 1080 },
+  { width: 1920, height: 1200 },
 ]) {
   test(`every desktop icon is fully on screen and uncovered at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
@@ -423,7 +436,7 @@ for (const viewport of [
     await page.evaluate(() => document.fonts.ready);
     const desk = (await page.locator('[data-desktop]').boundingBox())!;
     const icons = page.locator('[data-icon]');
-    await expect(icons).toHaveCount(11);
+    await expect(icons).toHaveCount(DESKTOP_ICON_ORDER.length);
     const windows = await Promise.all(['about', 'projects'].map(async (id) => (await win(page, id as AppId).boundingBox())!));
     for (const icon of await icons.all()) {
       const name = (await icon.getAttribute('data-icon'))!;
@@ -441,5 +454,26 @@ for (const viewport of [
     // Nothing to scroll in the icon area.
     const column = page.locator('.os-icon-col');
     expect(await column.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0);
+    // The two windows open on load sit side by side: neither hides the
+    // other's titlebar buttons.
+    const [about, projects] = windows;
+    expect(about.x + about.width, 'about overlaps projects').toBeLessThanOrEqual(projects.x);
+  });
+}
+
+// A one-word label never breaks mid-word in any language: "Personalitzar"
+// is the longest. Labels with a space may wrap between words.
+for (const path of ['/', '/ca/', '/en/']) {
+  test(`one-word desktop icon labels stay on one line (${path})`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await visit(page, path);
+    await page.evaluate(() => document.fonts.ready);
+    const broken = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-icon] .os-icon-label')]
+        .filter((label) => !label.textContent!.trim().includes(' '))
+        .filter((label) => label.getClientRects().length > 1 || label.getBoundingClientRect().height > 1.6 * parseFloat(getComputedStyle(label).lineHeight))
+        .map((label) => label.textContent!.trim()),
+    );
+    expect(broken).toEqual([]);
   });
 }

@@ -36,7 +36,7 @@ export type WmAction =
   | { type: 'minimize'; id: AppId }
   | { type: 'toggleMaximize'; id: AppId }
   | { type: 'setRect'; id: AppId; rect: Rect; bounds: Size }
-  /** left: where the cascade starts, clear of the desktop icons (default 112). */
+  /** left: where the cascade starts, clear of the desktop icons (default 128). */
   | { type: 'arrange'; bounds: Size; left?: number }
   | { type: 'reclamp'; bounds: Size }
   | { type: 'route'; slug: CaseAppId | null }
@@ -79,13 +79,13 @@ export function clampRect(rect: Rect, bounds: Size, min: Size): Rect {
  * Build a map of AppId → Rect by cascading windows from (24,24) with +32 px per step.
  * Each window uses its app's default fractional size scaled to bounds.
  */
-export function cascade(ids: AppId[], bounds: Size, left = 112): Partial<Record<AppId, Rect>> {
+export function cascade(ids: AppId[], bounds: Size, left = 128): Partial<Record<AppId, Rect>> {
   const result: Partial<Record<AppId, Rect>> = {};
   ids.forEach((id, i) => {
     const def = getApp(id);
     if (!def) return;
     const { w, h } = fracToRect(def.defaultRect, bounds);
-    // R8: clear of the icons. One 104px column + 8px gap = 112px by default;
+    // R8: clear of the icons. One 120px column + 8px gap = 128px by default;
     // the shell passes the measured edge when the icons take two columns.
     result[id] = { x: left + 32 * i, y: 24 + 32 * i, w, h };
   });
