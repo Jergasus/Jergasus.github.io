@@ -17,10 +17,17 @@
   --os-ink: #111111;
   --os-border: #111111;
   --os-shadow: #111111;
-  /* Icon label chip: a neutral surface so labels stay readable on any
-     wallpaper. #111111 on #ede7d9 is 13.6:1 — well above AA. */
-  --os-label-bg: #ede7d9;
-  --os-label-ink: #111111;
+  /* Icon names sit straight on the wallpaper, drawn with a 1 px pixel
+     outline (a halo). WCAG measures outlined text against its halo, so they
+     read on any wallpaper: white on #111111 is 18.9:1. They follow the
+     wallpaper, not the theme (cream overrides them below). --os-icon-hi is the
+     selection and focus highlight, as an RGB triplet for alpha. */
+  --os-icon-ink: #ffffff;
+  --os-icon-halo: #111111;
+  --os-icon-hi: 255 255 255;
+  --os-icon-outline: -1px -1px 0 var(--os-icon-halo), 0 -1px 0 var(--os-icon-halo), 1px -1px 0 var(--os-icon-halo),
+    -1px 0 0 var(--os-icon-halo), 1px 0 0 var(--os-icon-halo), -1px 1px 0 var(--os-icon-halo),
+    0 1px 0 var(--os-icon-halo), 1px 1px 0 var(--os-icon-halo);
 
   /* ── App colours (identical in day and night) ────────────────────────── */
   /* These are titlebar fills. Text colour on all is always #111111; every
@@ -84,8 +91,6 @@
     --os-ink: #e8e4da;
     --os-border: #000000;
     --os-shadow: #000000;
-    --os-label-bg: #252a38;
-    --os-label-ink: #e8e4da;
   }
 }
 
@@ -96,6 +101,13 @@
   --os-ink: #e8e4da;
   --os-border: #000000;
   --os-shadow: #000000;
-  --os-label-bg: #252a38;
-  --os-label-ink: #e8e4da;
+}
+
+/* ── Icon names on the cream wallpaper ───────────────────────────────────── */
+/* The one light wallpaper, day or night: dark names, a cream outline, and a
+   dark highlight. #111111 on #f4ecd2 is 16.1:1. */
+html[data-wallpaper="cream"] {
+  --os-icon-ink: #111111;
+  --os-icon-halo: #f4ecd2;
+  --os-icon-hi: 17 17 17;
 }

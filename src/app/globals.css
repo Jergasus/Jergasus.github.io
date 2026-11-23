@@ -35,8 +35,6 @@
   --color-os-ink: var(--os-ink);
   --color-os-border: var(--os-border);
   --color-os-shadow: var(--os-shadow);
-  --color-os-label-bg: var(--os-label-bg);
-  --color-os-label-ink: var(--os-label-ink);
 
   /* App colours */
   --color-os-c-yellow: var(--os-c-yellow);

@@ -1812,23 +1812,25 @@
       border: 2px solid transparent;
       border-radius: 4px;
       cursor: pointer;
-      color: var(--os-label-ink);
+      color: var(--os-icon-ink);
     }
 
+    /* The highlight is light on dark wallpapers and dark on cream, so a
+       selected or focused icon always shows (os-tokens.css). */
     html[data-os="desktop"] .os-icon--selected {
-      border-color: rgba(255 255 255 / 0.6);
-      background: rgba(255 255 255 / 0.15);
+      border-color: rgb(var(--os-icon-hi) / 0.6);
+      background: rgb(var(--os-icon-hi) / 0.15);
       outline: none;
     }
 
     html[data-os="desktop"] .os-icon:focus-visible {
-      border-color: rgba(255 255 255 / 0.9);
+      border-color: rgb(var(--os-icon-hi) / 0.9);
       outline: none;
     }
 
     @media (hover: hover) and (pointer: fine) {
       html[data-os="desktop"] .os-icon:hover {
-        background: rgba(255 255 255 / 0.1);
+        background: rgb(var(--os-icon-hi) / 0.1);
       }
     }
 
@@ -1856,8 +1858,9 @@
       text-align: center;
       word-break: break-word;
       hyphens: auto;
-      background: var(--os-label-bg);
-      color: var(--os-label-ink);
+      /* Straight on the wallpaper, readable on any of them (os-tokens.css). */
+      color: var(--os-icon-ink);
+      text-shadow: var(--os-icon-outline);
       padding: 1px 3px;
       max-width: 100%;
       line-height: 1.2;
@@ -2039,7 +2042,7 @@
     background: transparent;
     border: 0;
     cursor: pointer;
-    color: var(--os-label-ink);
+    color: var(--os-icon-ink);
     -webkit-tap-highlight-color: transparent;
     /* A control, not content: a long press neither selects the label nor
        pops the callout. */
@@ -2078,8 +2081,9 @@
     line-height: 1.1;
     word-break: break-word;
     max-width: 72px;
-    background: var(--os-label-bg);
-    color: var(--os-label-ink);
+    /* Straight on the wallpaper, readable on any of them (os-tokens.css). */
+    color: var(--os-icon-ink);
+    text-shadow: var(--os-icon-outline);
     padding: 1px 2px;
   }
 

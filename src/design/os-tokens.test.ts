@@ -25,6 +25,10 @@ const day = parseBlock(dayRaw);
 const nightRaw = css.match(/:root\[data-theme="dark"\]\s*\{([^}]*)\}/)?.[1] ?? '';
 const night = parseBlock(nightRaw);
 
+// Cream: the one light wallpaper overrides the icon label colours.
+const creamRaw = css.match(/html\[data-wallpaper="cream"\]\s*\{([^}]*)\}/)?.[1] ?? '';
+const cream = parseBlock(creamRaw);
+
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 const luminance = (hex: string) => {
@@ -46,15 +50,11 @@ const DAY_AND_NIGHT = [
   '--os-ink',
   '--os-border',
   '--os-shadow',
-  '--os-label-bg',
-  '--os-label-ink',
 ] as const;
 
 /**
  * App colours used as window titlebar fills.
  * Text colour on these is always #111111 (brief §title-bar); all must pass AA.
- * Icon-label chips are NOT on the wallpaper — they sit on --os-label-bg,
- * which provides a neutral surface that meets 4.5:1 regardless of wallpaper.
  */
 const APP_COLOURS = [
   '#ffd84d', // yellow
@@ -89,15 +89,15 @@ describe('os-tokens', () => {
     }
   });
 
-  test('icon labels use the label chip, ≥ 4.5 in both themes', () => {
-    expect(
-      contrast(day['--os-label-ink'], day['--os-label-bg']),
-      'day label chip',
-    ).toBeGreaterThanOrEqual(4.5);
-    expect(
-      contrast(night['--os-label-ink'], night['--os-label-bg']),
-      'night label chip',
-    ).toBeGreaterThanOrEqual(4.5);
+  // Icon labels sit straight on the wallpaper, drawn with a 1 px outline (a
+  // halo). WCAG measures outlined text against its halo, so ink on halo must
+  // pass on every wallpaper, whatever it shows behind.
+  test('icon labels: ink on its outline ≥ 4.5, on dark wallpapers and on cream', () => {
+    expect(contrast(day['--os-icon-ink'], day['--os-icon-halo']), 'dark wallpapers').toBeGreaterThanOrEqual(4.5);
+    expect(contrast(cream['--os-icon-ink'], cream['--os-icon-halo']), 'cream').toBeGreaterThanOrEqual(4.5);
+    // The colours follow the wallpaper, not the theme: night must not override them.
+    expect(night['--os-icon-ink']).toBeUndefined();
+    expect(night['--os-icon-halo']).toBeUndefined();
   });
 
   test('theme colours equal the desk colours', () => {

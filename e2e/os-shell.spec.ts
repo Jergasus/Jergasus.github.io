@@ -461,6 +461,33 @@ for (const viewport of [
   });
 }
 
+// Icon names sit straight on the wallpaper, with no chip behind them: light
+// text with a dark pixel outline, and dark text on the one light wallpaper.
+for (const [layout, viewport, label] of [
+  ['desktop', { width: 1440, height: 900 }, '[data-icon] .os-icon-label'],
+  ['phone', { width: 390, height: 844 }, '.os-phone-icon-label'],
+] as const) {
+  test(`${layout} icon names have no chip and follow the wallpaper`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await visit(page, '/');
+    const look = () =>
+      page.locator(label).first().evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { background: style.backgroundColor, color: style.color, outline: style.textShadow };
+      });
+
+    const onDots = await look();
+    expect(onDots.background).toBe('rgba(0, 0, 0, 0)');
+    expect(onDots.color).toBe('rgb(255, 255, 255)');
+    expect(onDots.outline).toContain('rgb(17, 17, 17)');
+
+    await page.evaluate(() => document.documentElement.setAttribute('data-wallpaper', 'cream'));
+    const onCream = await look();
+    expect(onCream.color).toBe('rgb(17, 17, 17)');
+    expect(onCream.outline).not.toContain('rgb(17, 17, 17)');
+  });
+}
+
 // A one-word label never breaks mid-word in any language: "Personalitzar"
 // is the longest. Labels with a space may wrap between words.
 for (const path of ['/', '/ca/', '/en/']) {
