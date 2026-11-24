@@ -53,7 +53,10 @@ function parseTokens(cssPath: string): Record<string, string> {
 const tokens = parseTokens(join(root, 'src/design/os-tokens.css'));
 
 /** The card uses these; a missing one stops the script rather than drawing a guess. */
-const REQUIRED = ['desk', 'window', 'ink', 'border', 'shadow', 'wp-dots', 'c-lilac', 'border-w', 'shadow-offset', 'radius-icon'];
+const REQUIRED = [
+  'desk', 'window', 'ink', 'border', 'shadow', 'wp-dots', 'c-lilac', 'border-w', 'shadow-offset', 'radius-icon',
+  'icon-ink', 'icon-outline',
+];
 for (const name of REQUIRED) {
   if (!tokens[name]) throw new Error(`src/design/os-tokens.css: --os-${name} is missing from the day :root block`);
 }
@@ -105,7 +108,7 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
     (id) => `
       <div class="icon">
         <span class="tile" style="--app: ${colour(id)}">${svg(APP_ICONS[id], 34)}</span>
-        <span class="chip">${label(id)}</span>
+        <span class="label">${label(id)}</span>
       </div>`,
   ).join('');
 
@@ -161,11 +164,12 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
     border-radius: var(--os-radius-icon);
     box-shadow: 2px 2px 0 var(--os-shadow);
   }
-  .chip {
+  /* Icon names sit straight on the wallpaper, outlined, as on the site. */
+  .label {
     padding: 1px 4px;
     font: 400 14px/1.2 var(--pixel);
-    color: var(--os-ink);
-    background: var(--os-window);
+    color: var(--os-icon-ink);
+    text-shadow: var(--os-icon-outline);
   }
 
   /* The window. */
