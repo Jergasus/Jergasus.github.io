@@ -6,7 +6,7 @@
  * App colours are the same by day and by night, so the icons need no theme.
  */
 export const ICON_COLOURS = {
-  ink: '#111111',
+  black: '#111111',
   white: '#ffffff',
   /** The day window beige (--os-window), for the logo's window body. */
   window: '#ede7d9',
@@ -26,7 +26,7 @@ export type IconProps = { size?: number };
 
 /** The outline every icon is drawn with: 2.5 units on the 40-unit grid. */
 export const OUTLINE = {
-  stroke: ICON_COLOURS.ink,
+  stroke: ICON_COLOURS.black,
   strokeWidth: 2.5,
   strokeLinejoin: 'round',
   strokeLinecap: 'round',

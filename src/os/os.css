@@ -13,6 +13,17 @@
   :root {
     /* Secondary text: 72% ink on the window, about 6.6:1 by day. */
     --os-ink-muted: color-mix(in srgb, var(--os-ink) 72%, var(--os-window));
+
+    /*
+     * VT323 ships one weight (400 only). Block bold synthesis everywhere so
+     * the browser never fakes a heavier weight for elements that ask for 600
+     * or 700. IBM Plex Sans/Mono have real weight axes so this is a no-op
+     * for them: synthesis only fires when no matching face exists.
+     * The shorthand is for older browsers (pre-Chromium 97, pre-Firefox 111);
+     * the longhand overrides it in browsers that understand both.
+     */
+    font-synthesis: none;
+    font-synthesis-weight: none;
     --os-pad: 16px;
     --os-wp: var(--os-wp-dots);
   }
@@ -96,7 +107,7 @@
     min-height: var(--os-titlebar-h);
     padding: 1px 3px 1px 8px;
     background-color: var(--app, var(--os-c-cream));
-    color: #111111;
+    color: var(--app-fg, #111111);
     border-bottom: var(--os-border-w) solid var(--os-border);
     font-family: var(--os-font-pixel);
     font-size: var(--os-step-0);
@@ -210,8 +221,8 @@
     display: inline-block;
     padding: 6px 16px;
     font: 600 var(--os-step-0) / 1.2 var(--os-font-pixel);
-    /* App colours are light by day and by night: always black on them. */
-    color: #111111;
+    /* Light foreground on grey (welcome), dark on all other colours. */
+    color: var(--app-fg, #111111);
     text-decoration: none;
     background: var(--app, var(--os-c-cream));
     border: var(--os-border-w) solid var(--os-border);
@@ -223,8 +234,11 @@
 
   @media (hover: hover) and (pointer: fine) {
     .os-button:hover {
-      background: var(--os-ink);
-      color: var(--os-window);
+      /* --app-hover-bg/fg are set by each windowed component via the
+         --os-c-${colour}-hover-* token; for colours that have no hover token
+         the values fall back to the OS ink/window pair (the original rule). */
+      background: var(--app-hover-bg, var(--os-ink));
+      color: var(--app-hover-fg, var(--os-window));
     }
   }
 
@@ -287,6 +301,56 @@
 
   .os-specs dd {
     margin: 0;
+  }
+
+  /* bienvenida.txt */
+  .os-welcome {
+    display: grid;
+    gap: 18px;
+    max-width: 62ch;
+    margin-inline: auto;
+  }
+
+  /* Centred welcome: portrait is smaller; about keeps 96px. */
+  .os-welcome .os-about {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .os-welcome > [data-welcome-part="line"] {
+    font-size: var(--os-step-1);
+  }
+
+  .os-welcome > [data-welcome-part="question"] {
+    font-family: var(--os-font-pixel);
+    font-size: var(--os-step--1);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0;
+  }
+
+  .os-welcome > [data-welcome-part="actions"] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .os-welcome > [data-welcome-part="explore"] {
+    font-family: var(--os-font-mono);
+    font-size: var(--os-step--1);
+  }
+
+  /* The explore invite is for the interactive shell only. */
+  p[data-shell] {
+    display: none;
+  }
+
+  @media screen {
+    html[data-os="desktop"] .os-welcome p[data-shell="desktop"] {
+      display: block;
+    }
+    html[data-os="phone"] .os-welcome p[data-shell="phone"] {
+      display: block;
+    }
   }
 
   /* sobre_mi.txt */
@@ -1129,6 +1193,31 @@
       background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
     }
 
+    /* Welcome window: --app = var(--os-c-grey) = #5c6069, --app-fg = var(--os-c-grey-fg)
+       = #ede7d9, both set by WindowFrame inline style. The titlebar background and
+       text colour are now covered by the token path; only the white focused-stripe
+       override remains (the global stripe is dark, barely visible on a grey bar). */
+
+    /* Welcome focused: white stripes (0,5,1) beat the global dark-stripe rule
+       (0,4,1) by specificity — adding .os-win raises the count by one class. */
+    html[data-os] .os-win[data-app="welcome"][data-focused="true"] > .os-titlebar {
+      background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(255 255 255 / 0.1) 2px 3px);
+    }
+
+    /* Welcome window border: grey in both themes, while every other window keeps
+       its theme --os-border. The specificity (0,3,1) beats .os-win (0,1,1). */
+    html[data-os] .os-win[data-app="welcome"] {
+      border-color: var(--os-c-grey);
+    }
+
+    /* Welcome guide buttons: focus ring must contrast with the cream/dark window
+       background. The global rule uses currentColor which resolves to --app-fg
+       (cream) on grey buttons — invisible against the cream window. Pin it to
+       --os-ink so the ring is always visible in both themes. */
+    html[data-os] .os-win[data-app="welcome"] .os-button:focus-visible {
+      outline-color: var(--os-ink);
+    }
+
     /* The taskbar plus the home-indicator strip of a tablet (viewport-fit=
        cover): the desk, the windows, the start menu and the toasts all stop
        above it. */
@@ -1273,7 +1362,10 @@
       display: block;
       flex: 1 1 0;
       min-width: 0;
-      height: 100%;
+      /* align-self: stretch fills the titlebar height even when the window uses
+         height: fit-content — height: 100% would resolve to 0 there because
+         the containing block height is content-based, not definite. */
+      align-self: stretch;
       padding: 0;
       background: transparent;
       border: 0;
@@ -1288,6 +1380,22 @@
 
     html[data-os="desktop"] .os-win:is([data-win-state="closed"], [data-win-state="minimized"]) {
       display: none;
+    }
+
+    /* A centred window (welcome) is positioned by CSS rather than by --x/--y/--w/--h.
+       Horizontal: centred on the full desktop, clamped so the left edge never
+       overlaps the icon column (left ≥ --os-win-min-x).
+       Vertical: centred in the desktop area above the taskbar. */
+    html[data-os="desktop"] .os-win[data-centred]:not([data-maximized="true"]) {
+      --_centred-w: min(34rem, 100% - var(--os-win-min-x, 0px) - 32px);
+      top: 0;
+      right: auto;
+      bottom: 0;
+      left: max(var(--os-win-min-x, 0px), calc((100% - var(--_centred-w)) / 2));
+      margin-block: auto;
+      width: var(--_centred-w);
+      height: fit-content;
+      max-height: 100%;
     }
 
     html[data-os="desktop"] .os-win[data-interactive-only][data-win-state="open"] {
@@ -1463,8 +1571,8 @@
     font-family: var(--os-font-pixel);
     font-size: var(--os-step--1);
     font-weight: 600;
-    /* The app colour is light in both themes. */
-    color: #111111;
+    /* Light foreground on grey (welcome), dark on all other colours. */
+    color: var(--app-fg, #111111);
     background: var(--app, var(--os-window));
     border: var(--os-border-w) solid var(--os-border);
     cursor: pointer;
@@ -1759,11 +1867,10 @@
   /* ── Desktop icon column (desktop mode) ──────────────────────────────── */
 
   @media screen {
-    /* One column of icons, top to bottom, when the screen is tall enough for
-       all of them; on a laptop screen they flow into a second column, so no
-       icon hides below the fold. --icon-rows / --icon-rows-half come from
-       DesktopIcons (the icon count). Windows that have not moved yet start
-       clear of the icons (--os-win-min-x, WindowFrame). */
+    /* One column of 13 icons at taller viewports; two columns at ≤ 75 rem
+       (1200 px); extra compact at ≤ 42 rem (672 px).
+       Windows that have not moved yet start clear of the column(s)
+       (--os-win-min-x, WindowFrame). */
     html[data-os="desktop"] {
       --os-win-min-x: calc(var(--os-icon-col) + 8px);
     }
@@ -1771,7 +1878,7 @@
     html[data-os="desktop"] .os-icon-col {
       display: grid;
       grid-auto-flow: column;
-      grid-template-rows: repeat(var(--icon-rows, 11), auto);
+      grid-template-rows: repeat(var(--icon-rows, 13), auto);
       grid-auto-columns: calc(var(--os-icon-col) - 16px);
       justify-items: center;
       align-content: start;
@@ -1782,18 +1889,6 @@
       height: 100%;
       overflow-y: auto;
       overscroll-behavior: contain;
-    }
-
-    @media (max-height: 72rem) {
-      html[data-os="desktop"] {
-        /* Two 104 px columns with 8 px around and between them (232 px), and
-           the same 8 px gap before a window. */
-        --os-win-min-x: calc(2 * var(--os-icon-col));
-      }
-
-      html[data-os="desktop"] .os-icon-col {
-        grid-template-rows: repeat(var(--icon-rows-half, 6), auto);
-      }
     }
 
     html[data-os="desktop"] .os-icon {
@@ -1865,6 +1960,28 @@
       max-width: 100%;
       line-height: 1.2;
     }
+
+    /* Two columns when viewport height ≤ 75 rem (1200 px). */
+    @media (max-height: 75rem) {
+      html[data-os="desktop"] {
+        --os-win-min-x: calc(2 * var(--os-icon-col));
+      }
+
+      html[data-os="desktop"] .os-icon-col {
+        grid-template-rows: repeat(var(--icon-rows-half, 7), auto);
+      }
+    }
+
+    /* Extra compact when viewport height ≤ 42 rem (504 px). */
+    @media (max-height: 42rem) {
+      html[data-os="desktop"] .os-icon-col {
+        row-gap: 0;
+      }
+
+      html[data-os="desktop"] .os-icon {
+        padding-block: 2px;
+      }
+    }
   }
 
   /* ── Phone home screen components ───────────────────────────────────── */
@@ -1892,141 +2009,75 @@
     flex-shrink: 0;
   }
 
-  .os-phone-widgets {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 12px 0;
-    flex-shrink: 0;
+  /* Scroll container — holds the welcome card and the icon grid in one
+     continuous scroll; the dock stays outside. */
+  .os-phone-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
-  /* Widget card */
-  .os-phone-widget {
+  /* Welcome card — carries the welcome app tokens so the guide buttons inside
+     it get the same grey/cream look as the desktop window's buttons. */
+  .os-phone-welcome {
+    --app: var(--os-c-grey);
+    --app-fg: var(--os-c-grey-fg);
+    --app-hover-bg: var(--os-c-grey-hover-bg);
+    --app-hover-fg: var(--os-c-grey-hover-fg);
     background: var(--os-window);
-    border: var(--os-border-w) solid var(--os-border);
+    border: var(--os-border-w) solid var(--os-c-grey);
     box-shadow: 3px 3px 0 var(--os-shadow);
     flex-shrink: 0;
+    margin: 10px 12px 0;
   }
 
-  .os-phone-widget-titlebar {
+  /* Phone guide buttons: same focus ring fix as the desktop welcome window —
+     pin outline-color to --os-ink so it contrasts with the cream/dark card bg. */
+  .os-phone-welcome .os-button:focus-visible {
+    outline-color: var(--os-ink);
+  }
+
+  .os-phone-welcome-titlebar {
     display: flex;
     align-items: center;
     min-height: 24px;
     padding: 1px 8px;
-    background: #111111;
-    /* The bar is black in both themes, so its text is the day beige. */
-    color: #ede7d9;
+    background: var(--os-c-grey);
+    /* The bar is grey in both themes; the foreground follows --app-fg = --os-c-grey-fg. */
+    color: var(--app-fg);
     font-family: var(--os-font-pixel);
     font-size: var(--os-step--1);
     font-weight: 600;
   }
 
-  .os-phone-widget-title {
+  .os-phone-welcome-title {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  .os-phone-widget-body {
+  .os-phone-welcome-body {
+    overflow: hidden;
     padding: 10px 12px;
   }
 
-  /* Hello widget */
-  .os-phone-hello-body {
-    display: grid;
-    gap: 6px;
-  }
-
-  .os-phone-hello-name {
-    margin: 0;
-    font-family: var(--os-font-pixel);
-    font-size: var(--os-step-1);
-    font-weight: 700;
-    line-height: 1.1;
-  }
-
-  .os-phone-hello-lede {
-    margin: 0;
-    font-size: var(--os-step--1);
-    line-height: 1.4;
-  }
-
-  .os-phone-hello-avail {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    font-family: var(--os-font-mono);
-    font-size: var(--os-step--1);
-  }
-
-  .os-phone-avail-dot {
-    flex: none;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--os-off);
-  }
-
-  [data-available="true"] .os-phone-avail-dot {
-    background: var(--os-ok);
-  }
-
-  /* Activity widget */
-  .os-phone-activity-body {
-    display: grid;
-    gap: 8px;
-  }
-
-  .os-phone-activity-stats {
-    margin: 0;
-    font-family: var(--os-font-mono);
-    font-size: var(--os-step--1);
-    line-height: 1.3;
-  }
-
-  .os-phone-activity-sep {
-    color: var(--os-ink-muted);
-  }
-
-  .os-phone-mini-grid {
-    display: grid;
-    grid-template-columns: repeat(26, 1fr);
-    gap: 2px;
-  }
-
-  .os-phone-mini-grid > span {
-    aspect-ratio: 1;
-    background: color-mix(in srgb, var(--os-ink) 10%, var(--os-window));
-  }
-
-  .os-phone-mini-grid > [data-intensity="1"] {
-    background: color-mix(in srgb, var(--os-ok) 30%, var(--os-window));
-  }
-  .os-phone-mini-grid > [data-intensity="2"] {
-    background: color-mix(in srgb, var(--os-ok) 55%, var(--os-window));
-  }
-  .os-phone-mini-grid > [data-intensity="3"] {
-    background: color-mix(in srgb, var(--os-ok) 80%, var(--os-window));
-  }
-  .os-phone-mini-grid > [data-intensity="4"] {
-    background: var(--os-ok);
-  }
-
-  /* Icon grid */
+  /* Icon grid — scrolls inside .os-phone-scroll, right after the welcome card. */
   .os-phone-icon-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
-    padding: 10px 12px;
-    flex: 1 1 auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    padding: 10px 12px 20px;
     align-content: start;
-    min-height: 0;
     list-style: none;
     margin: 0;
+  }
+
+  @media (min-width: 480px) {
+    .os-phone-icon-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   .os-phone-icon-li {
@@ -2079,8 +2130,10 @@
     font-weight: 600;
     text-align: center;
     line-height: 1.1;
-    word-break: break-word;
-    max-width: 72px;
+    max-width: 100%;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: manual;
     /* Straight on the wallpaper, readable on any of them (os-tokens.css). */
     color: var(--os-icon-ink);
     text-shadow: var(--os-icon-outline);
@@ -2151,8 +2204,10 @@
 
   /* -----------------------------------------------------------------------
      Boot screen
-     Visible only when html[data-boot="1"]; hidden by default so returning
-     visitors and no-JS environments never see it.
+     Visible only when html[data-boot="1"]; hidden by default so no-JS
+     environments never see it. Shows on every full page load, about 3.5 s,
+     ended by the pre-paint script's timer, a keydown, or a click — whichever
+     comes first. Never shown under prefers-reduced-motion.
      The overlay captures pointer events itself so a tap that dismisses it
      does NOT activate anything underneath. aria-hidden keeps it out of the
      accessibility tree; there are no focusable children.
@@ -2179,21 +2234,18 @@
     cursor: default;
   }
 
-  /* Bounded from the first paint, not by hydration: one step after the boot's
-     own end (six steps, about 1.3 s) the screen hides and lets the pointer
-     through on its own, so a slow or failed script never holds the content
-     back. The JS path (its timer, a key, a click) still removes data-boot and
-     remembers the visit, whichever comes first. */
-  html[data-boot="1"] [data-boot-screen] {
-    display: flex;
-    animation: os-boot-out 0s calc(6 * var(--os-boot-step, 0.22s)) forwards;
+  @media (hover: none) {
+    [data-boot-screen] {
+      /* iOS WebKit only synthesises a click for a tap when the target (or an
+         ancestor below <body>) has a click listener or cursor: pointer. The boot
+         listener is on document, so we add cursor: pointer here to ensure tap-to-
+         skip works on WebKit touch devices. */
+      cursor: pointer;
+    }
   }
 
-  @keyframes os-boot-out {
-    to {
-      visibility: hidden;
-      pointer-events: none;
-    }
+  html[data-boot="1"] [data-boot-screen] {
+    display: flex;
   }
 
   /* The mark and the name, centred in the space above the start-up lines.
@@ -2233,12 +2285,28 @@
     font-size: var(--os-step--1);
   }
 
+  /* Show only one hint at a time: the touch one on touch screens
+     (hover: none and pointer: coarse), the key one everywhere else.
+     display: none keeps the hidden hint out of the accessibility tree. */
+  .os-boot-skip--touch {
+    display: none;
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    .os-boot-skip--key {
+      display: none;
+    }
+
+    .os-boot-skip--touch {
+      display: revert;
+    }
+  }
+
   @keyframes os-boot-step {
     to { opacity: 1; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-boot-screen] { animation: none; }
     .os-boot-line,
     .os-boot-skip {
       animation: none;

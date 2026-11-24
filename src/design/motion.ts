@@ -20,8 +20,8 @@ export const motion = {
     phoneClose: { duration: 0.24, ease: 'power3.in' },
     /** A notification slides in from the edge of the screen. */
     toast: { duration: 0.3, ease: 'power3.out' },
-    /** Seconds between boot lines. */
-    bootLine: 0.22,
+    /** Seconds per boot step (four lines + the skip hint = about 3.5 s total). */
+    bootLine: 0.7,
   },
 } as const;
 

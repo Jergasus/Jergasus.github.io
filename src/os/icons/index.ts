@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { AppId } from '../apps';
 import type { IconProps } from './palette';
 import { AboutIcon } from './AboutIcon';
+import { WelcomeIcon } from './WelcomeIcon';
 import { ActivityIcon } from './ActivityIcon';
 import { BrowserIcon } from './BrowserIcon';
 import { BusinessIcon } from './BusinessIcon';
@@ -21,6 +22,7 @@ import { YokaidoIcon } from './YokaidoIcon';
  * icon is aria-hidden: the text chip beside it is the label.
  */
 export const APP_ICONS: Record<AppId, ComponentType<IconProps>> = {
+  welcome: WelcomeIcon,
   about: AboutIcon,
   projects: ProjectsIcon,
   activity: ActivityIcon,

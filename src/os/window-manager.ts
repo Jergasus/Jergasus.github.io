@@ -21,6 +21,8 @@ export interface WmState {
   focused: AppId | null;
   nextZ: number;
   phoneActive: AppId | null;
+  /** The app that opened the current phoneActive; one level of back-nav. */
+  phoneParent: AppId | null;
   /** The most recently opened or focused case window still open; drives the URL. */
   activeCase: CaseAppId | null;
 }
@@ -40,8 +42,9 @@ export type WmAction =
   | { type: 'arrange'; bounds: Size; left?: number }
   | { type: 'reclamp'; bounds: Size }
   | { type: 'route'; slug: CaseAppId | null }
-  | { type: 'phoneOpen'; id: AppId }
+  | { type: 'phoneOpen'; id: AppId; parent?: AppId }
   | { type: 'phoneHome' }
+  | { type: 'phoneBack' }
   | { type: 'hydrate'; saved: SavedWindows };
 
 export const TITLEBAR_H = 30;
@@ -129,9 +132,9 @@ export function nextActiveCase(state: WmState, closing: CaseAppId): CaseAppId | 
 /**
  * Build the starting WmState for a given URL route.
  *
- * Open: about (z=1), projects (z=2), and the route case app (z=3) if any.
+ * Home (route null): welcome open (z=1, focused), nextZ=2.
+ * Route: only the case window open (z=1, focused), nextZ=2.
  * rect is null for all windows — the UI converts defaultRect on first render.
- * focused = route ?? 'projects'; phoneActive = route; activeCase = route.
  */
 export function initialState(route: CaseAppId | null): WmState {
   const windows = {} as Record<AppId, WinState>;
@@ -139,20 +142,18 @@ export function initialState(route: CaseAppId | null): WmState {
     windows[app.id] = { open: false, minimized: false, maximized: false, rect: null, z: 0 };
   }
 
-  windows['about'] = { open: true, minimized: false, maximized: false, rect: null, z: 1 };
-  windows['projects'] = { open: true, minimized: false, maximized: false, rect: null, z: 2 };
-
-  let nextZ = 3;
   if (route !== null) {
-    windows[route] = { open: true, minimized: false, maximized: false, rect: null, z: 3 };
-    nextZ = 4;
+    windows[route] = { open: true, minimized: false, maximized: false, rect: null, z: 1 };
+  } else {
+    windows['welcome'] = { open: true, minimized: false, maximized: false, rect: null, z: 1 };
   }
 
   return {
     windows,
-    focused: route ?? 'projects',
-    nextZ,
+    focused: route ?? 'welcome',
+    nextZ: 2,
     phoneActive: route,
+    phoneParent: null,
     activeCase: route,
   };
 }
@@ -216,8 +217,11 @@ export function reduce(state: WmState, action: WmAction): WmState {
 
       // Carried item (Task 8): closing the active phone app clears phoneActive.
       const phoneActive = state.phoneActive === id ? null : state.phoneActive;
+      // Closing phoneActive or phoneParent clears the parent nav context.
+      const phoneParent =
+        state.phoneActive === id || state.phoneParent === id ? null : state.phoneParent;
 
-      return { ...state, windows: newWindows, focused, activeCase, phoneActive };
+      return { ...state, windows: newWindows, focused, activeCase, phoneActive, phoneParent };
     }
 
     // -----------------------------------------------------------------------
@@ -330,9 +334,10 @@ export function reduce(state: WmState, action: WmAction): WmState {
             ? topVisibleExcluding({ ...state, windows }, state.focused)
             : state.focused;
         // A non-case phone app opened while the URL was on its way home is the
-        // visitor's last intent: it stays in front.
+        // visitor's last intent: it stays in front, along with its parent context.
         const phoneActive = casePhoneApp ? null : state.phoneActive;
-        return { ...state, windows, focused, activeCase: null, phoneActive };
+        const phoneParent = casePhoneApp ? null : state.phoneParent;
+        return { ...state, windows, focused, activeCase: null, phoneActive, phoneParent };
       }
 
       // Open (or bring to front) the case window
@@ -351,20 +356,32 @@ export function reduce(state: WmState, action: WmAction): WmState {
         nextZ: state.nextZ + 1,
         activeCase: slug,
         phoneActive: slug,
+        phoneParent: null,
       };
     }
 
     // -----------------------------------------------------------------------
     case 'phoneOpen': {
       const { id } = action;
-      if (state.phoneActive === id) return state; // no-op
-      return { ...state, phoneActive: id };
+      const parent = action.parent ?? null;
+      // No-op when both phoneActive and phoneParent are unchanged.
+      if (state.phoneActive === id && state.phoneParent === parent) return state;
+      return { ...state, phoneActive: id, phoneParent: parent };
     }
 
     // -----------------------------------------------------------------------
     case 'phoneHome': {
       if (state.phoneActive === null) return state; // no-op
-      return { ...state, phoneActive: null };
+      return { ...state, phoneActive: null, phoneParent: null };
+    }
+
+    // -----------------------------------------------------------------------
+    case 'phoneBack': {
+      if (state.phoneActive === null) return state; // no-op at home
+      const parentOpen =
+        state.phoneParent !== null && state.windows[state.phoneParent]?.open === true;
+      const phoneActive = parentOpen ? state.phoneParent : null;
+      return { ...state, phoneActive, phoneParent: null };
     }
 
     // -----------------------------------------------------------------------
@@ -396,7 +413,7 @@ export function reduce(state: WmState, action: WmAction): WmState {
         } else {
           // For non-case apps: apply the full saved state.
           // When re-opening a window that was closed in initialState, assign a real z so it
-          // renders above the default windows (which start at z=1 and z=2).
+          // renders above windows that start at z=1 or z=2.
           const wasOpen = current.open;
           const willOpen = savedWin.open;
           const z = willOpen && !wasOpen ? nextZ++ : current.z;
@@ -421,7 +438,33 @@ export function reduce(state: WmState, action: WmAction): WmState {
         }
       }
 
-      return changed ? { ...state, windows: newWindows, nextZ } : state;
+      // When activeCase is set and not the topmost z, bring it to front.
+      const activeCase = state.activeCase;
+      if (activeCase !== null) {
+        const caseWin = newWindows[activeCase];
+        const notTop = Object.entries(newWindows).some(
+          ([id, w]) => id !== activeCase && w.z > caseWin.z,
+        );
+        if (notTop) {
+          newWindows[activeCase] = { ...caseWin, z: nextZ++ };
+          changed = true;
+        }
+      }
+
+      // Recompute focused: activeCase wins (and was already forced to the top
+      // above), then the topmost visible window, then null. The old "keep
+      // curFocused if still visible" branch is gone — it caused stale focus
+      // when a window opened after the last save sat above curFocused.
+      const curFocused = state.focused;
+      let newFocused: AppId | null;
+      if (activeCase !== null) {
+        newFocused = activeCase;
+      } else {
+        newFocused = visibleOrder({ ...state, windows: newWindows }).at(-1) ?? null;
+      }
+      if (newFocused !== curFocused) changed = true;
+
+      return changed ? { ...state, windows: newWindows, nextZ, focused: newFocused } : state;
     }
 
     // -----------------------------------------------------------------------

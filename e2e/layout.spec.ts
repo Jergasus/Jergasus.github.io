@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { themeColor, themeColorDark } from '@/design/theme-color';
-import { expect, test, visit } from './fixtures';
+import { expect, openFromIcon, test, visit } from './fixtures';
 import { ALL_PAGES, HOME_PAGES } from './pages';
 
 // Quality gate (spec §4 anti-goals, §5): nothing breaks at 375px, every
@@ -98,11 +98,10 @@ for (const path of HOME_PAGES) {
     await visit(page, path);
     const stops = await tabThrough(page);
     const expected = [
-      ...['about', 'projects'].flatMap((app) => [`minimize:${app}`, `maximize:${app}`, `close:${app}`]),
-      'item:questday',
-      'item:sakurai',
-      'item:rally-voley',
-      'item:yokaido',
+      ...['welcome'].flatMap((app) => [`minimize:${app}`, `maximize:${app}`, `close:${app}`]),
+      'item:projects',
+      'item:about',
+      'item:contact',
       'switcher:es',
       'switcher:ca',
       'switcher:en',
@@ -133,9 +132,9 @@ test.describe('touch', () => {
 
   // What a finger presses, and the property that answers.
   const PRESSES = [
-    { name: 'close button', press: '[data-app="about"] [data-win-close]', property: 'background-color' },
-    { name: 'minimise button', press: '[data-app="about"] [data-win-minimize]', property: 'background-color' },
-    { name: 'maximise button', press: '[data-app="about"] [data-win-maximize]', property: 'background-color' },
+    { name: 'close button', press: '[data-app="welcome"] [data-win-close]', property: 'background-color' },
+    { name: 'minimise button', press: '[data-app="welcome"] [data-win-minimize]', property: 'background-color' },
+    { name: 'maximise button', press: '[data-app="welcome"] [data-win-maximize]', property: 'background-color' },
     { name: 'project item', press: '[data-app="projects"] a[data-open-app]', property: 'background-color' },
     { name: 'yokaido item', press: '[data-app="projects"] button[data-open-app]', property: 'background-color' },
     { name: 'language switcher', press: '[data-taskbar] a[hreflang="en"]', property: 'background-color' },
@@ -145,6 +144,8 @@ test.describe('touch', () => {
     test(`pressing the ${name} shows a cue`, async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       await visit(page, '/');
+      // The yokaido item is in projects which is closed on home load; open it first.
+      if (press.includes('[data-app="projects"]')) await openFromIcon(page, 'projects');
       // Measure with the real fonts: a late font swap moves things.
       await page.evaluate(() => document.fonts.ready);
       const target = page.locator(press).first();

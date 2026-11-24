@@ -39,16 +39,27 @@ function firstBox(...elements: (HTMLElement | null | undefined)[]): Box | null {
   return null;
 }
 
+/**
+ * The home-screen element that represents an app on the phone.
+ * Lookup chain:
+ *   1. [data-phone-icon=id] — a direct home grid icon
+ *   2. [data-phone-home] [data-open-app=id] — a guide button in the phone home
+ */
+export function phoneHomeTarget(id: AppId): HTMLElement | null {
+  const q = (s: string) => document.querySelector<HTMLElement>(s);
+  return q(`[data-phone-icon="${id}"]`) ?? q(`[data-phone-home] [data-open-app="${id}"]`);
+}
+
 /** Where a window grows from: what opened it, else its taskbar button or its icon. */
 export function openOrigin(id: AppId, mode: Mode, opener?: HTMLElement | null): Box | null {
   return mode === 'phone'
-    ? firstBox(opener, query(`[data-phone-icon="${id}"]`))
+    ? firstBox(opener, phoneHomeTarget(id))
     : firstBox(opener, query(`[data-task="${id}"]`), query(`[data-icon="${id}"]`));
 }
 
 /** Where a closed window shrinks back to: what opened it, else its icon. */
 export function closeTarget(id: AppId, mode: Mode, opener?: HTMLElement | null): Box | null {
-  return firstBox(opener, query(mode === 'phone' ? `[data-phone-icon="${id}"]` : `[data-icon="${id}"]`));
+  return firstBox(opener, mode === 'phone' ? phoneHomeTarget(id) : query(`[data-icon="${id}"]`));
 }
 
 // ── Geometry ────────────────────────────────────────────────────────────────

@@ -3,43 +3,31 @@
 /**
  * BootScreen
  *
- * A full-viewport overlay shown on a first visit (html[data-boot="1"] is set
- * by the pre-paint script before the first paint).  Rendered server-side so
- * the lines appear instantly — no flash.  The JS side only drives the timer
- * and skip-on-input behaviour.
+ * A full-viewport overlay shown on every full page load (html[data-boot="1"]
+ * is set by the pre-paint IIFE before the first paint). Rendered server-side
+ * so the lines appear instantly — no flash.
  *
- * Click / tap capture strategy:
- *  - The overlay has NO pointer-events:none and NO inert, so it sits at
- *    z-index 9999 and intercepts all pointer events.
- *  - Dismiss is triggered by onClick (not pointerdown) on the boot screen div.
- *    At that moment the overlay is still visible (data-boot not yet removed),
- *    so the browser hit-tested the boot screen, NOT whatever is underneath.
- *    stopPropagation() + preventDefault() ensure React does not fire any
- *    handlers further up the tree, then we dismiss.
- *  - Keyboard dismiss is handled on the document so any key works.
- *  - aria-hidden="true" keeps it out of the accessibility tree.  There are no
- *    focusable children so a focus trap is not possible.
+ * Lifecycle (pre-paint script owns it):
+ *  - The IIFE sets data-boot="1", registers keydown and click capture
+ *    listeners on document, and schedules window.setTimeout(end, BOOT_MS).
+ *  - Any key or click calls end() at once — before or after hydration.
+ *  - end() removes data-boot, the listeners, and the timer.
+ *  - CSS hides the overlay when data-boot is absent.
+ *  - React has no boot logic here; this component is markup only.
  *
- * Lifetime: CSS hides it about 1.3 s after the first paint whatever the
- * scripts do (os-boot-out in os.css), so a slow or failed hydration never
- * holds the content back; this component ends it sooner on input and
- * remembers the visit.
+ * Animation: the skip hint is at step 0 (visible from the first paint), and
+ * the four lines appear at steps 1–4, one bootLine second apart.
+ * CSS drives the animation (--os-boot-step, --i), so it runs from the first
+ * paint before hydration. Reduced motion never boots.
  *
- * Motion: the lines appear one by one, a step (motion.os.bootLine) apart, like
- * an old machine printing its start-up checks. It is CSS (os.css), so it runs
- * from the first paint, before and during hydration; the step reaches it as
- * --os-boot-step and each line's index as --i. Reduced motion never boots.
+ * Accessibility: aria-hidden="true" keeps it out of the accessibility tree.
+ * There are no focusable children, so a focus trap is not possible.
+ * The boot never traps keyboard input after it ends.
  */
-import { useEffect, useRef, type CSSProperties, type MouseEvent } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from '@/design/motion';
-import { PREF_KEYS, writePref } from '@/os/storage';
 import { JgOsLogo } from '@/os/icons/JgOsLogo';
-
-/** Four loading lines and the skip hint, one step each. */
-const BEATS = 5;
-/** The boot ends one step after the last line appears (about 1 s). */
-const BOOT_MS = Math.round(BEATS * motion.os.bootLine * 1000);
 
 const step = (i: number) => ({ '--i': i }) as CSSProperties;
 
@@ -52,59 +40,24 @@ export type BootScreenProps = {
 
 export function BootScreen({ projectCount, totalCommits }: BootScreenProps) {
   const t = useTranslations('os.boot');
-  const dismissedRef = useRef(false);
-
-  const dismiss = () => {
-    if (dismissedRef.current) return;
-    dismissedRef.current = true;
-    document.documentElement.removeAttribute('data-boot');
-    writePref(PREF_KEYS.booted, '1');
-  };
-
-  useEffect(() => {
-    const html = document.documentElement;
-    // The boot screen is active only when the pre-paint set data-boot="1".
-    if (!html.hasAttribute('data-boot')) return;
-
-    // Skip on any key anywhere in the document.
-    document.addEventListener('keydown', dismiss);
-
-    // Auto-dismiss after the boot animation completes.
-    const timer = window.setTimeout(dismiss, BOOT_MS);
-
-    return () => {
-      document.removeEventListener('keydown', dismiss);
-      window.clearTimeout(timer);
-    };
-    // dismiss is stable (closure over refs) — no deps needed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Click handler: the click fires while the boot screen is still visible
-  // (data-boot not yet removed), so the browser hit-tested THIS element,
-  // not whatever is underneath.  stopPropagation absorbs it; then we dismiss.
-  const handleClick = (e: MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    dismiss();
-  };
 
   return (
     <div
       data-boot-screen
       aria-hidden="true"
-      onClick={handleClick}
       style={{ '--os-boot-step': `${motion.os.bootLine}s` } as CSSProperties}
     >
       <div className="os-boot-brand">
         <JgOsLogo size={104} />
         <p className="os-boot-name">JG-OS</p>
       </div>
-      <p className="os-boot-line" style={step(0)}>{t('line1')}</p>
-      <p className="os-boot-line" style={step(1)}>{t('line2', { count: projectCount })}</p>
-      <p className="os-boot-line" style={step(2)}>{t('line3', { total: totalCommits })}</p>
-      <p className="os-boot-line" style={step(3)}>{t('line4')}</p>
-      <p className="os-boot-skip" style={step(4)}>{t('skip')}</p>
+      <p className="os-boot-line" style={step(1)}>{t('line1')}</p>
+      <p className="os-boot-line" style={step(2)}>{t('line2', { count: projectCount })}</p>
+      <p className="os-boot-line" style={step(3)}>{t('line3', { total: totalCommits })}</p>
+      <p className="os-boot-line" style={step(4)}>{t('line4')}</p>
+      {/* Two hints: CSS shows the right one for the input device. */}
+      <p className="os-boot-skip os-boot-skip--key" data-boot-hint="key" style={step(0)}>{t('skip')}</p>
+      <p className="os-boot-skip os-boot-skip--touch" data-boot-hint="touch" style={step(0)}>{t('skipTouch')}</p>
     </div>
   );
 }

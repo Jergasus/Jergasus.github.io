@@ -8,13 +8,21 @@ import localFont from 'next/font/local';
  * puts all three on <html> (osFontVariables).
  */
 
-/** Pixelify Sans (wght 400–700): window titles, taskbar and OS chrome. */
+/**
+ * VT323 (weight 400 only): window titles, taskbar and OS chrome.
+ *
+ * size-adjust: 125% compensates for VT323's narrower metrics — it renders
+ * ~20-25% smaller than Pixelify Sans at the same font-size. The multiplier
+ * restores the original visual weight without touching every size declaration.
+ * font-synthesis-weight: none in os.css prevents faux-bold synthesis.
+ */
 export const osPixelFont = localFont({
-  src: './fonts/pixelify-sans-wght-latin.woff2',
-  weight: '400 700',
+  src: './fonts/vt323-400-latin.woff2',
+  weight: '400',
   variable: '--font-os-pixel',
   fallback: ['monospace'],
   adjustFontFallback: false,
+  declarations: [{ prop: 'size-adjust', value: '125%' }],
 });
 
 /** IBM Plex Sans (wght 400–600): long-form text (case studies, bio). */

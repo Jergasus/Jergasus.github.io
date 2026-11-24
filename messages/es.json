@@ -7,7 +7,7 @@
     "label": "Cambiar idioma"
   },
   "hero": {
-    "lede": "Desarrollador full-stack en Barcelona. Construyo webs, apps y herramientas digitales de la interfaz al servidor.",
+    "lede": "Desarrollador full-stack en Barcelona.",
     "availability": {
       "available": "Aceptando nuevos proyectos",
       "unavailable": "Ahora mismo no acepto proyectos"
@@ -155,9 +155,19 @@
       "stackNote": "Next.js 16 en exportación estática, Dexie sobre IndexedDB en el móvil y un Worker de Cloudflare con D1 para sincronizar. GSAP para el movimiento, que respeta la preferencia de movimiento reducido, y Vitest y Playwright para las pruebas."
     }
   },
+  "welcome": {
+    "question": "¿Por dónde empiezas?",
+    "seeProjects": "Ver proyectos",
+    "explore": "Cierra esta ventana para explorar JG-OS ↓",
+    "explorePhone": "O explora las apps de abajo ↓"
+  },
   "os": {
     "name": "JG-OS",
     "apps": {
+      "welcome": {
+        "title": "bienvenida.txt",
+        "label": "Bienvenida"
+      },
       "about": {
         "title": "sobre_mi.txt",
         "label": "Sobre mí"
@@ -268,23 +278,19 @@
     "phone": {
       "back": "‹ Inicio",
       "homeLabel": "Inicio",
-      "activityTitle": "actividad",
       "dock": {
         "mailLabel": "Correo",
         "whatsappLabel": "WhatsApp"
       },
-      "activity": {
-        "commits": "{total, number} commits",
-        "lastServer": "último: {date}",
-        "lastLive": "último: {time}"
-      }
+      "backTo": "‹ {app}"
     },
     "boot": {
       "line1": "Iniciando JG-OS…",
       "line2": "Cargando {count, plural, one {# proyecto} other {# proyectos}}…",
       "line3": "{total, number} commits encontrados",
       "line4": "Listo.",
-      "skip": "Pulsa cualquier tecla para continuar"
+      "skip": "Pulsa cualquier tecla para continuar",
+      "skipTouch": "Toca la pantalla para continuar"
     },
     "notifications": {
       "commit": "Nuevo commit en {project} {when}",

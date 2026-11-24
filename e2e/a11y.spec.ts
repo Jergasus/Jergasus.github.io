@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { apps, isCaseApp, PHONE_ICON_ORDER, type AppId } from '@/os/apps';
-import { expect, test, visit, win } from './fixtures';
+import { expect, test, visit, win, openFromStart } from './fixtures';
+import { WELCOME_DELAY_MS } from '@/os/shell/toast-timing';
 import { ALL_PAGES } from './pages';
 
 // Quality gate (spec §5, WCAG 2.2 AA): axe finds no violation on any page,
@@ -88,12 +89,6 @@ for (const [mode, options] of Object.entries(MODES)) {
 const DESKTOP_APPS = apps.map((app) => app.id).filter((id) => !isCaseApp(id));
 const PHONE_APPS = PHONE_ICON_ORDER.filter((id) => !isCaseApp(id));
 
-async function openFromStart(page: Page, id: AppId) {
-  await page.locator('[data-start]').click();
-  await page.locator(`[data-start-menu] [data-open-app="${id}"]`).click();
-  await expect(win(page, id)).toHaveAttribute('data-win-state', 'open');
-}
-
 for (const colorScheme of THEMES) {
   test.describe(`every desktop app, ${colorScheme}`, () => {
     test.use({ colorScheme, viewport: { width: 1440, height: 900 } });
@@ -118,6 +113,14 @@ for (const colorScheme of THEMES) {
         expect(await axeReport(page, `[data-app="${id}"]`)).toEqual([]);
       });
     }
+
+    // projects is not in PHONE_ICON_ORDER but opens from the guide button
+    test('no axe violations in the projects app', async ({ page }) => {
+      await visit(page, '/');
+      await page.locator('[data-phone-home] button[data-open-app="projects"]').tap();
+      await expect(win(page, 'projects')).toHaveAttribute('data-phone-active', 'true');
+      expect(await axeReport(page, '[data-app="projects"]')).toEqual([]);
+    });
   });
 
   // A commit notification, on the desktop and on the phone.
@@ -129,7 +132,8 @@ for (const colorScheme of THEMES) {
         // Close to the snapshot, so at least one commit is fresh.
         await page.clock.install({ time: new Date('2026-11-19T23:30:00Z') });
         await visit(page, '/');
-        await page.clock.fastForward(1500);
+        // Welcome is open at '/', so the toast waits 8 s.
+        await page.clock.fastForward(WELCOME_DELAY_MS + 500);
         await expect(page.locator('[data-toast]').first()).toBeVisible();
         expect(await axeReport(page, '[data-toasts]')).toEqual([]);
       });

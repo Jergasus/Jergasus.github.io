@@ -89,7 +89,7 @@ export function Taskbar({ locale, available, availabilityLabel }: Props) {
               className="os-task-btn"
               aria-pressed={isFocused}
               onClick={() => handleTaskClick(id)}
-              style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
+              style={{ '--app': `var(--os-c-${app.colour})`, '--app-fg': `var(--os-c-${app.colour}-fg, #111111)`, '--app-hover-bg': `var(--os-c-${app.colour}-hover-bg, var(--os-ink))`, '--app-hover-fg': `var(--os-c-${app.colour}-hover-fg, var(--os-window))` } as React.CSSProperties}
             >
               <Icon size={18} />
               <span className="os-task-label">{t(`apps.${app.messageKey}.label`)}</span>

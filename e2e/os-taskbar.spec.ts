@@ -7,16 +7,15 @@ import { expect, test, visit, win, openFromIcon, taskbar } from './fixtures';
 
 test('taskbar shows a button per open window and toggles minimise/restore', async ({ page }) => {
   await visit(page, '/');
-  // about and projects are open by default
-  await expect(taskbar(page).locator('[data-task="about"]')).toBeVisible();
-  await expect(taskbar(page).locator('[data-task="projects"]')).toBeVisible();
+  // welcome is the only window open by default
+  await expect(taskbar(page).locator('[data-task="welcome"]')).toBeVisible();
   // clicking the focused window's button minimises it
-  await win(page, 'projects').focus();
-  await taskbar(page).locator('[data-task="projects"]').click();
-  await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'minimized');
+  await win(page, 'welcome').focus();
+  await taskbar(page).locator('[data-task="welcome"]').click();
+  await expect(win(page, 'welcome')).toHaveAttribute('data-win-state', 'minimized');
   // clicking again restores
-  await taskbar(page).locator('[data-task="projects"]').click();
-  await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'open');
+  await taskbar(page).locator('[data-task="welcome"]').click();
+  await expect(win(page, 'welcome')).toHaveAttribute('data-win-state', 'open');
 });
 
 // ── Start menu ────────────────────────────────────────────────────────────
@@ -78,7 +77,7 @@ test('keyboard reaches every app from the desktop icons and from the start menu'
   page,
 }) => {
   await visit(page, '/');
-  // Open activity and business from desktop icons
+  // Open activity from its desktop icon, business from its desktop icon
   await openFromIcon(page, 'activity');
   await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
   await openFromIcon(page, 'business');
@@ -97,9 +96,10 @@ test('right-click → Cambiar fondo → Atardecer sets data-wallpaper=sunset and
   page,
 }) => {
   await visit(page, '/');
-  // Right-click below the about window (y>500) and right of the icons (x>240),
-  // with room for the submenu to expand rightward. No windows in this area.
-  await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
+  // Right-click in the gap between the icon column (right edge ≈240px at 1280×720,
+  // two columns active because height < 1200px) and the welcome window (left edge
+  // ≈488px, centred in the remaining 1040px). No windows here.
+  await page.mouse.click(250, 400, { button: 'right' });
   const contextMenu = page.locator('[data-context-menu]');
   await expect(contextMenu).toBeVisible();
   await expect(contextMenu).toHaveAccessibleName('Escritorio');
@@ -120,7 +120,7 @@ test('the context menu is named in the page’s language', async ({ page }) => {
     ['/en/', 'Desktop'],
   ] as const) {
     await visit(page, path);
-    await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
+    await page.mouse.click(250, 400, { button: 'right' });
     await expect(page.locator('[data-context-menu]')).toHaveAccessibleName(name);
     await page.keyboard.press('Escape');
   }

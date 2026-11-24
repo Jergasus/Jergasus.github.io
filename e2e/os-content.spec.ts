@@ -48,6 +48,8 @@ const snapshotDate = (locale: Locale) =>
 for (const { locale, path } of LOCALES) {
   test(`about shows the name, bio and availability label (${locale})`, async ({ page }) => {
     await visit(page, path);
+    // about is closed on home load; open it before checking its content.
+    await openFromIcon(page, 'about');
     const about = win(page, 'about');
     await expect(about.getByRole('heading', { level: 2 })).toHaveText('Jesús García');
     await expect(about.getByText(messages(locale).about.bio)).toBeVisible();
@@ -58,6 +60,8 @@ for (const { locale, path } of LOCALES) {
 
 test('projects lists 4 projects in order with status labels; yokaido opens its card, not a page', async ({ page }) => {
   await visit(page, '/');
+  // projects is closed on home load; open it before checking its content.
+  await openFromIcon(page, 'projects');
   const list = win(page, 'projects');
   const items = list.locator('[data-open-app]');
   await expect(items).toHaveText(projects.map((project) => new RegExp(project.name)));
@@ -87,6 +91,8 @@ test('projects lists 4 projects in order with status labels; yokaido opens its c
 
 test('project links keep the locale', async ({ page }) => {
   await visit(page, '/en/');
+  // projects is closed on home load; open it before checking its content.
+  await openFromIcon(page, 'projects');
   for (const slug of ['questday', 'sakurai', 'rally-voley']) {
     await expect(win(page, 'projects').locator(`a[data-open-app="${slug}"]`)).toHaveAttribute(
       'href',

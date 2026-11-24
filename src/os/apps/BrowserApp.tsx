@@ -40,6 +40,7 @@ export function BrowserApp() {
   useLayoutEffect(() => {
     window.clearTimeout(timerRef.current);
     if (showIframe) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(true);
       setFailed(false);
       timerRef.current = setTimeout(() => {

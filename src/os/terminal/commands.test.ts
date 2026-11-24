@@ -116,6 +116,9 @@ describe('runCommand: proyectos', () => {
 
 describe('runCommand: abrir <app>', () => {
   const openCases: Array<[string, string]> = [
+    ['abrir bienvenida', 'welcome'],
+    ['open welcome', 'welcome'],
+    ['obre benvinguda', 'welcome'],
     ['abrir sobre', 'about'],
     ['abrir about', 'about'],
     ['open sobre', 'about'],

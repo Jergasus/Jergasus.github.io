@@ -85,7 +85,7 @@ export function DesktopIcons() {
             type="button"
             data-icon={id}
             className={`os-icon${isSelected ? ' os-icon--selected' : ''}`}
-            style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
+            style={{ '--app': `var(--os-c-${app.colour})`, '--app-fg': `var(--os-c-${app.colour}-fg, #111111)`, '--app-hover-bg': `var(--os-c-${app.colour}-hover-bg, var(--os-ink))`, '--app-hover-fg': `var(--os-c-${app.colour}-hover-fg, var(--os-window))` } as React.CSSProperties}
             onPointerUp={(e) => handlePointerUp(id, e)}
             onClick={(e) => handleClick(id, e)}
             onKeyDown={(e) => handleKeyDown(e, index)}

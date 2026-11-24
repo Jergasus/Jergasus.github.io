@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { DESKTOP_ICON_ORDER, type AppId, type CaseAppId } from '@/os/apps';
-import { bringToFront, expect, test, visit, win } from './fixtures';
+import { bringToFront, expect, openFromIcon, openFromStart, test, visit, win } from './fixtures';
 
 // The OS shell on a desktop (Desktop Chrome, 1280 x 720): windows open,
 // close, minimise and maximise from their buttons; project windows own the
@@ -16,11 +16,15 @@ type Messages = {
 };
 const es = readJson<Messages>('../messages/es.json');
 
-const CONTENT_WINDOWS: AppId[] = ['about', 'projects', 'yokaido', 'activity', 'business', 'contact', 'system'];
-const CLOSED_ON_LOAD: AppId[] = ['activity', 'business', 'contact', 'system', 'yokaido'];
+const CONTENT_WINDOWS: AppId[] = ['welcome', 'about', 'projects', 'yokaido', 'activity', 'business', 'contact', 'system'];
+const CLOSED_ON_LOAD: AppId[] = ['about', 'projects', 'activity', 'business', 'contact', 'system', 'yokaido'];
 
-/** Opens a project from the projects window, raising that window first if a project covers it. */
+/** Opens a project from the projects window, opening projects first if it is not open. */
 async function openProject(page: Page, slug: CaseAppId) {
+  if ((await win(page, 'projects').getAttribute('data-win-state')) !== 'open') {
+    await openFromIcon(page, 'projects');
+    await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'open');
+  }
   const item = win(page, 'projects').locator(`[data-open-app="${slug}"]`);
   if ((await win(page, 'projects').getAttribute('data-focused')) !== 'true') {
     await bringToFront(page, 'projects');
@@ -41,19 +45,15 @@ const visibleWindows = (page: Page) =>
       sections.filter((section) => section.getClientRects().length > 0).map((section) => section.getAttribute('data-app')),
     );
 
-test('home opens about and projects; projects is focused', async ({ page }) => {
+test('home opens welcome; welcome is focused', async ({ page }) => {
   await visit(page, '/');
-  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
-  await expect(win(page, 'about')).toHaveAttribute('data-focused', 'false');
-  await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'open');
-  await expect(win(page, 'projects')).toHaveAttribute('data-focused', 'true');
-  await expect(win(page, 'about')).toBeVisible();
-  await expect(win(page, 'projects')).toBeVisible();
+  await expect(win(page, 'welcome')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'welcome')).toHaveAttribute('data-focused', 'true');
+  await expect(win(page, 'welcome')).toBeVisible();
   for (const id of CLOSED_ON_LOAD) {
     await expect(win(page, id), id).toHaveAttribute('data-win-state', 'closed');
     await expect(win(page, id), id).toBeHidden();
   }
-  expect(await zIndex(page, 'projects')).toBeGreaterThan(await zIndex(page, 'about'));
 });
 
 test('html gets data-os=desktop before hydration finishes', async ({ page }) => {
@@ -67,11 +67,14 @@ test('html gets data-os=desktop before hydration finishes', async ({ page }) => 
   await expect(html).not.toHaveAttribute('data-os-ready', /.*/);
   // The windows are laid out as a desktop from the first paint.
   await expect(win(page, 'activity')).toBeHidden();
-  await expect(win(page, 'about')).toBeVisible();
+  await expect(win(page, 'welcome')).toBeVisible();
 });
 
 test('close, minimise and maximise buttons change data-win-state / data-maximized', async ({ page }) => {
   await visit(page, '/');
+  // about and projects are closed on home load; open them before interacting.
+  await openFromIcon(page, 'about');
+  await openFromIcon(page, 'projects');
   const about = win(page, 'about');
 
   await about.locator('[data-win-maximize]').click();
@@ -109,6 +112,7 @@ test('opening a project from the projects window navigates to /work/<slug>/ and 
 
 test('project windows keep the language in the URL', async ({ page }) => {
   await visit(page, '/en/');
+  await openFromIcon(page, 'projects');
   await win(page, 'projects').locator('[data-open-app="rally-voley"]').click();
   await expect(page).toHaveURL('/en/work/rally-voley/');
   await expect(win(page, 'rally-voley').getByRole('heading', { level: 1 })).toHaveText('Rally Voley');
@@ -122,7 +126,7 @@ test('closing the only case window returns to / and keeps other windows as they 
   await win(page, 'questday').locator('[data-win-close]').click();
   await expect(page).toHaveURL('/');
   await expect(win(page, 'questday')).toHaveCount(0);
-  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'welcome')).toHaveAttribute('data-win-state', 'open');
   await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'open');
   // Focus goes back to what opened the window.
   await expect(win(page, 'projects').locator('[data-open-app="questday"]')).toBeFocused();
@@ -327,9 +331,20 @@ test('/ → questday → sakurai, back twice', async ({ page }) => {
   await expect(page.locator('[data-app="questday"], [data-app="sakurai"], [data-app="rally-voley"]')).toHaveCount(0);
   // Nothing left to touch that could rewrite home's history entry.
   const length = await page.evaluate(() => history.length);
-  await win(page, 'projects').locator('[data-titlebar]').click({ position: { x: 12, y: 10 } });
+  await win(page, 'welcome').locator('[data-titlebar]').click({ position: { x: 12, y: 10 } });
   await expect(page).toHaveURL('/');
   expect(await page.evaluate(() => history.length)).toBe(length);
+});
+
+test('reload on a project page keeps it in front of the windows the session reopens', async ({ page }) => {
+  await visit(page, '/work/questday/');
+  await openFromStart(page, 'terminal');
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('jgos-windows'))).toContain('"terminal":{"open":true');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-os-ready', '1');
+  await expect(win(page, 'terminal')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'questday')).toHaveAttribute('data-focused', 'true');
+  expect(await zIndex(page, 'questday')).toBeGreaterThan(await zIndex(page, 'terminal'));
 });
 
 test('reload on /work/sakurai/ after opening two projects shows only sakurai', async ({ page }) => {
@@ -356,10 +371,9 @@ test('loading /work/sakurai/ directly opens sakurai focused on top', async ({ pa
   const sakurai = win(page, 'sakurai');
   await expect(sakurai).toBeVisible();
   await expect(sakurai).toHaveAttribute('data-focused', 'true');
-  for (const id of ['about', 'projects'] as const) {
-    await expect(win(page, id)).toHaveAttribute('data-win-state', 'open');
-    expect(await zIndex(page, 'sakurai')).toBeGreaterThan(await zIndex(page, id));
-  }
+  // On a case route, only the case window opens; about and projects are closed.
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'closed');
+  await expect(win(page, 'projects')).toHaveAttribute('data-win-state', 'closed');
 });
 
 test('exactly one h1 on home and on a case page', async ({ page }) => {
@@ -380,7 +394,7 @@ test.describe('without JavaScript', () => {
     await expect(page.locator('h1')).toBeVisible();
     expect(await visibleWindows(page)).toEqual(CONTENT_WINDOWS);
     // Stacked as a document: each visible window starts below the one before.
-    // (interactiveOnly windows like settings are display:none and excluded.)
+    // (interactive-only windows like settings, terminal etc. are display:none and excluded.)
     const tops = await page
       .locator('[data-app]')
       .evaluateAll((sections) =>
@@ -410,25 +424,23 @@ test('print media shows the document layout with every content window', async ({
   await expect(page.locator('[data-phone-home]')).toBeHidden();
 });
 
-// Visitors don't discover the right-click menu, so wallpaper, theme and
-// language are one click away from a desktop icon too.
-test('a Personalizar icon on the desktop opens the settings window', async ({ page }) => {
+test('Personalizar opens the settings window from its desktop icon', async ({ page }) => {
   await visit(page, '/');
-  const icon = page.locator('[data-icon="settings"]');
-  await expect(icon).toBeVisible();
-  await expect(icon).toContainText('Personalizar');
-  await icon.dblclick();
+  await openFromIcon(page, 'settings');
   await expect(win(page, 'settings')).toHaveAttribute('data-win-state', 'open');
 });
 
-// Carried item (Task 14): on a laptop screen the desktop icons flow into a
-// second column instead of hiding below the fold, and the windows open on
-// load start clear of them.
+// Every desktop icon must stay on screen and not be covered by a window, at
+// all supported viewport heights. At ≤ 75rem height the column doubles.
 for (const viewport of [
-  { width: 1440, height: 900 },
+  { width: 1024, height: 640 },
   { width: 1280, height: 720 },
+  { width: 1366, height: 657 },
+  { width: 1440, height: 900 },
   { width: 1920, height: 1080 },
   { width: 1920, height: 1200 },
+  { width: 1920, height: 1201 },
+  { width: 2560, height: 1440 },
 ]) {
   test(`every desktop icon is fully on screen and uncovered at ${viewport.width}x${viewport.height}`, async ({ page }) => {
     await page.setViewportSize(viewport);
@@ -437,7 +449,10 @@ for (const viewport of [
     const desk = (await page.locator('[data-desktop]').boundingBox())!;
     const icons = page.locator('[data-icon]');
     await expect(icons).toHaveCount(DESKTOP_ICON_ORDER.length);
-    const windows = await Promise.all(['about', 'projects'].map(async (id) => (await win(page, id as AppId).boundingBox())!));
+    // Open Sobre mí so ordinary windows (placed by --os-win-min-x) are covered too.
+    await openFromIcon(page, 'about');
+    await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
+    const windows = await Promise.all(['welcome', 'about'].map(async (id) => (await win(page, id as AppId).boundingBox())!));
     for (const icon of await icons.all()) {
       const name = (await icon.getAttribute('data-icon'))!;
       const box = (await icon.boundingBox())!;
@@ -451,13 +466,16 @@ for (const viewport of [
         expect(apart, `${name} is under a window`).toBe(true);
       }
     }
+    // 1200 px is the 75rem breakpoint: above it one column, at or below two.
+    const xs = await icons.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().x)));
+    expect(new Set(xs).size, 'icon columns').toBe(viewport.height > 1200 ? 1 : 2);
     // Nothing to scroll in the icon area.
     const column = page.locator('.os-icon-col');
     expect(await column.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(0);
-    // The two windows open on load sit side by side: neither hides the
-    // other's titlebar buttons.
-    const [about, projects] = windows;
-    expect(about.x + about.width, 'about overlaps projects').toBeLessThanOrEqual(projects.x);
+    // The centred welcome window starts to the right of the icon column's right edge.
+    const colBox = (await column.boundingBox())!;
+    const welcomeBox = windows[0]; // welcome is the first entry in the windows array above
+    expect(welcomeBox.x, 'welcome.x >= icon column right edge').toBeGreaterThanOrEqual(colBox.x + colBox.width - 2);
   });
 }
 
@@ -504,3 +522,74 @@ for (const path of ['/', '/ca/', '/en/']) {
     expect(broken).toEqual([]);
   });
 }
+
+// Every project has its own desktop icon, so closing a deep-linked project
+// focuses that project's own icon.
+test('closing a deep-linked project with nothing else open focuses its own desktop icon', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await visit(page, '/work/questday/');
+  // On a deep link only questday is open and focused; there is no opener stored for it.
+  await win(page, 'questday').locator('[data-win-close]').click();
+  await expect(page).toHaveURL('/');
+  // The questday desktop icon must receive focus.
+  const questdayIcon = page.locator('[data-icon="questday"]');
+  await expect(questdayIcon).toBeFocused();
+});
+
+// When another window is in front, closing a window that was opened without an
+// explicit opener (e.g. from the terminal) should focus that front window, not
+// the closed window's desktop icon.
+test('closing a window opened by the terminal focuses the terminal, not the closed window\'s icon', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await visit(page, '/');
+  // Open terminal and type "abrir sobre" to open Sobre mí from the terminal.
+  // The terminal does not pass an opener element, so the openers map has no entry.
+  await openFromStart(page, 'terminal');
+  await expect(win(page, 'terminal')).toHaveAttribute('data-win-state', 'open');
+  const termInput = win(page, 'terminal').getByRole('textbox');
+  await termInput.fill('abrir sobre');
+  await termInput.press('Enter');
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'open');
+  await expect(win(page, 'about')).toHaveAttribute('data-focused', 'true');
+
+  // Close Sobre mí; with no opener stored for it, focus must land on the
+  // terminal (the topmost remaining visible window), not on the Sobre mí icon.
+  await win(page, 'about').locator('[data-win-close]').click();
+  await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'closed');
+  await expect(win(page, 'terminal')).toHaveAttribute('data-focused', 'true');
+  // Keyboard focus must be inside the terminal or on its frame, not on the icon.
+  await expect(page.locator('[data-icon="about"]')).not.toBeFocused();
+});
+
+// F6: after a reload, the taskbar button of the front window minimises it,
+// and the back window's button raises it (stale-focus fix).
+test('after a reload, the front window taskbar minimises it and the back one raises it', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  // Open contact (non-case, opens on top of welcome).
+  await visit(page, '/');
+  await openFromStart(page, 'contact');
+  await expect(win(page, 'contact')).toHaveAttribute('data-focused', 'true');
+
+  // Persist the state, then reload.
+  await expect.poll(() => page.evaluate(() => sessionStorage.getItem('jgos-windows'))).toContain('"contact":{"open":true');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-os-ready', '1');
+
+  // After reload, contact is the topmost visible window → it must be focused.
+  await expect(win(page, 'contact')).toHaveAttribute('data-focused', 'true');
+
+  // welcome is behind and NOT focused → clicking its taskbar RAISES it, does not minimise it.
+  const welcomeTask = page.locator('[data-taskbar] [data-task="welcome"]');
+  await expect(welcomeTask).not.toHaveAttribute('aria-pressed', 'true');
+  await welcomeTask.click();
+  // welcome raised: now focused, still open.
+  await expect(win(page, 'welcome')).toHaveAttribute('data-focused', 'true');
+  await expect(win(page, 'welcome')).toHaveAttribute('data-win-state', 'open');
+
+  // contact is now behind — clicking its taskbar RAISES it (not minimises it).
+  const contactTask = page.locator('[data-taskbar] [data-task="contact"]');
+  await expect(contactTask).not.toHaveAttribute('aria-pressed', 'true');
+  await contactTask.click();
+  await expect(win(page, 'contact')).toHaveAttribute('data-focused', 'true');
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
+});

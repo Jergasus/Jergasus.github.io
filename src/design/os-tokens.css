@@ -30,8 +30,9 @@
     0 1px 0 var(--os-icon-halo), 1px 1px 0 var(--os-icon-halo);
 
   /* ── App colours (identical in day and night) ────────────────────────── */
-  /* These are titlebar fills. Text colour on all is always #111111; every
-     one of them delivers ≥ 4.5:1 contrast (os-tokens.test.ts asserts this). */
+  /* These are titlebar fills. Light colours use #111111 as text; grey uses
+     its own foreground (#ede7d9, in --os-c-grey-fg). Every pair delivers
+     ≥ 4.5:1 contrast (os-tokens.test.ts asserts this). */
   --os-c-yellow: #ffd84d;
   --os-c-pink: #f2a7c3;
   --os-c-green: #b6e36b;
@@ -41,6 +42,13 @@
   --os-c-mint: #9de0ad;
   --os-c-sky: #a9dcf2;
   --os-c-cream: #f4ecd2;
+  /* grey: a dark-grey tile (the welcome app). --os-c-grey-fg is the matching
+     light foreground; components pass both as --app and --app-fg.
+     hover-bg/fg: inverted pair so the button flips to cream on :hover. */
+  --os-c-grey: #5c6069;
+  --os-c-grey-fg: #ede7d9;
+  --os-c-grey-hover-bg: #ede7d9;
+  --os-c-grey-hover-fg: #111111;
 
   /* ── Signals ─────────────────────────────────────────────────────────── */
   --os-ok: #2ea043;

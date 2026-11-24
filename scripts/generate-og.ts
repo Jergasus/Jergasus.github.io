@@ -53,7 +53,7 @@ function parseTokens(cssPath: string): Record<string, string> {
 const tokens = parseTokens(join(root, 'src/design/os-tokens.css'));
 
 /** The card uses these; a missing one stops the script rather than drawing a guess. */
-const REQUIRED = ['desk', 'window', 'ink', 'border', 'shadow', 'label-bg', 'label-ink', 'wp-dots', 'c-lilac', 'border-w', 'shadow-offset', 'radius-icon'];
+const REQUIRED = ['desk', 'window', 'ink', 'border', 'shadow', 'wp-dots', 'c-lilac', 'border-w', 'shadow-offset', 'radius-icon'];
 for (const name of REQUIRED) {
   if (!tokens[name]) throw new Error(`src/design/os-tokens.css: --os-${name} is missing from the day :root block`);
 }
@@ -67,7 +67,7 @@ const tokenCss = Object.entries(tokens)
 
 const font = (file: string) =>
   `data:font/woff2;base64,${readFileSync(join(root, 'src/design/fonts', file)).toString('base64')}`;
-const PIXEL = font('pixelify-sans-wght-latin.woff2');
+const PIXEL = font('vt323-400-latin.woff2');
 const SANS = font('ibm-plex-sans-wght-latin.woff2');
 
 // ── Words ────────────────────────────────────────────────────────────────────
@@ -121,11 +121,11 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
 <head>
 <meta charset="utf-8">
 <style>
-  @font-face { font-family: 'Pixelify Sans'; src: url('${PIXEL}') format('woff2'); font-weight: 400 700; }
+  @font-face { font-family: 'VT323'; src: url('${PIXEL}') format('woff2'); font-weight: 400; }
   @font-face { font-family: 'IBM Plex Sans'; src: url('${SANS}') format('woff2'); font-weight: 400 600; }
   :root {
     ${tokenCss}
-    --pixel: 'Pixelify Sans', monospace;
+    --pixel: 'VT323', monospace;
     --sans: 'IBM Plex Sans', sans-serif;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -163,9 +163,9 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
   }
   .chip {
     padding: 1px 4px;
-    font: 600 11px/1.2 var(--pixel);
-    color: var(--os-label-ink);
-    background: var(--os-label-bg);
+    font: 400 14px/1.2 var(--pixel);
+    color: var(--os-ink);
+    background: var(--os-window);
   }
 
   /* The window. */
@@ -188,7 +188,7 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
     background-color: var(--os-c-lilac);
     background-image: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.18) 2px 3px);
     border-bottom: var(--os-border-w) solid var(--os-border);
-    font: 600 15px/1 var(--pixel);
+    font: 400 19px/1 var(--pixel);
   }
   .patch { display: flex; align-items: center; gap: 6px; padding: 3px 6px 3px 4px; background: var(--os-c-lilac); }
   .grow { flex: 1; }
@@ -204,7 +204,7 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
   }
   .body { padding: 20px 22px 24px; }
   .name {
-    font: 700 42px/1.05 var(--pixel);
+    font: 400 52px/1.05 var(--pixel);
     letter-spacing: 0.01em;
   }
   .lede {
@@ -232,7 +232,7 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
     gap: 7px;
     height: 32px;
     padding: 2px 10px 2px 6px;
-    font: 700 15px/1 var(--pixel);
+    font: 400 19px/1 var(--pixel);
     border: var(--os-border-w) solid var(--os-border);
   }
   .task {
@@ -241,14 +241,14 @@ function buildHtml(locale: (typeof LOCALES)[number]): string {
     gap: 6px;
     height: 32px;
     padding: 0 10px 0 5px;
-    font: 600 13px/1 var(--pixel);
+    font: 400 16px/1 var(--pixel);
     color: #111111;
     background: var(--os-c-lilac);
     border: var(--os-border-w) solid var(--os-border);
     box-shadow: inset 1px 1px 0 rgb(0 0 0 / 0.5), inset -1px -1px 0 rgb(0 0 0 / 0.25);
   }
   .tray { margin-left: auto; display: flex; gap: 4px; }
-  .lang { padding: 2px 6px; font: 600 12px/1 var(--pixel); border: var(--os-border-w) solid transparent; }
+  .lang { padding: 2px 6px; font: 400 15px/1 var(--pixel); border: var(--os-border-w) solid transparent; }
   .lang.current { border-color: currentColor; }
 </style>
 </head>

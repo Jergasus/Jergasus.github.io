@@ -1,5 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
-import { expect, openFromIcon, taskbar, test, visit, win } from './fixtures';
+import { expect, openFromIcon, tapInView, taskbar, test, visit, win } from './fixtures';
+import { PHONE_ICON_ORDER } from '@/os/apps';
+import { WELCOME_DELAY_MS } from '@/os/shell/toast-timing';
 
 /**
  * JG-OS motion (spec §6.4). E2E builds expose window.__motionDebug (ruling R4,
@@ -93,16 +95,16 @@ const drawn = (page: Page, kind: 'open' | 'close') =>
 
 test('opening a window plays os-open and tweens only transform/opacity', async ({ page }) => {
   await ready(page);
-  const activity = win(page, 'activity');
+  const contact = win(page, 'contact');
 
-  await openFromIcon(page, 'activity');
+  await openFromIcon(page, 'contact');
   // The state is final at once; only the picture catches up.
-  await expect(activity).toHaveAttribute('data-win-state', 'open');
+  await expect(contact).toHaveAttribute('data-win-state', 'open');
   await expect.poll(() => played(page)).toContain('os-open');
 
   await settled(page);
-  await expect(activity).toBeVisible();
-  expect(await leftovers(activity)).toEqual(CLEAN);
+  await expect(contact).toBeVisible();
+  expect(await leftovers(contact)).toEqual(CLEAN);
   expect(await properties(page)).toEqual(expect.arrayContaining(['opacity', 'scaleX', 'scaleY', 'x', 'y']));
   expect(await notAnimatable(page)).toEqual([]);
 });
@@ -110,10 +112,10 @@ test('opening a window plays os-open and tweens only transform/opacity', async (
 test('the open outline grows from the icon while the window waits for it', async ({ page }) => {
   await ready(page);
   await timeScale(page, FROZEN);
-  const icon = page.locator('[data-icon="activity"]');
+  const icon = page.locator('[data-icon="contact"]');
   const iconBox = await box(icon);
 
-  await openFromIcon(page, 'activity');
+  await openFromIcon(page, 'contact');
   await expect(page.locator('[data-motion-outline="open"]')).toHaveCount(1);
   // It starts on the icon...
   const start = await drawn(page, 'open');
@@ -127,52 +129,52 @@ test('the open outline grows from the icon while the window waits for it', async
     .evaluateAll((all) => all.map((edge) => edge.getBoundingClientRect()));
   for (const edge of edges) expect(Math.min(edge.width, edge.height)).toBeCloseTo(2, 0);
   // ...and the window only appears once it lands.
-  const now = await looksNow(page, 'activity');
+  const now = await looksNow(page, 'contact');
   expect(now).toMatchObject({ state: 'open', opacity: '0', motion: 'in' });
 
   await timeScale(page, 1);
   await settled(page);
-  expect(await looksNow(page, 'activity')).toMatchObject({ opacity: '1', transform: 'none' });
+  expect(await looksNow(page, 'contact')).toMatchObject({ opacity: '1', transform: 'none' });
 });
 
 test('minimising plays os-minimize', async ({ page }) => {
   await ready(page);
-  const about = win(page, 'about');
+  const welcome = win(page, 'welcome');
 
-  await about.locator('[data-win-minimize]').click();
-  await expect(about).toHaveAttribute('data-win-state', 'minimized');
+  await welcome.locator('[data-win-minimize]').click();
+  await expect(welcome).toHaveAttribute('data-win-state', 'minimized');
   await expect.poll(() => played(page)).toContain('os-minimize');
 
   await settled(page);
-  await expect(about).toBeHidden();
-  expect(await leftovers(about)).toEqual(CLEAN);
+  await expect(welcome).toBeHidden();
+  expect(await leftovers(welcome)).toEqual(CLEAN);
   expect(await notAnimatable(page)).toEqual([]);
 });
 
 test('a minimising window heads for its taskbar button and cannot be used on the way', async ({ page }) => {
   await ready(page);
-  const about = win(page, 'about');
-  const before = await box(about);
+  const welcome = win(page, 'welcome');
+  const before = await box(welcome);
   await timeScale(page, SLOW);
 
-  await about.locator('[data-win-minimize]').click();
-  expect(await leftovers(about)).toMatchObject({ inert: true, motion: 'out' });
-  await expect(taskbar(page).locator('[data-task="about"]')).toHaveAttribute('aria-pressed', 'false');
+  await welcome.locator('[data-win-minimize]').click();
+  expect(await leftovers(welcome)).toMatchObject({ inert: true, motion: 'out' });
+  await expect(taskbar(page).locator('[data-task="welcome"]')).toHaveAttribute('aria-pressed', 'false');
   // A few steps in, it is smaller and closer to the taskbar.
-  await expect.poll(async () => (await box(about)).width).toBeLessThan(before.width - 2);
-  expect((await box(about)).y).toBeGreaterThan(before.y);
+  await expect.poll(async () => (await box(welcome)).width).toBeLessThan(before.width - 2);
+  expect((await box(welcome)).y).toBeGreaterThan(before.y);
 
   await timeScale(page, 1);
   await settled(page);
-  await expect(about).toBeHidden();
+  await expect(welcome).toBeHidden();
 });
 
 test('closing plays os-close and leaves the window closed at once', async ({ page }) => {
   await ready(page);
-  const projects = win(page, 'projects');
+  const welcome = win(page, 'welcome');
 
-  await projects.locator('[data-win-close]').click();
-  expect(await looksNow(page, 'projects')).toMatchObject({ display: 'none', state: 'closed' });
+  await welcome.locator('[data-win-close]').click();
+  expect(await looksNow(page, 'welcome')).toMatchObject({ display: 'none', state: 'closed' });
   await expect.poll(() => played(page)).toContain('os-close');
   await settled(page);
   expect(await notAnimatable(page)).toEqual([]);
@@ -185,7 +187,7 @@ test('windows on the first paint do not animate in', async ({ page }) => {
     // Toasts may slide in on their own timer; no window does.
     expect((await played(page)).filter((name) => name !== 'os-toast')).toEqual([]);
     await expect(page.locator('[data-motion-outline]')).toHaveCount(0);
-    for (const id of ['about', 'projects'] as const) expect(await leftovers(win(page, id))).toEqual(CLEAN);
+    for (const id of ['welcome', 'about', 'projects'] as const) expect(await leftovers(win(page, id))).toEqual(CLEAN);
   }
 });
 
@@ -193,42 +195,42 @@ test('windows on the first paint do not animate in', async ({ page }) => {
 
 test('acting mid-animation jumps to the final state', async ({ page }) => {
   await ready(page);
-  const activity = win(page, 'activity');
+  const contact = win(page, 'contact');
   await timeScale(page, SLOW);
 
   // Close during open: the open is over at once, then the close outline runs.
-  await openFromIcon(page, 'activity');
+  await openFromIcon(page, 'contact');
   await expect(page.locator('[data-motion-outline="open"]')).toHaveCount(1);
-  await activity.locator('[data-win-close]').click();
-  expect(await looksNow(page, 'activity')).toMatchObject({
+  await contact.locator('[data-win-close]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({
     display: 'none',
     state: 'closed',
     motion: null,
     outlines: ['close'],
   });
-  expect(await leftovers(activity)).toEqual(CLEAN);
+  expect(await leftovers(contact)).toEqual(CLEAN);
 
   // Open again during the close: the close outline goes, a fresh open starts.
-  await openFromIcon(page, 'activity');
-  expect(await looksNow(page, 'activity')).toMatchObject({ state: 'open', motion: 'in', outlines: ['open'] });
+  await openFromIcon(page, 'contact');
+  expect(await looksNow(page, 'contact')).toMatchObject({ state: 'open', motion: 'in', outlines: ['open'] });
 
   // Minimise during open.
-  await activity.locator('[data-win-minimize]').click();
-  expect(await looksNow(page, 'activity')).toMatchObject({ state: 'minimized', motion: 'out', outlines: [] });
+  await contact.locator('[data-win-minimize]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({ state: 'minimized', motion: 'out', outlines: [] });
 
   // Restore from the taskbar during the minimise: the open grows from the button.
-  const button = taskbar(page).locator('[data-task="activity"]');
+  const button = taskbar(page).locator('[data-task="contact"]');
   const buttonBox = await box(button);
   await timeScale(page, FROZEN);
   await button.click();
-  expect(await looksNow(page, 'activity')).toMatchObject({ state: 'open', motion: 'in', outlines: ['open'] });
+  expect(await looksNow(page, 'contact')).toMatchObject({ state: 'open', motion: 'in', outlines: ['open'] });
   const start = await drawn(page, 'open');
   expect(Math.abs(start.x - buttonBox.x)).toBeLessThan(6);
   expect(Math.abs(start.y - buttonBox.y)).toBeLessThan(6);
 
   // Activating it again while it opens shows it at once.
-  await openFromIcon(page, 'activity');
-  expect(await looksNow(page, 'activity')).toMatchObject({
+  await openFromIcon(page, 'contact');
+  expect(await looksNow(page, 'contact')).toMatchObject({
     display: 'flex',
     state: 'open',
     opacity: '1',
@@ -236,7 +238,7 @@ test('acting mid-animation jumps to the final state', async ({ page }) => {
     motion: null,
     outlines: [],
   });
-  expect(await leftovers(activity)).toEqual(CLEAN);
+  expect(await leftovers(contact)).toEqual(CLEAN);
 
   await timeScale(page, 1);
   await settled(page);
@@ -244,37 +246,37 @@ test('acting mid-animation jumps to the final state', async ({ page }) => {
 
 test('fast taskbar toggles end where the clicks say, with nothing held back', async ({ page }) => {
   await ready(page);
-  const projects = win(page, 'projects');
-  await projects.focus();
-  const button = taskbar(page).locator('[data-task="projects"]');
+  const welcome = win(page, 'welcome');
+  await welcome.focus();
+  const button = taskbar(page).locator('[data-task="welcome"]');
 
   // minimise, restore, minimise, restore, minimise
   for (let i = 0; i < 5; i++) await button.click();
-  await expect(projects).toHaveAttribute('data-win-state', 'minimized');
+  await expect(welcome).toHaveAttribute('data-win-state', 'minimized');
   await settled(page);
-  await expect(projects).toBeHidden();
-  expect(await leftovers(projects)).toEqual(CLEAN);
+  await expect(welcome).toBeHidden();
+  expect(await leftovers(welcome)).toEqual(CLEAN);
 
   await button.click();
-  await expect(projects).toHaveAttribute('data-win-state', 'open');
+  await expect(welcome).toHaveAttribute('data-win-state', 'open');
   await settled(page);
-  await expect(projects).toBeVisible();
-  expect(await leftovers(projects)).toEqual(CLEAN);
+  await expect(welcome).toBeVisible();
+  expect(await leftovers(welcome)).toEqual(CLEAN);
 });
 
 test('a phone/desktop switch or a route change mid-animation leaves nothing hidden', async ({ page }) => {
   await ready(page);
   await timeScale(page, SLOW);
 
-  await openFromIcon(page, 'activity');
+  await openFromIcon(page, 'contact');
   await expect(page.locator('[data-motion-outline="open"]')).toHaveCount(1);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('html')).toHaveAttribute('data-os', 'phone');
   await settled(page);
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('html')).toHaveAttribute('data-os', 'desktop');
-  expect(await leftovers(win(page, 'activity'))).toEqual(CLEAN);
-  await expect(win(page, 'activity')).toBeVisible();
+  expect(await leftovers(win(page, 'contact'))).toEqual(CLEAN);
+  await expect(win(page, 'contact')).toBeVisible();
 
   // A project opens by moving the URL; Back mid-open takes it away again.
   await openFromIcon(page, 'questday');
@@ -283,7 +285,7 @@ test('a phone/desktop switch or a route change mid-animation leaves nothing hidd
   await page.goBack();
   await expect(page).toHaveURL('/');
   await settled(page);
-  for (const id of ['about', 'projects', 'activity'] as const) {
+  for (const id of ['welcome', 'contact'] as const) {
     expect(await leftovers(win(page, id))).toEqual(CLEAN);
   }
 });
@@ -295,18 +297,18 @@ test.describe('phone', () => {
 
   test('phone app open plays os-phone-open', async ({ page }) => {
     await ready(page);
-    const about = win(page, 'about');
+    const contact = win(page, 'contact');
 
-    await page.locator('[data-phone-icon="about"]').tap();
-    await expect(about).toHaveAttribute('data-phone-active', 'true');
+    await page.locator('[data-phone-icon="contact"]').tap();
+    await expect(contact).toHaveAttribute('data-phone-active', 'true');
     await expect.poll(() => played(page)).toContain('os-phone-open');
     await settled(page);
-    await expect(about).toBeVisible();
-    expect(await leftovers(about)).toEqual(CLEAN);
+    await expect(contact).toBeVisible();
+    expect(await leftovers(contact)).toEqual(CLEAN);
 
     // It closes back into its icon.
     await page.locator('[data-phone-active="true"] [data-phone-back]').tap();
-    await expect(about).toHaveAttribute('data-phone-active', 'false');
+    await expect(contact).toHaveAttribute('data-phone-active', 'false');
     await expect.poll(() => played(page)).toContain('os-phone-close');
     await settled(page);
     expect(await notAnimatable(page)).toEqual([]);
@@ -314,13 +316,14 @@ test.describe('phone', () => {
 
   test('closing a phone app shrinks the app itself back into its icon (no outline)', async ({ page }) => {
     await ready(page);
-    const about = win(page, 'about');
-    const icon = page.locator('[data-phone-icon="about"]');
+    const contact = win(page, 'contact');
+    const icon = page.locator('[data-phone-icon="contact"]');
+    await icon.scrollIntoViewIfNeeded();
     const iconBox = await box(icon);
     await icon.tap();
-    await expect(about).toHaveAttribute('data-phone-active', 'true');
+    await expect(contact).toHaveAttribute('data-phone-active', 'true');
     await settled(page);
-    const full = await box(about);
+    const full = await box(contact);
     const centre = (b: { x: number; y: number; width: number; height: number }) => ({
       x: b.x + b.width / 2,
       y: b.y + b.height / 2,
@@ -331,17 +334,17 @@ test.describe('phone', () => {
     await page.locator('[data-phone-active="true"] [data-phone-back]').tap();
     // The state is final at once, with home showing underneath; the app is
     // only drawn (and unusable) on its way back into the icon.
-    await expect(about).toHaveAttribute('data-phone-active', 'false');
+    await expect(contact).toHaveAttribute('data-phone-active', 'false');
     await expect(page.locator('[data-phone-home]')).toBeVisible();
-    expect(await looksNow(page, 'about')).toMatchObject({ display: 'flex', motion: 'out', outlines: [] });
-    expect(await leftovers(about)).toMatchObject({ inert: true, motion: 'out' });
-    await expect.poll(async () => (await box(about)).width, { timeout: 10_000 }).toBeLessThan(full.width - 2);
-    expect(distance(centre(await box(about)), centre(iconBox))).toBeLessThan(distance(centre(full), centre(iconBox)));
+    expect(await looksNow(page, 'contact')).toMatchObject({ display: 'flex', motion: 'out', outlines: [] });
+    expect(await leftovers(contact)).toMatchObject({ inert: true, motion: 'out' });
+    await expect.poll(async () => (await box(contact)).width, { timeout: 10_000 }).toBeLessThan(full.width - 2);
+    expect(distance(centre(await box(contact)), centre(iconBox))).toBeLessThan(distance(centre(full), centre(iconBox)));
 
     await timeScale(page, 1);
     await settled(page);
-    await expect(about).toBeHidden();
-    expect(await leftovers(about)).toEqual(CLEAN);
+    await expect(contact).toBeHidden();
+    expect(await leftovers(contact)).toEqual(CLEAN);
     expect(await played(page)).toContain('os-phone-close');
     expect(await notAnimatable(page)).toEqual([]);
   });
@@ -367,22 +370,56 @@ test.describe('phone', () => {
     expect(await played(page)).toContain('os-phone-close');
   });
 
-  test('the app grows out of the icon that was tapped', async ({ page }) => {
+  test('an icon partly under the dock: the app grows from it, and closing it leaves the home where it was', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
     await ready(page);
-    const icon = page.locator('[data-phone-icon="about"]');
-    const iconBox = await box(icon);
-    await timeScale(page, FROZEN);
+    const id = PHONE_ICON_ORDER.at(-1)!;
+    const scroll = page.locator('.os-phone-scroll');
+    const icon = page.locator(`[data-phone-icon="${id}"]`);
 
-    await icon.tap();
-    const start = await box(win(page, 'about'));
+    // Position the icon so its centre is exactly at the scroll area's bottom edge.
+    await scroll.evaluate((el, selector) => {
+      const target = el.querySelector(selector)!.getBoundingClientRect();
+      el.scrollTo({
+        top: el.scrollTop + target.top + target.height / 2 - el.getBoundingClientRect().bottom,
+        behavior: 'instant',
+      });
+    }, `[data-phone-icon="${id}"]`);
+
+    // Poll until the scroll settles (two reads a frame apart agree).
+    await expect.poll(async () => {
+      const a = await scroll.evaluate((el) => el.scrollTop);
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+      const b = await scroll.evaluate((el) => el.scrollTop);
+      return a === b ? a : null;
+    }, { timeout: 2000 }).not.toBeNull();
+
+    const before = await scroll.evaluate((el) => el.scrollTop);
+    const area = await box(scroll);
+    const iconBox = await box(icon);
+
+    // The icon is partly shown and partly hidden below the scroll area.
+    expect(iconBox.y).toBeLessThan(area.y + area.height - 10);
+    expect(iconBox.y + iconBox.height).toBeGreaterThan(area.y + area.height + 10);
+
+    await timeScale(page, FROZEN);
+    await tapInView(page, icon);
+
+    // The app starts at the icon's position, and the scroll did not move.
+    const start = await box(win(page, id));
     expect(Math.abs(start.x - iconBox.x)).toBeLessThan(6);
     expect(Math.abs(start.y - iconBox.y)).toBeLessThan(6);
-    expect(start.width).toBeLessThan(iconBox.width + 6);
+    expect(await scroll.evaluate((el) => el.scrollTop)).toBe(before);
 
     await timeScale(page, 1);
     await settled(page);
-    const end = await box(win(page, 'about'));
-    expect(end.width).toBeGreaterThan(380);
+    expect((await box(win(page, id))).width).toBeGreaterThan(360);
+
+    // Close and verify focus returns to the icon without moving the scroll.
+    await page.locator('[data-phone-active="true"] [data-win-close]').tap();
+    await settled(page);
+    await expect(icon).toBeFocused();
+    expect(await scroll.evaluate((el) => el.scrollTop)).toBe(before);
   });
 });
 
@@ -392,7 +429,8 @@ test('a toast slides in (os-toast) and slides out when dismissed', async ({ page
   // Within 14 days of the newest commit in data/activity.json.
   await page.clock.install({ time: new Date('2026-11-20T00:00:00Z') });
   await ready(page);
-  await page.clock.fastForward(1500);
+  // Welcome is open at '/', so the toast waits 8 s.
+  await page.clock.fastForward(WELCOME_DELAY_MS + 500);
 
   // The newest commit's toast comes first (the next one waits 2 s).
   const toast = page.locator('[data-toast]', { hasText: 'Rally Voley' });
@@ -405,16 +443,17 @@ test('a toast slides in (os-toast) and slides out when dismissed', async ({ page
   expect(await notAnimatable(page)).toEqual([]);
 });
 
-test('the boot prints its lines one step apart', async ({ context }) => {
-  // A first visit: a page without the fixture's "already booted" flag.
+test('the boot shows the skip hint first, then prints a line every step', async ({ context }) => {
+  // A first visit: a page without the fixture's boot-skip flag.
   const page = await context.newPage();
   await page.clock.install();
   await page.goto('/');
   await expect(page.locator('[data-boot-screen]')).toBeVisible();
+  // DOM order: four lines (steps 1–4) then the two hints (both step 0).
   const delays = await page
     .locator('[data-boot-screen] > p')
     .evaluateAll((lines) => lines.map((line) => getComputedStyle(line).animationDelay));
-  expect(delays).toEqual(['0s', '0.22s', '0.44s', '0.66s', '0.88s']);
+  expect(delays).toEqual(['0.7s', '1.4s', '2.1s', '2.8s', '0s', '0s']);
 });
 
 // ── Reduced motion and no JavaScript ──────────────────────────────────────
@@ -423,25 +462,25 @@ test('reduced motion: nothing plays and state changes are instant', async ({ pag
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await ready(page);
 
-  await openFromIcon(page, 'activity');
-  expect(await looksNow(page, 'activity')).toMatchObject({
+  await openFromIcon(page, 'contact');
+  expect(await looksNow(page, 'contact')).toMatchObject({
     display: 'flex',
     opacity: '1',
     transform: 'none',
     state: 'open',
     outlines: [],
   });
-  await win(page, 'activity').locator('[data-win-minimize]').click();
-  expect(await looksNow(page, 'activity')).toMatchObject({ display: 'none', state: 'minimized', motion: null });
-  await taskbar(page).locator('[data-task="activity"]').click();
-  expect(await looksNow(page, 'activity')).toMatchObject({ display: 'flex', opacity: '1', outlines: [] });
-  await win(page, 'activity').locator('[data-win-close]').click();
-  expect(await looksNow(page, 'activity')).toMatchObject({ display: 'none', outlines: [] });
+  await win(page, 'contact').locator('[data-win-minimize]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({ display: 'none', state: 'minimized', motion: null });
+  await taskbar(page).locator('[data-task="contact"]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({ display: 'flex', opacity: '1', outlines: [] });
+  await win(page, 'contact').locator('[data-win-close]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({ display: 'none', outlines: [] });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.locator('html')).toHaveAttribute('data-os', 'phone');
-  await page.locator('[data-phone-icon="about"]').click();
-  expect(await looksNow(page, 'about')).toMatchObject({ display: 'flex', opacity: '1', transform: 'none' });
+  await page.locator('[data-phone-icon="contact"]').click();
+  expect(await looksNow(page, 'contact')).toMatchObject({ display: 'flex', opacity: '1', transform: 'none' });
 
   expect(await played(page)).toEqual([]);
   expect(await properties(page)).toEqual([]);

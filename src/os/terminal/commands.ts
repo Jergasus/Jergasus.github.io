@@ -22,6 +22,9 @@ export interface TerminalResult {
 // ---------------------------------------------------------------------------
 
 const APP_WORDS: Record<string, AppId> = {
+  bienvenida: 'welcome',
+  welcome: 'welcome',
+  benvinguda: 'welcome',
   sobre: 'about',
   about: 'about',
   proyectos: 'projects',

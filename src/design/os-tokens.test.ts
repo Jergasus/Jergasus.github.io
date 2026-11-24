@@ -54,9 +54,10 @@ const DAY_AND_NIGHT = [
 
 /**
  * App colours used as window titlebar fills.
- * Text colour on these is always #111111 (brief §title-bar); all must pass AA.
+ * Light colours use #111111 as text; grey (#5c6069) uses #ede7d9 as text.
+ * All pairs must pass AA (os-tokens.test.ts asserts this).
  */
-const APP_COLOURS = [
+const LIGHT_APP_COLOURS = [
   '#ffd84d', // yellow
   '#f2a7c3', // pink
   '#b6e36b', // green
@@ -84,9 +85,15 @@ describe('os-tokens', () => {
   });
 
   test('titlebar text on every app colour ≥ 4.5', () => {
-    for (const c of APP_COLOURS) {
+    // Light colours: dark text (#111111) on light background.
+    for (const c of LIGHT_APP_COLOURS) {
       expect(contrast('#111111', c), `#111111 on ${c}`).toBeGreaterThanOrEqual(4.5);
     }
+    // grey: light text (#ede7d9) on grey background (#5c6069). Contrast is 5.1:1.
+    expect(contrast('#ede7d9', '#5c6069'), '#ede7d9 on grey (#5c6069)').toBeGreaterThanOrEqual(4.5);
+    // Verify grey and its foreground are defined in the token file.
+    expect(day['--os-c-grey'], '--os-c-grey').toBe('#5c6069');
+    expect(day['--os-c-grey-fg'], '--os-c-grey-fg').toBe('#ede7d9');
   });
 
   // Icon labels sit straight on the wallpaper, drawn with a 1 px outline (a

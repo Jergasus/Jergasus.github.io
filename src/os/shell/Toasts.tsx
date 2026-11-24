@@ -4,9 +4,14 @@
  * Toasts
  *
  * Shows OS-style commit notifications once per session.  Timing:
- *  - If the boot screen ran: starts after data-boot is removed, with a small
- *    extra delay so the transition feels natural.
- *  - If there was no boot (returning visitor): starts 1200 ms after hydration.
+ *  - If the welcome is open (home, first load): waits 8 s from the desktop
+ *    showing before the first toast — giving the visitor time to read it.
+ *    This is a static delay decided once at mount; it does not track whether
+ *    the visitor closes the welcome sooner.
+ *  - If the boot screen ran (and welcome is not open): starts after data-boot
+ *    is removed, with a small extra delay so the transition feels natural.
+ *  - Otherwise (no boot — reduced motion or the e2e skip flag — and no
+ *    welcome): starts 1200 ms after hydration.
  *
  * Freshness is evaluated client-side (commitNotifications calls new Date()),
  * which keeps the behaviour deterministic in e2e tests via page.clock.
@@ -33,12 +38,8 @@ import { formatRelative } from '@/lib/dates';
 import { commitNotifications } from '@/os/notifications';
 import { SESSION_KEY_TOASTS, readSession, writeSession } from '@/os/storage';
 import { WindowGlyph } from '@/os/WindowGlyph';
+import { firstToastDelay } from './toast-timing';
 import { playToastIn, playToastOut } from './motion';
-
-/** Delay before showing toasts when no boot ran (ms). */
-const NO_BOOT_DELAY_MS = 1200;
-/** Delay after the boot screen clears before showing the first toast (ms). */
-const POST_BOOT_DELAY_MS = 100;
 /** Time between the first and subsequent toasts (ms). */
 const STAGGER_MS = 2000;
 /** Auto-dismiss delay per toast (ms). */
@@ -52,9 +53,14 @@ type Props = {
   /** Raw activity repos — only slug and lastCommitAt, never private fields. */
   repos: NotifRepo[];
   locale: Locale;
+  /**
+   * True when the welcome is open on this session's first load (route is home).
+   * Decided once at mount by OsRoot; Toasts never reads window state.
+   */
+  welcome: boolean;
 };
 
-export function Toasts({ repos, locale }: Props) {
+export function Toasts({ repos, locale, welcome }: Props) {
   const t = useTranslations('os.notifications');
   const [visibleToasts, setVisibleToasts] = useState<VisibleToast[]>([]);
   const shownRef = useRef(false);
@@ -121,16 +127,17 @@ export function Toasts({ repos, locale }: Props) {
     };
 
     if (!html.hasAttribute('data-boot')) {
-      // No boot: show after a fixed delay.
-      const timer = window.setTimeout(startToasts, NO_BOOT_DELAY_MS);
+      // No boot: show after a fixed delay (8 s when welcome is open, else 1.2 s).
+      const timer = window.setTimeout(startToasts, firstToastDelay({ boot: false, welcome }));
       timers.push(timer);
     } else {
       // Boot active: watch for data-boot removal, then start.
+      // Welcome gets 8 s from when the boot clears; otherwise 100 ms.
       observer = new MutationObserver(() => {
         if (!html.hasAttribute('data-boot') && observer) {
           observer.disconnect();
           observer = null;
-          extraTimer = window.setTimeout(startToasts, POST_BOOT_DELAY_MS);
+          extraTimer = window.setTimeout(startToasts, firstToastDelay({ boot: true, welcome }));
         }
       });
       observer.observe(html, { attributes: true, attributeFilter: ['data-boot'] });
@@ -141,7 +148,7 @@ export function Toasts({ repos, locale }: Props) {
       if (extraTimer !== null) window.clearTimeout(extraTimer);
       timers.forEach((id) => window.clearTimeout(id));
     };
-  }, [repos, dismiss]);
+  }, [repos, dismiss, welcome]);
 
   return (
     // The region is always in the DOM so AT can observe live changes.

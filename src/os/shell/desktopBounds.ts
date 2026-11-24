@@ -16,9 +16,9 @@ export function desktopBounds(): { w: number; h: number } {
 
 /**
  * Where windows start so they clear the desktop icons: the right edge of the
- * last icon column (one or two, os.css), plus the column's 8 px padding and
- * an 8 px gap. That is 128 for one column (R8) and 240 for two, the same as
- * --os-win-min-x for windows that have not moved yet.
+ * icon column (one column: 128 px, two columns: 240 px), plus the column's
+ * 8 px padding and an 8 px gap. The fallback stays 128 for pages with no
+ * visible icons.
  */
 export function iconsEdge(): number {
   let right = 0;

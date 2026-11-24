@@ -11,11 +11,11 @@ import { clientMessages } from '@/i18n/client-messages';
 import { openGraph } from '@/i18n/open-graph';
 import { availabilityLabel, status } from '@/lib/status';
 import { aggregate, parseActivitySnapshot } from '@/lib/activity';
-import { SITE_NAME } from '@/content/site';
 import { projects } from '@/content/projects';
 import { OsRoot } from '@/os/OsRoot';
 import snapshot from '../../../data/activity.json';
 import { OsWindows } from '@/os/OsWindows';
+import { WelcomeApp } from '@/os/apps/WelcomeApp';
 import { prepaintScript } from '@/os/prepaint';
 import '../globals.css';
 
@@ -86,6 +86,9 @@ export default async function LocaleLayout({
   const rawActivity = parseActivitySnapshot(snapshot);
   const activity = aggregate(rawActivity);
   const notifRepos = rawActivity.repos.map((r) => ({ slug: r.slug, lastCommitAt: r.lastCommitAt }));
+  // Rendered once on the server and placed in both the phone home card and the
+  // desktop welcome window — no id attributes inside, so duplicates never occur.
+  const welcome = <WelcomeApp locale={locale as Locale} />;
 
   return (
     // The pre-paint script sets data-os, data-wallpaper, data-theme and
@@ -101,17 +104,14 @@ export default async function LocaleLayout({
             locale={locale as Locale}
             available={status.available}
             availabilityLabel={avail}
-            name={SITE_NAME}
-            lede={tHero('lede')}
-            totalCommits={activity.totalCommits}
-            lastCommitAt={activity.lastCommitAt}
-            weekly={activity.weekly}
+            welcome={welcome}
             whatsappMessage={tContact('whatsappMessage')}
+            totalCommits={activity.totalCommits}
             projectCount={projects.length}
             notifRepos={notifRepos}
           >
             {children}
-            <OsWindows locale={locale as Locale} />
+            <OsWindows locale={locale as Locale} welcome={welcome} />
           </OsRoot>
         </NextIntlClientProvider>
       </body>

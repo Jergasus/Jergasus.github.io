@@ -18,11 +18,14 @@ import { WindowFrame } from './WindowFrame';
 /**
  * Every window the layout owns, server-rendered with its full content, in
  * the order a document reads them (a case page's window comes before these).
+ * `welcome` is passed in pre-rendered from the layout so it can also be
+ * placed on the phone home screen without a second render.
  */
-export async function OsWindows({ locale }: { locale: Locale }) {
+export async function OsWindows({ locale, welcome }: { locale: Locale; welcome: ReactNode }) {
   const [t, labels] = await Promise.all([getTranslations({ locale, namespace: 'os.apps' }), windowLabels(locale)]);
 
   const windows: [AppId, ReactNode][] = [
+    ['welcome', welcome],
     ['about', <AboutApp key="about" locale={locale} />],
     ['projects', <ProjectsApp key="projects" locale={locale} />],
     ['yokaido', <YokaidoApp key="yokaido" locale={locale} />],

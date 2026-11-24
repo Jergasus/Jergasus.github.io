@@ -44,8 +44,17 @@ export function WindowFrame({ id, title, children, labels }: Props) {
   const { state, dispatch, mode, focusApp, closeApp, minimizeApp, phoneBack } = useOsInternal();
   const t = useTranslations('os.window');
   const tPhone = useTranslations('os.phone');
+  const tApps = useTranslations('os.apps');
   const win = state.windows[id];
   const app = getApp(id)!;
+
+  // Back button: "‹ <Parent app>" when this app was opened from a parent screen,
+  // otherwise "‹ Inicio".
+  const isBackToParent = state.phoneActive === id && state.phoneParent !== null;
+  const parentApp = isBackToParent ? getApp(state.phoneParent!) : null;
+  const backLabel = isBackToParent && parentApp
+    ? tPhone('backTo', { app: tApps(`${parentApp.messageKey}.label`) })
+    : tPhone('back');
   const Icon = APP_ICONS[id];
   const section = useRef<HTMLElement>(null);
   const body = useRef<HTMLDivElement>(null);
@@ -56,13 +65,15 @@ export function WindowFrame({ id, title, children, labels }: Props) {
   const step = isCaseApp(id) ? caseStudySlugs.indexOf(id) * CASCADE_PX : 0;
   const { x, y, w, h } = app.defaultRect;
   const style = {
-    // A window that has not moved yet starts clear of the desktop icons.
     '--x': win.rect ? `${win.rect.x}px` : `max(var(--os-win-min-x, 0px), calc(${percent(x)} + ${step}px))`,
     '--y': win.rect ? `${win.rect.y}px` : `calc(${percent(y)} + ${step}px)`,
     '--w': win.rect ? `${win.rect.w}px` : percent(w),
     '--h': win.rect ? `${win.rect.h}px` : percent(h),
     '--z': String(win.z),
     '--app': `var(--os-c-${app.colour})`,
+    '--app-fg': `var(--os-c-${app.colour}-fg, #111111)`,
+    '--app-hover-bg': `var(--os-c-${app.colour}-hover-bg, var(--os-ink))`,
+    '--app-hover-fg': `var(--os-c-${app.colour}-hover-fg, var(--os-window))`,
   } as CSSProperties;
 
   // ── Drag ──────────────────────────────────────────────────────────────────
@@ -240,6 +251,7 @@ export function WindowFrame({ id, title, children, labels }: Props) {
       data-maximized={String(win.maximized)}
       data-phone-active={String(state.phoneActive === id)}
       data-interactive-only={app.interactiveOnly ? '' : undefined}
+      data-centred={app.centred && !win.rect ? '' : undefined}
       aria-labelledby={`${id}-title`}
       tabIndex={-1}
       className="os-win"
@@ -263,11 +275,11 @@ export function WindowFrame({ id, title, children, labels }: Props) {
         <button
           type="button"
           data-phone-back
-          aria-label={tPhone('back')}
+          aria-label={backLabel}
           className="os-phone-back-btn"
           onClick={() => phoneBack(id)}
         >
-          {tPhone('back')}
+          {backLabel}
         </button>
 
         <span className="os-title-icon" aria-hidden="true">

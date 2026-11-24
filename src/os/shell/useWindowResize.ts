@@ -83,13 +83,19 @@ export function useWindowResize({ id, sectionRef, dispatch, minSize }: Options) 
     if (!section) return;
 
     const box = section.getBoundingClientRect();
+    const orig = { x: box.left, y: box.top, w: box.width, h: box.height };
     resize.current = {
       pointerId: e.pointerId,
       dir,
       startX: e.clientX,
       startY: e.clientY,
-      orig: { x: box.left, y: box.top, w: box.width, h: box.height },
+      orig,
     };
+    // For centred windows, pin the box to its current screen position so that
+    // the CSS-centred layout does not shift under the first pointermove.
+    if (section.hasAttribute('data-centred')) {
+      dispatch({ type: 'setRect', id, rect: orig, bounds: desktopBounds() });
+    }
     // Capture so the section receives move/up even when the pointer leaves.
     section.setPointerCapture(e.pointerId);
     beginWindowGesture();

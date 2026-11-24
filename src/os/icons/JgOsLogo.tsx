@@ -29,11 +29,11 @@ export function JgOsLogo({ size = 26 }: { size?: number }) {
       aria-hidden="true"
       focusable="false"
     >
-      <path d={JG_OS_LOGO.frame} fill={C.ink} />
+      <path d={JG_OS_LOGO.frame} fill={C.black} />
       <path d={JG_OS_LOGO.titlebar} fill={C.yellow} />
-      <path d={JG_OS_LOGO.stripes} fill={C.ink} fillOpacity={0.22} />
+      <path d={JG_OS_LOGO.stripes} fill={C.black} fillOpacity={0.22} />
       <path d={JG_OS_LOGO.body} fill={C.window} />
-      <path d={JG_OS_LOGO.letters} fill={C.ink} />
+      <path d={JG_OS_LOGO.letters} fill={C.black} />
     </svg>
   );
 }

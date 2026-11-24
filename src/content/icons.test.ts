@@ -52,7 +52,7 @@ describe('app icons', () => {
   it('the icon palette is the OS app palette', () => {
     const tokens = readFileSync(path.join(root, 'src/design/os-tokens.css'), 'utf8');
     for (const [name, hex] of Object.entries(ICON_COLOURS)) {
-      if (name === 'ink' || name === 'white') continue;
+      if (name === 'black' || name === 'white') continue;
       const token = name === 'window' ? '--os-window' : `--os-c-${name}`;
       expect(tokens, name).toContain(`${token}: ${hex};`);
     }

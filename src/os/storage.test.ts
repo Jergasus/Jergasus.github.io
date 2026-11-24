@@ -38,7 +38,7 @@ describe('readPref', () => {
   it('returns null when window is undefined (SSR)', () => {
     // In the node test environment, window is not defined
     expect(typeof window).toBe('undefined');
-    expect(readPref(PREF_KEYS.booted)).toBe(null);
+    expect(readPref(PREF_KEYS.theme)).toBe(null);
   });
 
   it('returns stored value via window.localStorage', () => {
@@ -50,7 +50,7 @@ describe('readPref', () => {
   it('returns null for a key that is not in storage', () => {
     const ls = makeLS();
     vi.stubGlobal('window', { localStorage: ls });
-    expect(readPref(PREF_KEYS.booted)).toBe(null);
+    expect(readPref(PREF_KEYS.theme)).toBe(null);
   });
 
   it('returns null and writePref is silent when storage throws', () => {
@@ -60,9 +60,9 @@ describe('readPref', () => {
       removeItem: () => { throw new Error('storage denied'); },
     };
     vi.stubGlobal('window', { localStorage: throwing, sessionStorage: throwing });
-    expect(() => readPref(PREF_KEYS.booted)).not.toThrow();
-    expect(readPref(PREF_KEYS.booted)).toBe(null);
-    expect(() => writePref(PREF_KEYS.booted, '1')).not.toThrow();
+    expect(() => readPref(PREF_KEYS.theme)).not.toThrow();
+    expect(readPref(PREF_KEYS.theme)).toBe(null);
+    expect(() => writePref(PREF_KEYS.theme, 'light')).not.toThrow();
   });
 });
 

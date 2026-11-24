@@ -3,7 +3,6 @@
 
 /** Runtime key names — single source of truth for all modules (including prepaint). */
 export const PREF_KEYS = {
-  booted: 'jgos-booted',
   theme: 'jgos-theme',
   wallpaper: 'jgos-wallpaper',
 } as const;

@@ -13,10 +13,10 @@ test('dragging the titlebar moves the window and it stays put after a reload in 
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  const titlebar = about.locator('[data-titlebar]');
+  const welcome = win(page, 'welcome');
+  const titlebar = welcome.locator('[data-titlebar]');
 
-  const box0 = (await about.boundingBox())!;
+  const box0 = (await welcome.boundingBox())!;
   const tbBox = (await titlebar.boundingBox())!;
 
   // Drag 100 px right, 60 px down from the title area.
@@ -27,7 +27,7 @@ test('dragging the titlebar moves the window and it stays put after a reload in 
   await page.mouse.move(startX + 100, startY + 60, { steps: 10 });
   await page.mouse.up();
 
-  const box1 = (await about.boundingBox())!;
+  const box1 = (await welcome.boundingBox())!;
   expect(box1.x).toBeGreaterThan(box0.x + 90);
   expect(box1.y).toBeGreaterThan(box0.y + 50);
 
@@ -36,7 +36,7 @@ test('dragging the titlebar moves the window and it stays put after a reload in 
 
   // Reload: the position must be restored from sessionStorage.
   await visit(page, '/');
-  const box2 = (await about.boundingBox())!;
+  const box2 = (await welcome.boundingBox())!;
   expect(Math.abs(box2.x - box1.x)).toBeLessThan(10);
   expect(Math.abs(box2.y - box1.y)).toBeLessThan(10);
 });
@@ -54,10 +54,10 @@ test('dragging from the empty part of the titlebar (the move handle) moves the w
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  const grip = about.locator('[data-win-move]');
+  const welcome = win(page, 'welcome');
+  const grip = welcome.locator('[data-win-move]');
 
-  const box0 = (await about.boundingBox())!;
+  const box0 = (await welcome.boundingBox())!;
   const gripBox = (await grip.boundingBox())!;
 
   const startX = gripBox.x + gripBox.width / 2;
@@ -67,7 +67,7 @@ test('dragging from the empty part of the titlebar (the move handle) moves the w
   await page.mouse.move(startX + 100, startY + 60, { steps: 10 });
   await page.mouse.up();
 
-  const box1 = (await about.boundingBox())!;
+  const box1 = (await welcome.boundingBox())!;
   expect(box1.x).toBeGreaterThan(box0.x + 90);
   expect(box1.y).toBeGreaterThan(box0.y + 50);
 });
@@ -83,10 +83,10 @@ for (const [label, grab] of [
     await page.setViewportSize(VP);
     await visit(page, '/');
 
-    const about = win(page, 'about');
-    // Leave a selection on the bio, as a press on text would.
+    const welcome = win(page, 'welcome');
+    // Leave a selection on the intro text, as a press on text would.
     await page.evaluate(() => {
-      const p = document.querySelector('[data-app="about"] p');
+      const p = document.querySelector('[data-app="welcome"] p');
       const range = document.createRange();
       range.selectNodeContents(p!);
       const sel = window.getSelection()!;
@@ -95,21 +95,21 @@ for (const [label, grab] of [
     });
     expect(await page.evaluate(() => window.getSelection()!.toString().length)).toBeGreaterThan(0);
 
-    const box = (await about.locator(grab).boundingBox())!;
+    const box = (await welcome.locator(grab).boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 40, box.y + box.height / 2 + 30, { steps: 5 });
 
     const during = await page.evaluate(() => ({
       selected: window.getSelection()!.toString().length,
-      userSelect: getComputedStyle(document.querySelector('[data-app="about"] p')!).userSelect,
+      userSelect: getComputedStyle(document.querySelector('[data-app="welcome"] p')!).userSelect,
     }));
     expect(during.selected).toBe(0);
     expect(during.userSelect).toBe('none');
 
     await page.mouse.up();
     const after = await page.evaluate(
-      () => getComputedStyle(document.querySelector('[data-app="about"] p')!).userSelect,
+      () => getComputedStyle(document.querySelector('[data-app="welcome"] p')!).userSelect,
     );
     expect(after).not.toBe('none');
   });
@@ -118,7 +118,7 @@ for (const [label, grab] of [
 test('window titles are not selectable text', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');
-  const userSelect = await win(page, 'about')
+  const userSelect = await win(page, 'welcome')
     .locator('[data-titlebar]')
     .evaluate((el) => getComputedStyle(el).userSelect);
   expect(userSelect).toBe('none');
@@ -128,17 +128,17 @@ test('double-clicking the empty part of the titlebar maximises the window', asyn
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  await about.locator('[data-win-move]').dblclick();
-  await expect(about).toHaveAttribute('data-maximized', 'true');
+  const welcome = win(page, 'welcome');
+  await welcome.locator('[data-win-move]').dblclick();
+  await expect(welcome).toHaveAttribute('data-maximized', 'true');
 });
 
 test('a window cannot be dragged so its titlebar leaves the desktop', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  const titlebar = about.locator('[data-titlebar]');
+  const welcome = win(page, 'welcome');
+  const titlebar = welcome.locator('[data-titlebar]');
   const tbBox = (await titlebar.boundingBox())!;
 
   // Try to drag way off the right and bottom edges.
@@ -151,7 +151,7 @@ test('a window cannot be dragged so its titlebar leaves the desktop', async ({ p
 
   const desktop = page.locator('[data-desktop]');
   const desktopBox = (await desktop.boundingBox())!;
-  const newBox = (await about.boundingBox())!;
+  const newBox = (await welcome.boundingBox())!;
 
   // At least MIN_VISIBLE_X (64 px) of the window must be reachable.
   expect(newBox.x).toBeLessThanOrEqual(desktopBox.width - 64 + 2); // +2 px tolerance
@@ -169,12 +169,12 @@ test('resizing from the se corner grows the window and respects the minimum size
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
+  const welcome = win(page, 'welcome');
   // Bring to front.
-  await about.click();
+  await welcome.click();
 
-  const handleSe = about.locator('[data-resize="se"]');
-  const box0 = (await about.boundingBox())!;
+  const handleSe = welcome.locator('[data-resize="se"]');
+  const box0 = (await welcome.boundingBox())!;
   const h0 = (await handleSe.boundingBox())!;
 
   // Grow by 80 px in each direction.
@@ -183,20 +183,20 @@ test('resizing from the se corner grows the window and respects the minimum size
   await page.mouse.move(h0.x + h0.width / 2 + 80, h0.y + h0.height / 2 + 80, { steps: 10 });
   await page.mouse.up();
 
-  const box1 = (await about.boundingBox())!;
+  const box1 = (await welcome.boundingBox())!;
   expect(box1.width).toBeGreaterThan(box0.width + 70);
   expect(box1.height).toBeGreaterThan(box0.height + 70);
 
-  // Now try to shrink below the about minimum (300 × 220).
+  // Now try to shrink below the welcome minimum (360 × 300).
   const h1 = (await handleSe.boundingBox())!;
   await page.mouse.move(h1.x + h1.width / 2, h1.y + h1.height / 2);
   await page.mouse.down();
   await page.mouse.move(h1.x - 5000, h1.y - 5000, { steps: 20 });
   await page.mouse.up();
 
-  const box2 = (await about.boundingBox())!;
-  expect(box2.width).toBeGreaterThanOrEqual(300); // minSize.w
-  expect(box2.height).toBeGreaterThanOrEqual(220); // minSize.h
+  const box2 = (await welcome.boundingBox())!;
+  expect(box2.width).toBeGreaterThanOrEqual(360); // minSize.w
+  expect(box2.height).toBeGreaterThanOrEqual(300); // minSize.h
 });
 
 // ---------------------------------------------------------------------------
@@ -207,17 +207,17 @@ test('double-click on the titlebar maximises and restores', async ({ page }) => 
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
+  const welcome = win(page, 'welcome');
 
-  await expect(about).toHaveAttribute('data-maximized', 'false');
+  await expect(welcome).toHaveAttribute('data-maximized', 'false');
 
   // Double-click the title text (not the buttons).
-  await about.locator('.os-title').dblclick();
-  await expect(about).toHaveAttribute('data-maximized', 'true');
+  await welcome.locator('.os-title').dblclick();
+  await expect(welcome).toHaveAttribute('data-maximized', 'true');
 
   // Double-click again to restore.
-  await about.locator('.os-title').dblclick();
-  await expect(about).toHaveAttribute('data-maximized', 'false');
+  await welcome.locator('.os-title').dblclick();
+  await expect(welcome).toHaveAttribute('data-maximized', 'false');
 });
 
 // ---------------------------------------------------------------------------
@@ -230,16 +230,16 @@ test('dragging the titlebar of a maximised window is a no-op and restore returns
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  const titlebar = about.locator('[data-titlebar]');
+  const welcome = win(page, 'welcome');
+  const titlebar = welcome.locator('[data-titlebar]');
 
-  // Record the pre-maximise rect (percentage-based default position).
-  const box0 = (await about.boundingBox())!;
+  // Record the pre-maximise rect (centred default position).
+  const box0 = (await welcome.boundingBox())!;
 
   // Maximise via the button — avoids the dblclick's first-click drag side-effect
   // which would start pointer capture before the maximize fires.
-  await about.locator('[data-win-maximize]').click();
-  await expect(about).toHaveAttribute('data-maximized', 'true');
+  await welcome.locator('[data-win-maximize]').click();
+  await expect(welcome).toHaveAttribute('data-maximized', 'true');
 
   // Try to drag the titlebar — the window must remain maximised.
   const tbBox = (await titlebar.boundingBox())!;
@@ -251,14 +251,14 @@ test('dragging the titlebar of a maximised window is a no-op and restore returns
   await page.mouse.up();
 
   // Still maximised after the drag attempt.
-  await expect(about).toHaveAttribute('data-maximized', 'true');
+  await expect(welcome).toHaveAttribute('data-maximized', 'true');
 
   // Restore via the button.
-  await about.locator('[data-win-maximize]').click();
-  await expect(about).toHaveAttribute('data-maximized', 'false');
+  await welcome.locator('[data-win-maximize]').click();
+  await expect(welcome).toHaveAttribute('data-maximized', 'false');
 
   // After restore the window returns to the pre-maximise rect.
-  const box1 = (await about.boundingBox())!;
+  const box1 = (await welcome.boundingBox())!;
   expect(Math.abs(box1.x - box0.x)).toBeLessThan(2);
   expect(Math.abs(box1.y - box0.y)).toBeLessThan(2);
   expect(Math.abs(box1.width - box0.width)).toBeLessThan(2);
@@ -273,22 +273,22 @@ test('keyboard: arrow keys move the window, Alt+arrows resize it', async ({ page
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  const about = win(page, 'about');
-  const moveBtn = about.locator('[data-win-move]');
+  const welcome = win(page, 'welcome');
+  const moveBtn = welcome.locator('[data-win-move]');
 
-  const box0 = (await about.boundingBox())!;
+  const box0 = (await welcome.boundingBox())!;
 
   // Focus the move handle.
   await moveBtn.focus();
 
   // ArrowRight moves 16 px right.
   await page.keyboard.press('ArrowRight');
-  const box1 = (await about.boundingBox())!;
+  const box1 = (await welcome.boundingBox())!;
   expect(box1.x).toBeCloseTo(box0.x + 16, 0);
 
   // Alt+ArrowDown grows height by 16 px.
   await page.keyboard.press('Alt+ArrowDown');
-  const box2 = (await about.boundingBox())!;
+  const box2 = (await welcome.boundingBox())!;
   expect(box2.height).toBeCloseTo(box1.height + 16, 0);
 });
 
@@ -301,11 +301,12 @@ test('Ordenar ventanas cascades every open window', async ({ page }) => {
   await visit(page, '/');
 
   // Open an extra window so there are three to arrange.
-  await openFromIcon(page, 'activity');
-  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
+  await openFromIcon(page, 'contact');
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
 
-  // Right-click the desktop and pick "Ordenar ventanas".
-  await page.locator('[data-desktop]').click({ button: 'right', position: { x: 400, y: 600 } });
+  // Right-click in the gap between the icon column (right ≈128px) and the
+  // welcome window (left ≈384px). No windows in this area.
+  await page.mouse.click(250, 400, { button: 'right' });
   await page
     .locator('[data-context-menu]')
     .getByRole('menuitem', { name: /Ordenar ventanas/i })
@@ -329,9 +330,8 @@ test('windows stay reachable after the viewport shrinks', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 800 });
   await visit(page, '/');
 
-  // Bring both initial windows to front to ensure they have px rects.
-  await win(page, 'about').click();
-  await win(page, 'projects').click();
+  // Bring the initial window to front to ensure it has a px rect.
+  await win(page, 'welcome').click();
 
   // Shrink the viewport so windows would overflow without reclamp.
   await page.setViewportSize({ width: 1024, height: 600 });
@@ -362,16 +362,16 @@ test('close returns focus to the opener', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');
 
-  // Open activity from its desktop icon (the icon becomes the opener).
-  await openFromIcon(page, 'activity');
-  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
+  // Open contact from its desktop icon (the icon becomes the opener).
+  await openFromIcon(page, 'contact');
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'open');
 
-  // Close the activity window.
-  await win(page, 'activity').locator('[data-win-close]').click();
-  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'closed');
+  // Close the contact window.
+  await win(page, 'contact').locator('[data-win-close]').click();
+  await expect(win(page, 'contact')).toHaveAttribute('data-win-state', 'closed');
 
   // Focus must have returned to the icon that opened the window.
-  await expect(page.locator('[data-icon="activity"]')).toBeFocused();
+  await expect(page.locator('[data-icon="contact"]')).toBeFocused();
 });
 
 // ---------------------------------------------------------------------------
@@ -383,9 +383,9 @@ test('close returns focus to the opener', async ({ page }) => {
 test('the titlebar and the resize handles keep a touch drag for themselves', async ({ page }) => {
   await page.setViewportSize(VP);
   await visit(page, '/');
-  const about = win(page, 'about');
+  const welcome = win(page, 'welcome');
   const touchAction = (selector: string) =>
-    about.locator(selector).evaluateAll((elements) => elements.map((element) => getComputedStyle(element).touchAction));
+    welcome.locator(selector).evaluateAll((elements) => elements.map((element) => getComputedStyle(element).touchAction));
   expect(await touchAction('[data-titlebar]')).toEqual(['none']);
   expect(await touchAction('[data-resize]')).toEqual(new Array(8).fill('none'));
   // The window's content still scrolls by touch.

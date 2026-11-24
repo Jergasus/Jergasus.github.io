@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { localizedPath } from '@/i18n/localized-path';
@@ -10,8 +10,6 @@ import { APP_ICONS, ChatIcon, MailIcon } from '../icons';
 import { barcelonaTime } from '../clock';
 import { mailtoHref, whatsappHref } from '@/content/contact';
 import { useOsInternal } from '../context';
-import { HelloWidget } from './HelloWidget';
-import { ActivityWidget } from './ActivityWidget';
 
 const LOCALES: { code: Locale; label: string }[] = [
   { code: 'es', label: 'ES' },
@@ -21,31 +19,15 @@ const LOCALES: { code: Locale; label: string }[] = [
 
 type Props = {
   locale: Locale;
-  available: boolean;
-  availabilityLabel: string;
-  name: string;
-  lede: string;
-  totalCommits: number;
-  lastCommitAt: string;
-  weekly: number[];
   whatsappMessage: string;
+  welcome: ReactNode;
 };
 
 /**
  * Phone home screen — the full-screen canvas shown on [data-os="phone"] when
  * no app is active. All app-specific data is passed as props from the server.
  */
-export function PhoneHome({
-  locale,
-  available,
-  availabilityLabel,
-  name,
-  lede,
-  totalCommits,
-  lastCommitAt,
-  weekly,
-  whatsappMessage,
-}: Props) {
+export function PhoneHome({ locale, whatsappMessage, welcome }: Props) {
   const t = useTranslations('os');
   const tPhone = useTranslations('os.phone');
   const { openApp, state } = useOsInternal();
@@ -89,51 +71,47 @@ export function PhoneHome({
         <time className="os-tray-clock">{time}</time>
       </div>
 
-      {/* Widgets */}
-      <div className="os-phone-widgets">
-        <HelloWidget
-          name={name}
-          lede={lede}
-          available={available}
-          availabilityLabel={availabilityLabel}
-        />
-        <ActivityWidget
-          locale={locale}
-          totalCommits={totalCommits}
-          lastCommitAt={lastCommitAt}
-          weekly={weekly}
-        />
-      </div>
+      {/* Scrollable area: the welcome card and icon grid scroll together.
+          The dock stays outside so it is always visible. */}
+      <div className="os-phone-scroll">
+        {/* Welcome card */}
+        <div className="os-phone-welcome">
+          <div className="os-phone-welcome-titlebar">
+            <span className="os-phone-welcome-title">{t('apps.welcome.title')}</span>
+          </div>
+          <div className="os-phone-welcome-body">{welcome}</div>
+        </div>
 
-      {/* Icon grid */}
-      <ul className="os-phone-icon-grid">
-        {PHONE_ICON_ORDER.map((id) => {
-          const app = getApp(id);
-          if (!app) return null;
-          const label = t(`apps.${app.messageKey}.label`);
-          const Icon = APP_ICONS[id];
-          return (
-            <li key={id} className="os-phone-icon-li">
-            <button
-              type="button"
-              data-phone-icon={id}
-              aria-label={label}
-              className="os-phone-icon"
-              style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
-              // The icon is the opener: the app grows out of it, closes back
-              // into it, and focus returns to it. (Case apps navigate; openApp
-              // handles that path.)
-              onClick={(event) => openApp(id, event.currentTarget)}
-            >
-              <span className="os-phone-icon-tile" aria-hidden="true">
-                <Icon size={38} />
-              </span>
-              <span className="os-phone-icon-label">{label}</span>
-            </button>
-            </li>
-          );
-        })}
-      </ul>
+        {/* Icon grid — scrolls inside this container, below the welcome card. */}
+        <ul className="os-phone-icon-grid">
+          {PHONE_ICON_ORDER.map((id) => {
+            const app = getApp(id);
+            if (!app) return null;
+            const label = t(`apps.${app.messageKey}.label`);
+            const Icon = APP_ICONS[id];
+            return (
+              <li key={id} className="os-phone-icon-li">
+                <button
+                  type="button"
+                  data-phone-icon={id}
+                  aria-label={label}
+                  className="os-phone-icon"
+                  style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
+                  // The icon is the opener: the app grows out of it, closes back
+                  // into it, and focus returns to it. (Case apps navigate; openApp
+                  // handles that path.)
+                  onClick={(event) => openApp(id, event.currentTarget)}
+                >
+                  <span className="os-phone-icon-tile" aria-hidden="true">
+                    <Icon size={38} />
+                  </span>
+                  <span className="os-phone-icon-label">{label}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {/* Dock: Correo + WhatsApp — always visible */}
       <div data-dock className="os-phone-dock">

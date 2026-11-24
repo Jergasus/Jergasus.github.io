@@ -42,11 +42,11 @@ describe('JG-OS motion presets', () => {
     expect(minimize.ease).toMatch(/\.inOut$/);
   });
 
-  it('the boot prints its four lines and the skip hint in about a second', () => {
-    // Five beats: line 1 on the first paint, then one per step (BootScreen.tsx).
-    expect(bootLine).toBeGreaterThan(0);
-    expect(5 * bootLine).toBeGreaterThanOrEqual(0.8);
-    expect(5 * bootLine).toBeLessThanOrEqual(1.2);
+  it('the boot prints one readable line a step and lasts about 3.5 s', () => {
+    // Five beats (four lines + the skip hint) at bootLine seconds each.
+    expect(bootLine).toBeGreaterThanOrEqual(0.5);
+    expect(5 * bootLine).toBeGreaterThanOrEqual(3.3);
+    expect(5 * bootLine).toBeLessThanOrEqual(3.7);
   });
 
   it('holds only the JG-OS presets (the v1 values are gone)', () => {

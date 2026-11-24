@@ -1,4 +1,4 @@
-import { expect, test, visit, win, openFromIcon } from './fixtures';
+import { expect, openFromIcon, test, visit, win } from './fixtures';
 
 /** Shorthand: the text input inside the terminal window. */
 const termInput = (page: Parameters<typeof win>[0]) =>
@@ -66,7 +66,7 @@ for (const { path, open, lang } of [
 
 test('sobre opens the about window, as its help line says', async ({ page }) => {
   await visit(page, '/');
-  await win(page, 'about').locator('[data-win-close]').click();
+  // about starts closed on home load; verify it and open it via terminal.
   await expect(win(page, 'about')).toHaveAttribute('data-win-state', 'closed');
   await openFromIcon(page, 'terminal');
 
@@ -129,4 +129,14 @@ test('Up recalls the previous command', async ({ page }) => {
 
   // The previous command should be restored
   await expect(input).toHaveValue('ayuda');
+});
+
+// ── abrir actividad ───────────────────────────────────────────────────────
+
+test('abrir actividad opens the activity window', async ({ page }) => {
+  await visit(page, '/');
+  await openFromIcon(page, 'terminal');
+
+  await run(page, 'abrir actividad');
+  await expect(win(page, 'activity')).toHaveAttribute('data-win-state', 'open');
 });

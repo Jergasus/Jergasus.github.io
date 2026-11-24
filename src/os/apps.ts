@@ -1,6 +1,7 @@
 import { caseStudySlugs } from '@/content/projects';
 
 export type AppId =
+  | 'welcome'
   | 'about'
   | 'projects'
   | 'activity'
@@ -18,7 +19,7 @@ export type AppId =
 /** Subset of AppId that maps to a case-study route. Equals caseStudySlugs. */
 export type CaseAppId = 'questday' | 'sakurai' | 'rally-voley';
 
-export type AppColour = 'yellow' | 'pink' | 'green' | 'blue' | 'lilac' | 'peach' | 'mint' | 'sky' | 'cream';
+export type AppColour = 'yellow' | 'pink' | 'green' | 'blue' | 'lilac' | 'peach' | 'mint' | 'sky' | 'cream' | 'grey';
 
 /** Absolute pixel rect. */
 export interface Rect {
@@ -49,6 +50,8 @@ export interface AppDef {
   inStartMenu: boolean;
   /** True for terminal, browser and settings — no passive viewing mode. */
   interactiveOnly: boolean;
+  /** True for welcome — centred on both axes, sized to content, until the window has a rect. */
+  centred?: true;
 }
 
 // Shared defaults for all three case-study apps.
@@ -56,6 +59,19 @@ const CASE_RECT: FracRect = { x: 0.18, y: 0.04, w: 0.62, h: 0.86 };
 const CASE_MIN = { w: 420, h: 320 };
 
 export const apps: readonly AppDef[] = [
+  {
+    id: 'welcome',
+    messageKey: 'welcome',
+    colour: 'grey',
+    route: null,
+    defaultRect: { x: 0.3, y: 0.12, w: 0.42, h: 0.5 },
+    minSize: { w: 360, h: 300 },
+    desktopIcon: true,
+    phoneIcon: false,
+    inStartMenu: true,
+    interactiveOnly: false,
+    centred: true,
+  },
   {
     id: 'about',
     messageKey: 'about',
@@ -224,8 +240,9 @@ export function isCaseApp(id: AppId): id is CaseAppId {
   return (caseStudySlugs as string[]).includes(id);
 }
 
-/** Left-to-right order of icons on the desktop taskbar / dock. */
+/** Top-to-bottom order of icons in the desktop icon column (one or two columns at smaller heights). */
 export const DESKTOP_ICON_ORDER: readonly AppId[] = [
+  'welcome',
   'about',
   'projects',
   'questday',
@@ -240,7 +257,7 @@ export const DESKTOP_ICON_ORDER: readonly AppId[] = [
   'settings',
 ];
 
-/** Bottom-to-top order of icons in the phone home-screen grid. */
+/** Left-to-right, top-to-bottom order of icons in the phone home-screen grid. */
 export const PHONE_ICON_ORDER: readonly AppId[] = [
   'questday',
   'sakurai',

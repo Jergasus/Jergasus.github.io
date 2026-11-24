@@ -24,7 +24,7 @@ import { OsContext, type OsInternal, type OsMode } from './context';
 import { DESKTOP_QUERY, WALLPAPERS } from './prepaint';
 import { caseHref, routedSlugOf } from './route';
 import { PREF_KEYS, readPref, SESSION_KEY, readSession, writeSession } from './storage';
-import { initialState, nextActiveCase, reduce, serialize, type SavedWindows, type WmState } from './window-manager';
+import { initialState, nextActiveCase, reduce, serialize, visibleOrder, type SavedWindows, type WmState } from './window-manager';
 import { desktopBounds } from './shell/desktopBounds';
 import { forgetWindow } from './window-memory';
 import { BootScreen } from './shell/BootScreen';
@@ -41,6 +41,7 @@ import {
   finishAllMotion,
   finishMotion,
   openOrigin,
+  phoneHomeTarget,
   playClose,
   playMinimize,
   playPhoneClose,
@@ -74,17 +75,16 @@ function isShown(element: Element | null | undefined): element is HTMLElement {
 }
 
 const windowElement = (id: AppId) => document.querySelector<HTMLElement>(`[data-app="${id}"]`);
-const phoneIcon = (id: AppId) => document.querySelector<HTMLElement>(`[data-phone-icon="${id}"]`);
 /** The project the address bar shows right now (history moves update it before React does). */
 const urlAt = () => routedSlugOf(window.location.pathname);
 
 /**
  * Phone: where focus returns when an app closes. Its opener if that still
- * shows (an icon on the home screen), else the app's own icon: an opener
- * inside another app is hidden once home shows.
+ * shows (an icon on the home screen), else the home-target for the app:
+ * its home icon or its guide button in the phone home card.
  */
 function phoneOpener(id: AppId, opener: HTMLElement | null): HTMLElement | null {
-  return opener && isShown(opener) ? opener : phoneIcon(id);
+  return opener && isShown(opener) ? opener : phoneHomeTarget(id);
 }
 
 /** Whether the app's window shows in this mode (os.css draws it from the same state). */
@@ -97,21 +97,18 @@ function showing(state: WmState, id: AppId, mode: OsMode): boolean {
 /** Where keyboard focus goes once the next commits settle. */
 type FocusPlan =
   | { kind: 'into'; id: AppId }
-  | { kind: 'back'; to: HTMLElement | null; afterRoute?: CaseAppId | null };
+  | { kind: 'back'; to: HTMLElement | null; afterRoute?: CaseAppId | null; keepScroll?: boolean };
 
 type Props = {
   locale: Locale;
   children: ReactNode;
   available?: boolean;
   availabilityLabel?: string;
-  /** Phone home screen data — all passed from the server so no extra client namespace is needed. */
-  name?: string;
-  lede?: string;
-  totalCommits?: number;
-  lastCommitAt?: string;
-  weekly?: number[];
+  /** The welcome card, rendered once on the server and placed in both the phone home and the desktop window. */
+  welcome?: ReactNode;
   whatsappMessage?: string;
-  /** Boot screen: total number of projects. */
+  /** Boot screen: total number of projects and commits. */
+  totalCommits?: number;
   projectCount?: number;
   /**
    * Notification source repos — only { slug, lastCommitAt } pairs.
@@ -131,12 +128,9 @@ export function OsRoot({
   children,
   available = false,
   availabilityLabel = '',
-  name = '',
-  lede = '',
-  totalCommits = 0,
-  lastCommitAt = new Date().toISOString(),
-  weekly = new Array<number>(26).fill(0),
+  welcome,
   whatsappMessage = '',
+  totalCommits = 0,
   projectCount = 0,
   notifRepos = [],
 }: Props) {
@@ -147,6 +141,9 @@ export function OsRoot({
   const routedSlug = routedSlugOf(usePathname());
 
   const [state, dispatch] = useReducer(reduce, routedSlug, initialState);
+  // Decided once at mount: is the welcome open on this session's first load?
+  // Static — does not track whether the visitor closes the welcome sooner.
+  const [welcomeOnLoad] = useState(routedSlug === null);
   const mode = useSyncExternalStore(subscribeMode, readMode, readServerMode);
   // False on the server, through hydration and under reduced motion: then
   // every state change is instant and no sequence runs.
@@ -301,7 +298,7 @@ export function OsRoot({
     if (plan.afterRoute !== undefined && plan.afterRoute !== routedSlug) return;
     focusPlan.current = null;
     if (isShown(plan.to)) {
-      plan.to.focus();
+      plan.to.focus({ preventScroll: plan.keepScroll === true });
       return;
     }
     const top = state.focused ? windowElement(state.focused) : null;
@@ -360,7 +357,12 @@ export function OsRoot({
         return;
       }
       dispatch({ type: 'open', id });
-      if (now.mode === 'phone') dispatch({ type: 'phoneOpen', id });
+      if (now.mode === 'phone') {
+        // Track which app opened this one so Back can return to it.
+        const host = opener?.closest<HTMLElement>('[data-app]')?.dataset.app as AppId | undefined;
+        const parent = host !== undefined && host === now.state.phoneActive ? host as AppId : undefined;
+        dispatch({ type: 'phoneOpen', id, parent });
+      }
     },
     [navigate, followWithUrl],
   );
@@ -432,8 +434,16 @@ export function OsRoot({
       dispatch({ type: 'close', id });
       if (now.mode === 'phone') dispatch({ type: 'phoneHome' });
       if (from) playClose(id, from, closeTarget(id, 'desktop', opener));
-      const back = now.mode === 'phone' ? phoneOpener(id, opener) : opener;
-      focusPlan.current = ownsUrl ? { kind: 'back', to: back, afterRoute: next } : { kind: 'back', to: back };
+      const desktopIcon =
+        now.mode === 'desktop'
+          ? document.querySelector<HTMLElement>(`[data-icon="${id}"]`)
+          : null;
+      const othersShow = visibleOrder(now.state).some((w) => w !== id);
+      const to = now.mode === 'phone' ? phoneOpener(id, opener) : (opener ?? (othersShow ? null : desktopIcon));
+      const keepScroll = now.mode === 'phone' && to === opener;
+      focusPlan.current = ownsUrl
+        ? { kind: 'back', to, afterRoute: next, keepScroll }
+        : { kind: 'back', to, keepScroll };
       if (!held) go?.();
     },
     [navigate],
@@ -472,6 +482,21 @@ export function OsRoot({
       const opener = openers.current.get(id) ?? null;
       const frame = windowElement(id);
       const routedAt = now.routedSlug;
+
+      // If this app was opened from a parent screen, go back to it.
+      const parentOpen =
+        now.state.phoneActive === id &&
+        now.state.phoneParent !== null &&
+        now.state.windows[now.state.phoneParent]?.open === true;
+      if (parentOpen) {
+        if (now.animate && frame) playPhoneClose(id, frame, closeTarget(id, 'phone', opener));
+        dispatch({ type: 'phoneBack' });
+        // The opener gets focus without scroll (it opened this app, so its
+        // position is already where the visitor was looking).
+        focusPlan.current = { kind: 'back', to: opener, keepScroll: true };
+        return;
+      }
+
       // A project goes home: / → route(null) → closes every project window.
       // Opened from home in this session, it goes back to home's own entry
       // (ruling R16); landed on directly, home is pushed. A non-case app
@@ -487,9 +512,14 @@ export function OsRoot({
       // project's trip home waits for it (the route unmounts its frame).
       if (now.animate && frame) playPhoneClose(id, frame, closeTarget(id, 'phone', opener), go);
       else go?.();
-      dispatch({ type: 'phoneHome' });
+      dispatch(isCaseApp(id) ? { type: 'phoneHome' } : { type: 'phoneBack' });
       // Focus goes back to what opened it (the icon, once home shows).
-      focusPlan.current = { kind: 'back', to: phoneOpener(id, opener) };
+      // preventScroll when returning to the opener — it was visible when tapped,
+      // so the home position should not change. The fallback (phoneHomeTarget)
+      // keeps a plain focus so an icon the visitor never tapped scrolls into
+      // view and is not hidden (WCAG 2.4.11).
+      const to = phoneOpener(id, opener);
+      focusPlan.current = { kind: 'back', to, keepScroll: to === opener };
     },
     [navigate, goBack],
   );
@@ -609,13 +639,14 @@ export function OsRoot({
 
   return (
     <OsContext value={os}>
-      {/* Boot screen overlay — visible only on first visit (html[data-boot="1"]).
-          Renders server-side so the lines appear on the first paint; JS handles
-          the timer and skip-on-input logic.  Content renders underneath it. */}
+      {/* Boot screen overlay — visible on every full load (html[data-boot="1"]),
+          about 3.5 s, skippable from the first paint. Never shown under reduced
+          motion. Renders server-side so the lines appear instantly; the pre-paint
+          IIFE owns the timer and skip-on-input logic. Content renders underneath. */}
       <BootScreen projectCount={projectCount} totalCommits={totalCommits} />
 
       {/* Toast notifications — once per session, after the boot clears. */}
-      <Toasts repos={notifRepos} locale={locale} />
+      <Toasts repos={notifRepos} locale={locale} welcome={welcomeOnLoad} />
 
       {/* R5: Document-mode language links. Hidden via CSS once data-os is set.
           They render in the SSR HTML so a no-JS visitor can switch language. */}
@@ -630,14 +661,8 @@ export function OsRoot({
       {/* Phone home screen — hidden on desktop/document via CSS */}
       <PhoneHome
         locale={locale}
-        available={available}
-        availabilityLabel={availabilityLabel}
-        name={name}
-        lede={lede}
-        totalCommits={totalCommits}
-        lastCommitAt={lastCommitAt}
-        weekly={weekly}
         whatsappMessage={whatsappMessage}
+        welcome={welcome}
       />
 
       {/* Desktop wallpaper and icon column */}

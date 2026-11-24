@@ -138,7 +138,7 @@ export function StartMenu({ open, onClose, startRef }: Props) {
                 className="os-start-item"
                 data-open-app={app.id}
                 onClick={() => openApp(app.id)}
-                style={{ '--app': `var(--os-c-${app.colour})` } as React.CSSProperties}
+                style={{ '--app': `var(--os-c-${app.colour})`, '--app-fg': `var(--os-c-${app.colour}-fg, #111111)`, '--app-hover-bg': `var(--os-c-${app.colour}-hover-bg, var(--os-ink))`, '--app-hover-fg': `var(--os-c-${app.colour}-hover-fg, var(--os-window))` } as React.CSSProperties}
               >
                 <span className="os-start-icon" aria-hidden="true">
                   <Icon size={20} />
